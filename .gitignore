@@ -1,0 +1,12 @@
+*.a
+*.lib
+*.out
+*.cmake
+
+*.avi
+*.mpeg
+*.mp4
+
+CMakeCache.txt
+Makefile
+CMakeFiles/
