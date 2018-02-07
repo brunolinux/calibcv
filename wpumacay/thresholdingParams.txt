@@ -1,6 +1,6 @@
-hmin = 117
-hmax = 255
-smin = 66
-smax = 255
-vmin = 132
-vmax = 255
+hmin = 11
+hmax = 148
+smin = 0
+smax = 35
+vmin = 123
+vmax = 245

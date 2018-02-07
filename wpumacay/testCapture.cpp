@@ -29,11 +29,11 @@ int main()
     {
         int _key = cv::waitKey( SAMPLE_TIME );
 
-        if ( _key == 1048608 )
+        if ( _key == KEY_SPACE )
         {
             g_videoHandler->togglePause();
         }
-        else if( _key == 1048603 )
+        else if( _key == KEY_ESCAPE )
         {
             break;
         }

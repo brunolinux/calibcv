@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "CCommon.h"
+
 #include <opencv2/opencv.hpp>
 #include <string>
 #include <iostream>
