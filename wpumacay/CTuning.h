@@ -27,12 +27,12 @@ using namespace std;
 // #define DEF_CS2MAX 255
 
 // Params for YCrCb thresholding with Y equalization
-#define DEF_CS0MIN 0
-#define DEF_CS0MAX 136
-#define DEF_CS1MIN 0
-#define DEF_CS1MAX 23
-#define DEF_CS2MIN 132
-#define DEF_CS2MAX 255
+#define DEF_CS0MIN 165
+#define DEF_CS0MAX 255
+#define DEF_CS1MIN 24
+#define DEF_CS1MAX 162
+#define DEF_CS2MIN 98
+#define DEF_CS2MAX 162
 
 namespace calibcv { namespace tuning {
 

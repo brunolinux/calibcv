@@ -13,6 +13,8 @@ calibcv::tuning::CColorSpaceTuner* g_cspaceTuner;
 #define VIDEO_TEST_FILE "../res/calibration_ps3eyecam.avi"
 #define SAMPLE_TIME 33 // 30fps
 
+#define MORPH_ELEMENT_SIZE 2
+
 int main()
 {
     g_videoHandler = calibcv::CVideoHandler::create();
@@ -24,6 +26,9 @@ int main()
     }
 
     g_cspaceTuner = calibcv::tuning::CColorSpaceTuner::create();
+
+    cv::namedWindow( "fooMasked" );
+    cv::namedWindow( "fooEdges" );
 
     while ( 1 )
     {
@@ -60,6 +65,29 @@ int main()
                      g_cspaceTuner->cspaceMin(), 
                      g_cspaceTuner->cspaceMax(), 
                      _threshed );
+
+        cv::Mat _mElement = cv::getStructuringElement( cv::MORPH_CROSS, 
+                                                       cv::Size( 2 * MORPH_ELEMENT_SIZE + 1, 2 * MORPH_ELEMENT_SIZE + 1 ),
+                                                       cv::Point( MORPH_ELEMENT_SIZE, MORPH_ELEMENT_SIZE ) );
+
+        cv::Mat _mask;
+        cv::erode( _threshed, _mask, _mElement );
+        cv::dilate( _mask, _mask, _mElement );
+
+        cv::Mat _gray;
+        cv::Mat _masked;
+        cv::cvtColor( _frame, _gray, cv::COLOR_BGR2GRAY );
+        // cv::bitwise_and( _gray, _threshed, _masked );
+        cv::bitwise_and( _gray, _mask, _masked );
+
+        cv::imshow( "fooMasked", _masked );
+
+        cv::Mat _edges;
+
+        cv::blur( _masked, _masked, cv::Size( 3, 3 ) );
+        cv::Canny( _masked, _edges, 50, 50 * 3, 3 );
+
+        cv::imshow( "fooEdges", _edges );
 
         g_cspaceTuner->setBaseFrame( _frame );
         g_cspaceTuner->setThreshedFrame( _threshed );
