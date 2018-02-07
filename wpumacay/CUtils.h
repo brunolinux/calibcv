@@ -4,8 +4,11 @@
 #include <opencv2/opencv.hpp>
 #include <string>
 #include <iostream>
+#include <unordered_map>
 
 using namespace std;
+
+#define INPUT_WINDOW "Input window"
 
 namespace calibcv
 {
@@ -16,44 +19,29 @@ namespace calibcv
         private :
 
         cv::VideoCapture* m_capDevice;
+        int m_totalFrames;
+        int m_currentFrame;
+
+        CVideoHandler();
+        void init();
 
         public :
 
-        CVideoHandler()
-        {
-            m_capDevice = new cv::VideoCapture();
-        }
+        static CVideoHandler* INSTANCE;
+        static CVideoHandler* create();
+        static void release();
+        ~CVideoHandler();
 
-        ~CVideoHandler()
-        {
-            if ( m_capDevice != NULL )
-            {
-                delete m_capDevice;
-                m_capDevice = NULL;
-            }
-        }
+        bool openVideo( string filename );
+        bool openCamera( int deviceId );
 
-        bool openVideo( string filename )
-        {
-            cout << "opening file: " << filename << endl;
-            m_capDevice->open( filename );
+        void setPlaybackAtFrameIndex( int indx );
+        void takeFrame( cv::Mat& dstFrame );
 
-            return m_capDevice->isOpened();
-        }
-
-        bool openCamera( int deviceId )
-        {
-            cout << "opening device: " << deviceId << endl;
-            m_capDevice->open( deviceId );
-
-            return m_capDevice->isOpened();
-        }
-
-        void takeFrame( cv::Mat& dstFrame )
-        {
-            m_capDevice->read( dstFrame );
-        }
+        static void onTrackbarCallback( int dummyInt, void* dummyPtr );
 
     };
+
+
 
 }
