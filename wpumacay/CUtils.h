@@ -22,6 +22,8 @@ namespace calibcv
         int m_totalFrames;
         int m_currentFrame;
 
+        bool m_isPaused;
+
         CVideoHandler();
         void init();
 
@@ -34,6 +36,10 @@ namespace calibcv
 
         bool openVideo( string filename );
         bool openCamera( int deviceId );
+
+        bool isPaused() { return m_isPaused; }
+        void setPaused( bool pPaused ) { m_isPaused = pPaused; }
+        void togglePause() { m_isPaused = !m_isPaused; }
 
         void setPlaybackAtFrameIndex( int indx );
         void takeFrame( cv::Mat& dstFrame );

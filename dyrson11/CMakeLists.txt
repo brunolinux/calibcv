@@ -1,2 +1,2 @@
 
-message( "Building dyrson11 tests" )
+message( "Configuring dyrson11 tests" )

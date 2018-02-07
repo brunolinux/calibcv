@@ -11,6 +11,8 @@ calibcv::CVideoHandler* g_videoHandler;
 #define VIDEO_TEST_FILE "../res/calibration_ps3eyecam.avi"
 #define WINDOW_ORIGINAL_FRAME "wOriginalFrame"
 
+#define SAMPLE_TIME 33 // 30fps
+
 int main()
 {
     g_videoHandler = calibcv::CVideoHandler::create();
@@ -21,22 +23,29 @@ int main()
         exit( -1 );
     }
 
-    cv::namedWindow( WINDOW_ORIGINAL_FRAME, 1 );
+    cv::namedWindow( WINDOW_ORIGINAL_FRAME );
 
     while ( 1 )
     {
+        int _key = cv::waitKey( SAMPLE_TIME );
+
+        if ( _key == 1048608 )
+        {
+            g_videoHandler->togglePause();
+        }
+        else if( _key == 1048603 )
+        {
+            break;
+        }
+
         cv::Mat _frame;
 
         g_videoHandler->takeFrame( _frame );
 
         cv::imshow( WINDOW_ORIGINAL_FRAME, _frame );
-
-        if( cv::waitKey( 30 ) >= 0 ) 
-        {
-            break;
-        }
     }
 
+    calibcv::CVideoHandler::release();
 
     return 0;
 }

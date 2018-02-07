@@ -11,11 +11,12 @@ calibcv::CVideoHandler* g_videoHandler;
 calibcv::tuning::CThreshHSVTuner* g_hsvTuner;
 
 #define VIDEO_TEST_FILE "../res/calibration_ps3eyecam.avi"
+#define SAMPLE_TIME 33 // 30fps
 
 int main()
 {
     g_videoHandler = calibcv::CVideoHandler::create();
-    
+
     if ( !g_videoHandler->openVideo( VIDEO_TEST_FILE ) )
     {
         cout << "couldnt open: " << VIDEO_TEST_FILE << endl;
@@ -26,6 +27,17 @@ int main()
 
     while ( 1 )
     {
+        int _key = cv::waitKey( SAMPLE_TIME );
+
+        if ( _key == 1048608 )
+        {
+            g_videoHandler->togglePause();
+        }
+        else if( _key == 1048603 )
+        {
+            break;
+        }
+
         cv::Mat _frame;
         cv::Mat _threshed;
 
@@ -36,12 +48,10 @@ int main()
         g_hsvTuner->setBaseFrame( _frame );
         g_hsvTuner->setThreshedFrame( _threshed );
 
-        if( cv::waitKey( 30 ) >= 0 ) 
-        {
-            break;
-        }
     }
 
+    calibcv::CVideoHandler::release();
+    calibcv::tuning::CThreshHSVTuner::release();
 
     return 0;
 }
