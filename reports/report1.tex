@@ -100,22 +100,26 @@ In order to compensate for the ilumination changes, we \textbf{equalized} the $Y
 \State $\textit{Set up thresholding ranges}$
 \State $mask   = \textit{ColorSpaceThresholding}(inputImage)$
 \State $mask   = \textit{MorphologicalOpening}(mask, kernelSize)$
-\State $masked = \textit{BitwiseAnd}( \textit{rgb2gray}( inputImage ), mask )$
+\State $masked = \textit{BitwiseAnd}( \textit{rgb2gray}( inputImage ), mask )$\\
 \Return $masked$
 \end{algorithmic}
 \end{algorithm}
 \\
 \\
-The second approach consists of ...
+The second approach consists on creating a mask from the grayscale transformed image applying \textbf{Adaptive Thresholding algorithm}, this algorithm relies on Integral Image technique especified in \cite{IntegralImageThresholding}.
+\\
+\\
+Before apply this transformation we tried to transform the color frame to LAB color space and equalize L channel in order to control luminosity changes across the video frames, but the main issue in this heuristic was that the transformation trends to emphasize other regions with very low luminance like desk reflection on a video, and this produces noisy results.
 \\
 \\
 %% TODO: Gerson
 \begin{algorithm}
 \caption{Masking 2}
+\label{alg:mask2}
 \begin{algorithmic}[1]
-\State $mask   = \textit{ColorSpaceThresholding}(inputImage)$
-\State $mask   = \textit{MorphologicalOpening}(mask, kernelSize)$
-\State $masked = \textit{BitwiseAnd}( \textit{rgb2gray}( inputImage ), mask )$
+\State $\textit{Set up thresholding parameters}$
+\State $mask   = \textit{rgb2gray}( inputImage )$
+\State $mask   = \textit{AdaptiveThreshold}(mask, blockSize)$\\
 \Return $masked$
 \end{algorithmic}
 \end{algorithm}
@@ -125,8 +129,9 @@ The second approach consists of ...
 In this stage of the pipeline we extract edges from the result of the previous stage. We also have two approaches :
 \\
 \\
-In the first approach, we \textbf{blur} the image and then apply the \textbf{Canny's edge detection algorithm}, as described in algorithm 3. In the second approach we ... %TODO: Gerson
- ... as described in algorithm 4
+In the first approach, we \textbf{blur} the image and then apply the \textbf{Canny's edge detection algorithm}, as described in algorithm 3. 
+\\
+In the second approach we applied \textbf{Scharr operators} on \textit{x} and \textit{y} axis (as described in algorithm 4); Scharr is the result from Sobel algorithm minimizing weighted mean squared angular error in Fourier domain.
 \\
 \\
 \begin{algorithm}
@@ -142,10 +147,12 @@ In the first approach, we \textbf{blur} the image and then apply the \textbf{Can
 \begin{algorithm}
 \caption{Edge detection 2}
 \begin{algorithmic}[1]
-\State $mask   = \textit{ColorSpaceThresholding}(inputImage)$
-\State $mask   = \textit{MorphologicalOpening}(mask, kernelSize)$
-\State $masked = \textit{BitwiseAnd}( \textit{rgb2gray}( inputImage ), mask )$
-\Return $masked$
+\State $axis_x   = \textit{Scharr}(masked, 1, 0)$
+\State $axis_x   = \textit{Abs}(axis_x)$
+\State $axis_y   = \textit{Scharr}(masked, 0, 1)$
+\State $axis_y   = \textit{Abs}(axis_y)$
+\State $edgesImage   = \textit{Add}(axis_x, axis_y)$ \\
+\Return $edgesImage$
 \end{algorithmic}
 \end{algorithm}
 \\
@@ -154,8 +161,7 @@ In the first approach, we \textbf{blur} the image and then apply the \textbf{Can
 The last stage consist of extracting the features needed for the calibration from the edges detected in the previous stage. The first approach uses OpenCV's \textbf{findContours} and \textbf{fitEllipse} methods to extract connected contours from the image and fit ellipses to the contours. We then use some heuristics to filter out the outlier ellipses ( check with the size and aspect ratio), as described in \textit{Algorithm 5}.
 \\
 \\
-The second approach uses Scharr ... % TODO: Gerson 
-... as described in \textit{Algorithm 6}.
+The second approach uses OpenCV's \textbf{SimpleBlobDetector} that apply an extra thresholding on image, applies the findContours algorithm calculating their centers, groups centers of several images by their coordinates in blobs, finally, estimates the final centers of blobs. For detecting only pattern blobs, we had to apply similar heuristics to avobe (color blobs, area, and aspect ratio) specified in \textit{Algorithm 6}.
 \\
 \\
 \begin{algorithm}
@@ -172,10 +178,10 @@ The second approach uses Scharr ... % TODO: Gerson
 \begin{algorithm}
 \caption{Feature extraction 2}
 \begin{algorithmic}[1]
-\State $mask   = \textit{ColorSpaceThresholding}(inputImage)$
-\State $mask   = \textit{MorphologicalOpening}(mask, kernelSize)$
-\State $masked = \textit{BitwiseAnd}( \textit{rgb2gray}( inputImage ), mask )$
-\Return $masked$
+\State $\textit{Set up detector parameters}$
+\State $\textit{SimpleBlobDetector}(params)$
+\State $keypoints   = \textit{detect}(mask)$ \\
+\Return $keypoints$
 \end{algorithmic}
 \end{algorithm}
 
