@@ -25,6 +25,8 @@ namespace calibcv { namespace detection {
         m_cspaceMax = cv::Scalar( DETECT_PIPELINE_CS0MAX, 
                                   DETECT_PIPELINE_CS1MAX, 
                                   DETECT_PIPELINE_CS2MAX );
+
+        m_isTracking = false;
     }
 
     void CDetectionPipeline::init()
@@ -149,11 +151,27 @@ namespace calibcv { namespace detection {
             float _size = sqrt( _a * _a + _b * _b );
             float _ratio = _a / _b;
 
+            cv::Point2f _center( inEllipses[q].center.x,
+                                 inEllipses[q].center.y );
+
+            if ( params.roi.size() == 4 )
+            {
+                // cout << "rx : " << params.roi[0].x << endl;
+                // cout << "ry : " << params.roi[0].y << endl;
+                // cout << "cx : " << _center.x << endl;
+                // cout << "cy : " << _center.y << endl;
+
+                if ( cv::pointPolygonTest( params.roi, _center, false ) <= 0 )
+                {
+                    continue;
+                }
+            }
+
             if ( ( params.minSize < _size && _size < params.maxSize ) &&
                  ( params.minRatio < _ratio && _ratio < params.maxRatio ) )
             {
-                cout << "size: " << _size << endl;
-                cout << "ratio: " << _ratio << endl;
+                // cout << "size: " << _size << endl;
+                // cout << "ratio: " << _ratio << endl;
                 outEllipses.push_back( inEllipses[q] );
             }
 

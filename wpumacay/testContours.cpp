@@ -12,7 +12,7 @@ calibcv::CVideoHandler* g_videoHandler;
 calibcv::detection::CDetectionPanel* g_detectionPanel;
 calibcv::detection::CDetectionPipeline* g_detectionPipeline;
 
-#define VIDEO_TEST_FILE "../res/calibration_mslifecam.avi"
+#define VIDEO_TEST_FILE "../res/calibration_ps3eyecam.avi"
 #define SAMPLE_TIME 20 // 50fps
 
 int main()
@@ -35,10 +35,15 @@ int main()
         {
             g_videoHandler->togglePause();
         }
+        else if ( _key == KEY_ENTER && g_videoHandler->isPaused() )
+        {
+            g_videoHandler->togglePickingROI();
+        }
         else if( _key == KEY_ESCAPE )
         {
             break;
         }
+
 
         cv::Mat _frame; 
         cv::Mat _mask;
@@ -59,6 +64,12 @@ int main()
         _eparams.maxSize  = g_detectionPanel->ellipseMaxSize();
         _eparams.minRatio = 0.01 * g_detectionPanel->ellipseMinRatio();
         _eparams.maxRatio = 0.01 * g_detectionPanel->ellipseMaxRatio();
+        _eparams.roi = g_videoHandler->roi();
+
+        // if ( _eparams.roi.size() == 4 )
+        // {
+        //     cout << "roi!!!" << endl;
+        // }
 
         // apply pipeline
         g_detectionPipeline->stepMaskCreation( _frame, _mask );

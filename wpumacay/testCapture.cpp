@@ -33,6 +33,10 @@ int main()
         {
             g_videoHandler->togglePause();
         }
+        else if ( _key == KEY_ENTER && g_videoHandler->isPaused() )
+        {
+            g_videoHandler->togglePickingROI();
+        }
         else if( _key == KEY_ESCAPE )
         {
             break;

@@ -37,6 +37,8 @@ namespace calibcv { namespace detection {
 
         float minRatio;
         float maxRatio;
+
+        vector< cv::Point > roi;
     };
 
 
@@ -50,6 +52,8 @@ namespace calibcv { namespace detection {
         cv::Scalar m_cspaceMax;
 
         cv::Mat m_currentFrame;
+
+        bool m_isTracking;
 
         CDetectionPipeline();
         void init();
