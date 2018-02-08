@@ -12,8 +12,8 @@ calibcv::CVideoHandler* g_videoHandler;
 calibcv::detection::CDetectionPanel* g_detectionPanel;
 calibcv::detection::CDetectionPipeline* g_detectionPipeline;
 
-#define VIDEO_TEST_FILE "../res/calibration_ps3eyecam.avi"
-#define SAMPLE_TIME 33 // 30fps
+#define VIDEO_TEST_FILE "../res/calibration_mslifecam.avi"
+#define SAMPLE_TIME 20 // 50fps
 
 int main()
 {
@@ -50,8 +50,15 @@ int main()
         calibcv::CTypeContours _contours;
         calibcv::CTypeHierarchy _hierarchy;
         vector< cv::RotatedRect > _ellipsesBOB;
+        vector< cv::RotatedRect > _pEllipsesBOB;
 
         g_videoHandler->takeFrame( _frame );
+
+        calibcv::detection::CProcessingParams _eparams;
+        _eparams.minSize  = g_detectionPanel->ellipseMinSize();
+        _eparams.maxSize  = g_detectionPanel->ellipseMaxSize();
+        _eparams.minRatio = 0.01 * g_detectionPanel->ellipseMinRatio();
+        _eparams.maxRatio = 0.01 * g_detectionPanel->ellipseMaxRatio();
 
         // apply pipeline
         g_detectionPipeline->stepMaskCreation( _frame, _mask );
@@ -63,8 +70,8 @@ int main()
                                                 g_detectionPanel->cannySobelMaskSize() );
         g_detectionPipeline->stepFindEllipses( _edges, _matContours, _contours, _hierarchy, _ellipsesBOB,
                                                g_detectionPanel->ellipseCountThreshold() );
-        // g_detectionPipeline->stepProcessEllipses( _ellipsesBOB, _pEllipsesBOB );
-        g_detectionPipeline->stepBlendResults( _frame, _result, _ellipsesBOB );
+        g_detectionPipeline->stepProcessEllipses( _ellipsesBOB, _pEllipsesBOB, _eparams );
+        g_detectionPipeline->stepBlendResults( _frame, _result, _pEllipsesBOB );
 
         // show results
         g_detectionPanel->showMask( _mask );

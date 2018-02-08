@@ -1,6 +1,7 @@
 
 #include "CDetectionPipeline.h"
 
+#include <cmath>
 
 using namespace std;
 
@@ -69,21 +70,25 @@ namespace calibcv { namespace detection {
 
     void CDetectionPipeline::stepMaskCreation( const cv::Mat& frame, cv::Mat& mask )
     {
-        cv::Mat _frameCSpace;
-        cv::Mat _eqChannel;
-        cv::Mat _channel;
-        cv::Mat _threshed;
+        // cv::Mat _frameCSpace;
+        // cv::Mat _eqChannel;
+        // cv::Mat _channel;
+        // cv::Mat _threshed;
 
-        cv::cvtColor( frame, _frameCSpace, cv::COLOR_BGR2YCrCb );
+        // cv::cvtColor( frame, _frameCSpace, cv::COLOR_BGR2YCrCb );
 
-        cv::extractChannel( _frameCSpace, _channel, 0 );
-        cv::equalizeHist( _channel, _eqChannel );
-        cv::insertChannel( _eqChannel, _frameCSpace ,0 );
+        // cv::extractChannel( _frameCSpace, _channel, 0 );
+        // cv::equalizeHist( _channel, _eqChannel );
+        // cv::insertChannel( _eqChannel, _frameCSpace ,0 );
 
-        cv::inRange( _frameCSpace, m_cspaceMin, m_cspaceMax, _threshed );
+        // cv::inRange( _frameCSpace, m_cspaceMin, m_cspaceMax, _threshed );
 
-        cv::erode( _threshed, mask, m_morphElement );
-        cv::dilate( mask, mask, m_morphElement );
+        // cv::erode( _threshed, mask, m_morphElement );
+        // cv::dilate( mask, mask, m_morphElement );
+
+        cv::Mat _grayScale;
+        cv::cvtColor( frame, _grayScale, CV_RGB2GRAY );
+        adaptiveThreshold( _grayScale, mask, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV, 41, 15 );
     }
 
     void CDetectionPipeline::stepMaskedCreation( const cv::Mat& frame, const cv::Mat& mask, cv::Mat& masked )
@@ -134,9 +139,25 @@ namespace calibcv { namespace detection {
     }
 
     void CDetectionPipeline::stepProcessEllipses( const vector< cv::RotatedRect>& inEllipses,
-                                                  vector< cv::RotatedRect>& outEllipses )
+                                                  vector< cv::RotatedRect>& outEllipses,
+                                                  const CProcessingParams& params )
     {
+        for ( int q = 0; q < inEllipses.size(); q++ )
+        {
+            float _a = inEllipses[q].size.width;
+            float _b = inEllipses[q].size.height;
+            float _size = sqrt( _a * _a + _b * _b );
+            float _ratio = _a / _b;
 
+            if ( ( params.minSize < _size && _size < params.maxSize ) &&
+                 ( params.minRatio < _ratio && _ratio < params.maxRatio ) )
+            {
+                cout << "size: " << _size << endl;
+                cout << "ratio: " << _ratio << endl;
+                outEllipses.push_back( inEllipses[q] );
+            }
+
+        }
     }
 
     void CDetectionPipeline::stepBlendResults( const cv::Mat& frame,

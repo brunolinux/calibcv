@@ -30,6 +30,15 @@ using namespace std;
 
 namespace calibcv { namespace detection {
 
+    struct CProcessingParams
+    {
+        float minSize;
+        float maxSize;
+
+        float minRatio;
+        float maxRatio;
+    };
+
 
     class CDetectionPipeline
     {
@@ -89,7 +98,8 @@ namespace calibcv { namespace detection {
         // 1) sort by distance to tracked center
         // 2) keep better ellipses
         void stepProcessEllipses( const vector< cv::RotatedRect>& inEllipses,
-                                  vector< cv::RotatedRect>& outEllipses );
+                                  vector< cv::RotatedRect>& outEllipses,
+                                  const CProcessingParams& params );
 
         void stepBlendResults( const cv::Mat& frame,
                                cv::Mat& result,

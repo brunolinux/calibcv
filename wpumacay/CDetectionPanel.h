@@ -15,6 +15,10 @@ using namespace std;
 #define CANNY_MAX 150
 #define CANNY_SOBEL_MASK_SIZE 3
 #define ELLIPSE_COUNT_THRESHOLD 5
+#define ELLIPSE_MIN_SIZE 15
+#define ELLIPSE_MAX_SIZE 52
+#define ELLIPSE_MIN_RATIO 60
+#define ELLIPSE_MAX_RATIO 130
 
 namespace calibcv { namespace detection {
 
@@ -45,6 +49,11 @@ namespace calibcv { namespace detection {
         int m_cannySobelMaskDelta;
         int m_ellipseCountThreshold;
 
+        int m_ellipseMinSize;
+        int m_ellipseMaxSize;
+        int m_ellipseMinRatio;
+        int m_ellipseMaxRatio;
+
         CDetectionPanel();
         void init();
 
@@ -67,6 +76,11 @@ namespace calibcv { namespace detection {
         int cannyMax() { return m_cannyMax; }
         int cannySobelMaskSize() { return m_cannySobelMaskSize; }
         int ellipseCountThreshold() { return m_ellipseCountThreshold; }
+
+        int ellipseMinSize() { return m_ellipseMinSize; }
+        int ellipseMaxSize() { return m_ellipseMaxSize; }
+        int ellipseMinRatio() { return m_ellipseMinRatio; }
+        int ellipseMaxRatio() { return m_ellipseMaxRatio; }
 
         static void onTrackbarCallback( int dummyInt, void* dummyPtr );
 
