@@ -99,8 +99,8 @@ namespace calibcv
             m_camHandler->takeFrame( _rgbFrame );
             // cout << "? 2" << endl;
             imgRgb2cvMat( _videoFrame, _rgbFrame );
-
             dstFrame = m_lastFrame;
+            cv::cvtColor( dstFrame, dstFrame, cv::COLOR_RGB2BGR );
 
             // if ( m_isPickingROI )
             // {
@@ -140,6 +140,7 @@ namespace calibcv
 
             // cout << "? 2" << endl;
             imgRgb2cvMat( dstFrame, _rgbFrame );
+            cv::cvtColor( dstFrame, dstFrame, cv::COLOR_RGB2BGR );
             // cout << "? 3" << endl;
 
             // cout << "dstFrame.rows: " << dstFrame.rows << endl;
