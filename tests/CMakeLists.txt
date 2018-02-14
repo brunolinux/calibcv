@@ -1,7 +1,7 @@
 
 message( "configuring tests" )
 
-include_directories( ../engine/include ${OpenCV_INCLUDE_DIRS} )
+include_directories( ../engine/include ${OpenCV_INCLUDE_DIRS} ../ext/felixcam/lib/include )
 
 # TODO: add checks for windows support
 

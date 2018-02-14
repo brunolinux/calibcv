@@ -32,10 +32,10 @@ namespace calibcv
         vector< cv::Point > m_roi;
 
         SVideoHandler();
-        void init();
+        virtual void init();
 
-        void _takeFrameFromVideo( cv::Mat& dstFrame );
-        void _takeFrameFromCamera( cv::Mat& dstFrame );
+        virtual void _takeFrameFromVideo( cv::Mat& dstFrame );
+        virtual void _takeFrameFromCamera( cv::Mat& dstFrame );
 
         public :
 
@@ -44,8 +44,8 @@ namespace calibcv
         static void release();
         ~SVideoHandler();
 
-        bool openVideo( string filename );
-        bool openCamera( int deviceId );
+        virtual bool openVideo( string filename );
+        virtual bool openCamera( int deviceId );
 
         bool isPaused();
         void setPaused( bool pPaused );
@@ -55,7 +55,7 @@ namespace calibcv
         void setPickingROI( bool pPickingROI );
         void togglePickingROI();
 
-        void setPlaybackAtFrameIndex( int indx );
+        virtual void setPlaybackAtFrameIndex( int indx );
         void takeFrame( cv::Mat& dstFrame );
 
         vector< cv::Point > roi() { return m_roi; }
