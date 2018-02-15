@@ -86,9 +86,15 @@ To extract these features from every frame of video we implemented the following
 \end{figure}
 
 \subsection{ Use of ROI }
-We setted a ROI (Region Of Interest) based on the firsts iterations, after we extract enough features on \textit{Feature extraction} stage, we used a ROI based on coordinates in features and a margin for predicting next frame features in order to reduce processing and avoid noise produced by ambient.
+We setted a ROI (Region Of Interest) based on the firsts iterations, after we extract enough features on \textit{Feature extraction} stage, we used a ROI based on coordinates in features and a margin for predicting next frame features in order to reduce processing and avoid noise produced by ambient, we will apply next masking, edge detection, and feature extraction using ROI.
 \\
 \\
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/img_report2_processing_window.png}
+\caption{ROI crop.}
+\end{figure}
+
 \subsection{ Masking }
 This step is in charge of isolating the pattern by using threhsolding operations.
 \\
@@ -109,6 +115,12 @@ The approach consists on creating a mask from the grayscale transformed image ap
 \end{algorithm}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/img_report2_mask.png}
+\caption{Image mask applied to ROI.}
+\end{figure}
+
 \subsection{Edge detection}
 In this stage of the pipeline we extract edges from the result of the previous stage. In order to do this, we applied \textbf{Scharr operators} on \textit{x} and \textit{y} axis (as described in algorithm 2); Scharr is the result from Sobel algorithm minimizing weighted mean squared angular error in Fourier domain.
 %% TODO: Gerson
@@ -123,8 +135,13 @@ In this stage of the pipeline we extract edges from the result of the previous s
 \Return $edgesImage$
 \end{algorithmic}
 \end{algorithm}
-\\
-\\
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/img_report2_edges.png}
+\caption{Edge detection to mask.}
+\end{figure}
+
 \subsection{Feature extraction}
 The last stage consist of extracting the features needed for the calibration from the edges detected in the previous stage. We used OpenCV's \textbf{SimpleBlobDetector} that apply an extra thresholding on image, applies the findContours algorithm calculating their centers, groups centers of several images by their coordinates in blobs, finally, estimates the final centers of blobs. For detecting only pattern blobs, we had to apply similar heuristics to avobe (color blobs, area, aspect ratio, and convexity of points) specified in \textit{Algorithm 3}.
 \\
@@ -153,6 +170,12 @@ It should be noted that we only do recognition of features once, in next frames 
 \end{algorithmic}
 \end{algorithm}
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/img_report2_feature_detection.png}
+\caption{Result after feature detection.}
+\end{figure}
+
 \subsection{Tracking}
 To track Feature Points extracted in previous phase, we compared stored keyPoints of the last frame and the new Keypoints of the current frame, we stored new positions using a range of movement and a delta that represents speed in movement between frames.
 \\
@@ -160,20 +183,13 @@ To track Feature Points extracted in previous phase, we compared stored keyPoint
 Also, when not all keypoints are detected in previous phase, we try to predice the position of the lost points using neighbors information (position and speed).
 \\
 \\
-
-
 \section{Results}
 We implemented the pipeline using the \textbf{OpenCV} library. The following images show some results of applying the approach to a video recording.
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=2.5in]{_img/img_results_p1.png}
-\caption{Results using pipeline 1.}
-\end{figure}
 %
 \begin{figure}[H]
 \centering
-\includegraphics[width=2.5in]{_img/img_results_p2.png}
+\includegraphics[width=2.5in]{_img/img_report2_pattern.png}
 \caption{Results using pipeline 2.}
 \end{figure}
 %
@@ -182,14 +198,6 @@ The main issue in our pipeline implementation is that we cannot predict accurate
 \\
 \\
 We plan on using more object information, like rectangular layout shape of the features combined to aspect ratio of circunferences.
-\\
-\begin{figure}[H]
-\centering
-\includegraphics[width=2.5in]{_img/img_results_fut_1.png}
-\caption{Initial estimation.}
-\end{figure}
-%
-We plan on also use some fitting method to ensure that we can remove outliers from the grid pattern.
 
 \IEEEtriggeratref{8}
 
