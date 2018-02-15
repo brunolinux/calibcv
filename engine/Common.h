@@ -9,7 +9,9 @@
 #include <iostream>
 #include <unordered_map>
 #include <string>
+#include <algorithm>
 #include <cmath>
+#include <cassert>
 #include <cstring>
 #include <queue>
 #include <mutex>

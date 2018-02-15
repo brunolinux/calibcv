@@ -16,6 +16,28 @@ namespace calibcv
         m_isPaused = false;
         m_isPickingROI = false;
         m_readingFromVideo = true;
+
+        m_fixedROIwidth = 265;
+        m_fixedROIheight = 202;
+
+        m_fixedROIoffX = 13;
+        m_fixedROIoffY = -85;
+
+        m_fixedROI = cv::Rect2i( 0, 0, 1, 1 );
+
+        m_frameWidth = 640;
+        m_frameHeight = 480;
+
+        auto _fw = m_frameWidth;
+        auto _fh = m_frameHeight;
+        auto _rw = m_fixedROIwidth;
+        auto _rh = m_fixedROIheight;
+        auto _offX = m_fixedROIoffX;
+        auto _offY = m_fixedROIoffY;
+
+        m_fixedROI = cv::Rect2i( 0.5 * _fw - 0.5 * _rw + _offX,
+                                 0.5 * _fh - 0.5 * _rh + _offY,
+                                 _rw, _rh );
     }
 
     void SVideoHandler::init()
@@ -25,6 +47,24 @@ namespace calibcv
         m_currentFrame = 0;
 
         cv::setMouseCallback( SVH_INPUT_WINDOW, SVideoHandler::onMouseCallback, NULL );
+        cv::createTrackbar( "tbROIwidth", SVH_INPUT_WINDOW,
+                            &SVideoHandler::INSTANCE->m_fixedROIwidth,
+                            400, SVideoHandler::onTrackbarROIcallback );
+        cv::createTrackbar( "tbROIheight", SVH_INPUT_WINDOW,
+                            &SVideoHandler::INSTANCE->m_fixedROIheight,
+                            400, SVideoHandler::onTrackbarROIcallback );
+        cv::createTrackbar( "tbROIoffX", SVH_INPUT_WINDOW,
+                            &SVideoHandler::INSTANCE->m_fixedROIoffX,
+                            200, SVideoHandler::onTrackbarROIcallback );
+        cv::createTrackbar( "tbROIoffY", SVH_INPUT_WINDOW,
+                            &SVideoHandler::INSTANCE->m_fixedROIoffY,
+                            200, SVideoHandler::onTrackbarROIcallback );
+
+        cv::setTrackbarMin( "tbROIoffX", SVH_INPUT_WINDOW, -200 );
+        cv::setTrackbarMax( "tbROIoffX", SVH_INPUT_WINDOW, 200 );
+
+        cv::setTrackbarMin( "tbROIoffY", SVH_INPUT_WINDOW, -200 );
+        cv::setTrackbarMax( "tbROIoffY", SVH_INPUT_WINDOW, 200 );
     }
 
     SVideoHandler::~SVideoHandler()
@@ -192,7 +232,7 @@ namespace calibcv
                     }
                 }
             // }
-
+            cv::rectangle( _videoFrame, m_fixedROI, cv::Scalar( 0, 0, 255 ), 2 );
             cv::imshow( SVH_INPUT_WINDOW, _videoFrame );
             m_capDevice->set( CV_CAP_PROP_POS_FRAMES, m_currentFrame );
         }
@@ -210,6 +250,8 @@ namespace calibcv
                 cv::line( _videoFrame, m_roi[ _indx1 ], m_roi[ _indx2 ],
                           cv::Scalar( 0, 0, 255 ), 4 );
             }
+
+            cv::rectangle( _videoFrame, m_fixedROI, cv::Scalar( 0, 0, 255 ), 2 );
 
             cv::imshow( SVH_INPUT_WINDOW, _videoFrame );
         }
@@ -283,6 +325,9 @@ namespace calibcv
         {
             _takeFrameFromCamera( dstFrame );
         }
+
+        m_frameWidth = m_lastFrame.cols;
+        m_frameHeight = m_lastFrame.rows;
     }
 
     void SVideoHandler::onTrackbarCallback( int dummyInt, void* dummyPtr )
@@ -324,4 +369,18 @@ namespace calibcv
 
     }
 
+
+    void SVideoHandler::onTrackbarROIcallback( int dummyInt, void* dummyPtr )
+    {
+        auto _fw = SVideoHandler::INSTANCE->m_frameWidth;
+        auto _fh = SVideoHandler::INSTANCE->m_frameHeight;
+        auto _rw = SVideoHandler::INSTANCE->m_fixedROIwidth;
+        auto _rh = SVideoHandler::INSTANCE->m_fixedROIheight;
+        auto _offX = SVideoHandler::INSTANCE->m_fixedROIoffX;
+        auto _offY = SVideoHandler::INSTANCE->m_fixedROIoffY;
+
+        SVideoHandler::INSTANCE->m_fixedROI = cv::Rect2i( 0.5 * _fw - 0.5 * _rw + _offX,
+                                                          0.5 * _fh - 0.5 * _rh + _offY,
+                                                          _rw, _rh );
+    }
 }
