@@ -113,7 +113,7 @@ The approach consists on creating a mask from the grayscale transformed image ap
 In this stage of the pipeline we extract edges from the result of the previous stage. In order to do this, we applied \textbf{Scharr operators} on \textit{x} and \textit{y} axis (as described in algorithm 2); Scharr is the result from Sobel algorithm minimizing weighted mean squared angular error in Fourier domain.
 %% TODO: Gerson
 \begin{algorithm}
-\caption{Edge detection 2}
+\caption{Edge detection}
 \begin{algorithmic}[1]
 \State $axis_x   = \textit{Scharr}(masked, 1, 0)$
 \State $axis_x   = \textit{Abs}(axis_x)$
@@ -129,12 +129,18 @@ In this stage of the pipeline we extract edges from the result of the previous s
 The last stage consist of extracting the features needed for the calibration from the edges detected in the previous stage. We used OpenCV's \textbf{SimpleBlobDetector} that apply an extra thresholding on image, applies the findContours algorithm calculating their centers, groups centers of several images by their coordinates in blobs, finally, estimates the final centers of blobs. For detecting only pattern blobs, we had to apply similar heuristics to avobe (color blobs, area, aspect ratio, and convexity of points) specified in \textit{Algorithm 3}.
 \\
 \\
-Also, in this stage we recognized the order of features detected. We started calculating the center of pattern given by the average coordinates of all features, then we computed features which are located in the corners of the pattern given by the farthest features from the center point. Finally, we detected the intermediate points, using informations of distances between lines that pass through two corners and rest of points; we used this information to give a number to every point in pattern.
+Also, in this stage we recognized the order of features detected. We started calculating the center of pattern given by the average coordinates of all features, then we computed features which are located in the corners of the pattern given by the farthest features from the center point. Next, we detected the vertical border points, selecting the nearest point to the line that pass through two corners. Similarly, we used border points to recognize the horizontal strips of points.
+\\
+\\ 
+Finally, we used this information to give an ID number to every key point in pattern and store their location to track in next phase.
+\\
+\\
+It should be noted that we only do recognition of features once, in next frames we only will extract features using \textit{SimpleBlobDetector} and track key points result in next step.
 \\
 \\
 %% TODO: Gerson
 \begin{algorithm}
-\caption{Feature extraction 2}
+\caption{Feature extraction}
 \begin{algorithmic}[1]
 \State $\textit{Set up detector parameters}$
 \State $\textit{SimpleBlobDetector}(params)$
@@ -147,8 +153,17 @@ Also, in this stage we recognized the order of features detected. We started cal
 \end{algorithmic}
 \end{algorithm}
 
+\subsection{Tracking}
+To track Feature Points extracted in previous phase, we compared stored keyPoints of the last frame and the new Keypoints of the current frame, we stored new positions using a range of movement and a delta that represents speed in movement between frames.
+\\
+\\
+Also, when not all keypoints are detected in previous phase, we try to predice the position of the lost points using neighbors information (position and speed).
+\\
+\\
+
+
 \section{Results}
-We implemented the pipeline using the \textbf{OpenCV} library. The following images show some results of applying both approaches to a video recording.
+We implemented the pipeline using the \textbf{OpenCV} library. The following images show some results of applying the approach to a video recording.
 
 \begin{figure}[H]
 \centering
