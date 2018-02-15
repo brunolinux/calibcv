@@ -178,7 +178,7 @@ We implemented the pipeline using the \textbf{OpenCV} library. The following ima
 \end{figure}
 %
 \section{Conclusions and Future improvements}
-The main issue in both pipeline implementations is that we are using just global information from each frame. This gives some acceptable results, but in cases where there is quite some changes in ilumination, the pipeline may break. In these situations, we could use the fact that the pattern is moving, as well as the fact that the pattern is fixed and the resulting centers should be in a grid like pattern in some way.
+The main issue in our pipeline implementation is that we cannot predict accuratedly the lost points when tracking, and we depend of a neighborhood to predict position.
 \\
 \\
 We plan on using object tracking, by using an initial estimation of the circles. To get an initial estimation we plan on isolating a region of interest manually, and then track the initial estimation using optical flow or some other techniques, as shown in the following figure.
