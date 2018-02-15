@@ -52,7 +52,7 @@ namespace calibcv
         else
         {
             // TODO: Add estimation step
-            
+
         }
 
         // **************************
@@ -65,6 +65,14 @@ namespace calibcv
         {
             cv::putText( m_stageResult, to_string( i ), m_trackingPoints[i].pos, cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar( 255,0,255 ), 2 );
         }
+
+        cv::line( m_stageResult, m_trackingPoints[0].pos, m_trackingPoints[4].pos, cv::Scalar( 255, 255, 0 ), 1 );
+        cv::line( m_stageResult, m_trackingPoints[4].pos, m_trackingPoints[5].pos, cv::Scalar( 255, 255, 0 ), 1 );
+        cv::line( m_stageResult, m_trackingPoints[5].pos, m_trackingPoints[9].pos, cv::Scalar( 255, 255, 0 ), 1 );
+        cv::line( m_stageResult, m_trackingPoints[9].pos, m_trackingPoints[10].pos, cv::Scalar( 255, 255, 0 ), 1 );
+        cv::line( m_stageResult, m_trackingPoints[10].pos, m_trackingPoints[14].pos, cv::Scalar( 255, 255, 0 ), 1 );
+        cv::line( m_stageResult, m_trackingPoints[14].pos, m_trackingPoints[15].pos, cv::Scalar( 255, 255, 0 ), 1 );
+        cv::line( m_stageResult, m_trackingPoints[15].pos, m_trackingPoints[19].pos, cv::Scalar( 255, 255, 0 ), 1 );
     }
 
     void SComputingStageTracking::initialize( vector< cv::KeyPoint > positions )
