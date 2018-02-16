@@ -10,7 +10,10 @@ namespace calibcv
 
     float dist( cv::Point2f start, cv::Point2f end )
     {
-        return  sqrt( ( end.y - start.y ) * ( end.y - start.y ) + ( end.x - start.x ) * ( end.x - start.x ) );
+        float _dx = end.x - start.x;
+        float _dy = end.y - start.y;
+
+        return _dx * _dx + _dy * _dy;
     }
 
     SComputingStageTracking::SComputingStageTracking()
@@ -24,24 +27,22 @@ namespace calibcv
 
     }
 
-    void SComputingStageTracking::_run( const cv::Mat& input )
+    void SComputingStageTracking::grabParamsFromParent( SComputingStage* parent )
     {
-        assert( false );// should not call this
+        m_detectedKeypoints = reinterpret_cast< SComputingStageFeatures* >( parent )->getKeypoints();
     }
 
-    void SComputingStageTracking::_run( SComputingStage* parent )
+    void SComputingStageTracking::_run( const cv::Mat& input )
     {
         // Compute tracking here ****
 
-        auto _keypoints = reinterpret_cast< SComputingStageFeatures* >( parent )->getKeypoints();
-
-        if ( _keypoints.size() == 20 )
+        if ( m_detectedKeypoints.size() == 20 )
         {
-            for ( cv::KeyPoint _newKeypoint : _keypoints )
+            for ( cv::KeyPoint _newKeypoint : m_detectedKeypoints )
             {
                 for ( STrackingPoint& _oldTrackingPoint : m_trackingPoints  )
                 {
-                    if ( dist( _oldTrackingPoint.pos, _newKeypoint.pt + m_cropOrigin ) < 25 )
+                    if ( dist( _oldTrackingPoint.pos, _newKeypoint.pt + m_cropOrigin ) < 625 )
                     {
                         _oldTrackingPoint.vel = _newKeypoint.pt + m_cropOrigin - _oldTrackingPoint.pos;
                         _oldTrackingPoint.pos = _newKeypoint.pt + m_cropOrigin;
@@ -73,6 +74,11 @@ namespace calibcv
         cv::line( m_stageResult, m_trackingPoints[10].pos, m_trackingPoints[14].pos, cv::Scalar( 255, 255, 0 ), 1 );
         cv::line( m_stageResult, m_trackingPoints[14].pos, m_trackingPoints[15].pos, cv::Scalar( 255, 255, 0 ), 1 );
         cv::line( m_stageResult, m_trackingPoints[15].pos, m_trackingPoints[19].pos, cv::Scalar( 255, 255, 0 ), 1 );
+    }
+
+    void SComputingStageTracking::setDetectedKeypoints( const vector< cv::KeyPoint >& keypoints )
+    {
+        m_detectedKeypoints = keypoints;
     }
 
     void SComputingStageTracking::initialize( vector< cv::KeyPoint > positions )

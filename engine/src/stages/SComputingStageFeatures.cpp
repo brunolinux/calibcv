@@ -29,6 +29,7 @@ namespace calibcv
 
     void SComputingStageFeatures::_run( const cv::Mat& input )
     {
+        m_keypoints.clear();
         m_blobsDetector->detect( input, m_keypoints );
 
         m_stageResult = m_frame.clone();
@@ -37,11 +38,6 @@ namespace calibcv
         {
             cv::circle( m_stageResult, _keypoint.pt, 4, cv::Scalar( 255, 0, 255 ), 2 );
         }
-    }
-
-    void SComputingStageFeatures::_run( SComputingStage* parent )
-    {
-        _run( parent->getStageResult() );
     }
 
 }

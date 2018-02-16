@@ -16,7 +16,6 @@ namespace calibcv
         protected :
 
         void _run( const cv::Mat& input ) override;
-        void _run( SComputingStage* parent ) override;
 
         public :
 

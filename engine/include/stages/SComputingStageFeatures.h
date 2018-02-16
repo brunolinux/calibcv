@@ -17,7 +17,6 @@ namespace calibcv
         cv::Ptr< cv::SimpleBlobDetector > m_blobsDetector;
 
         void _run( const cv::Mat& input ) override;
-        void _run( SComputingStage* parent ) override;
 
         public :
 

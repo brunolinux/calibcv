@@ -31,6 +31,8 @@ namespace calibcv
 
         private :
 
+        vector< cv::KeyPoint > m_detectedKeypoints;
+
         vector< STrackingPoint > m_trackingPoints;
 
         _trackingMode m_trackingMode;
@@ -41,7 +43,6 @@ namespace calibcv
         protected :
 
         void _run( const cv::Mat& input ) override;
-        void _run( SComputingStage* parent ) override;
 
         public :
 
@@ -51,8 +52,10 @@ namespace calibcv
         void setTrackingMode( _trackingMode tmode ) { m_trackingMode = tmode; }
         _trackingMode trackingMode() { return m_trackingMode; }
 
-        void initialize( vector< cv::KeyPoint > positions );
+        void grabParamsFromParent( SComputingStage* parent ) override;
 
+        void initialize( vector< cv::KeyPoint > positions );
+        void setDetectedKeypoints( const vector< cv::KeyPoint >& keypoints );
         void getCroppedByWindow( const cv::Mat& src, cv::Mat& dst );
     };
 

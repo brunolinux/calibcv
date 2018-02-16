@@ -8,7 +8,7 @@ namespace calibcv
     SComputingStageLightCompensation::SComputingStageLightCompensation()
         : SComputingStage()
     {
-        
+
     }
 
     SComputingStageLightCompensation::~SComputingStageLightCompensation()
@@ -37,10 +37,5 @@ namespace calibcv
 
         // convert back to RGB
         cv::cvtColor( _imageLab, m_stageResult, CV_Lab2BGR );
-    }
-
-    void SComputingStageLightCompensation::_run( SComputingStage* parent )
-    {
-        assert( parent == NULL );
     }
 }
