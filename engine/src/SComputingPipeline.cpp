@@ -61,18 +61,13 @@ namespace calibcv
         }
 
         m_matInput = _pInput;
-        SCpuTimer::INSTANCE->start();
         m_stages[0]->run( _pInput );
-        m_totalCost = SCpuTimer::INSTANCE->stop();
-        m_stages[0]->setTimeCost( m_totalCost );
+        m_totalCost = m_stages[0]->getTimeCost();
 
         for ( int q = 1; q < m_stages.size(); q++ )
         {
-            SCpuTimer::INSTANCE->start();
-            m_stages[q]->run( m_stages[ q - 1 ] );
-            float _cost = SCpuTimer::INSTANCE->stop();
-            m_stages[q]->setTimeCost( m_totalCost );
-            m_totalCost += _cost;
+            m_stages[q]->run( m_stages[ q - 1 ]->getStageResult() );
+            m_totalCost += m_stages[q]->getTimeCost();
         }
 
         m_matOutput = m_stages.back()->getStageResult();
