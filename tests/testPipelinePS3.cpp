@@ -6,17 +6,18 @@
 
 #include <opencv2/opencv.hpp>
 
-#define SAMPLE_TIME 16 // 60fps
-#define CAMERA_ID 0
+#include <SVideoHandlerPSEye.h>
+
+#define SAMPLE_TIME 16 // 50fps
 
 int main()
 {
 
-    calibcv::SVideoHandler* _videoHandler = calibcv::SVideoHandler::create();
+    calibcv::SVideoHandlerPSEye* _videoHandler = calibcv::SVideoHandlerPSEye::create();
 
-    if ( !_videoHandler->openCamera( CAMERA_ID ) )
+    if ( !_videoHandler->openCamera( 0 ) )
     {
-        cout << "couldn't open webcam with deviceid: " << CAMERA_ID << endl;
+        cout << "couldn't open webcam with deviceid: " << 0 << endl;
         exit( -1 );
     }
 
@@ -24,22 +25,28 @@ int main()
     auto _panel = calibcv::SPatternDetectorPanel::create();
     auto _pipeline = new calibcv::SPatternDetectorPipeline();
 
+
     while( 1 )
     {
         cv::Mat _frame;
-
+        float _captureTime = 0;
         // frame capture ******************************
+
         double timer = (double)cv::getTickCount();
+        _timer->start();
         _videoHandler->takeFrame( _frame );
+        _captureTime = _timer->stop();
 
         // pipeline ***********************************
         calibcv::SPipelineParams _params;
         _params.roi = _videoHandler->fixedROI();
 
         _pipeline->run( _frame, _params );
+        // ********************************************
 
-        float delta = ((double)cv::getTickCount() - timer)/cv::getTickFrequency();
-        // cout << "delta: " << delta << endl;
+        float delta = ( ( double ) cv::getTickCount() - timer )/ cv::getTickFrequency();
+        cout << "delta: " << delta << endl;
+        cout << "totalCost: " << _pipeline->getTotalCost() + _captureTime << endl;
         _panel->setFPS( 1.0f / delta );
 
         int _key = cv::waitKey( SAMPLE_TIME ) & 0xff;

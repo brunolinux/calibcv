@@ -38,6 +38,7 @@ namespace calibcv
         void setPlaybackAtFrameIndex( int indx ) override;
 
         static void onMouseCallback( int event, int x, int y, int flags, void* userData );
+        static void onTrackbarROIcallback( int dummyInt, void* dummyPtr );
     };
 
 

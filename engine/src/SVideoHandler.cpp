@@ -1,6 +1,7 @@
 
 #include <SVideoHandler.h>
 
+
 using namespace std;
 
 namespace calibcv
@@ -155,17 +156,17 @@ namespace calibcv
         }
 
         // cout << "isPaused: " << m_isPaused << endl;
-        m_isPaused = !m_isPaused; 
+        m_isPaused = !m_isPaused;
     }
 
-    bool SVideoHandler::isPickingROI() 
-    { 
-        return m_isPickingROI; 
+    bool SVideoHandler::isPickingROI()
+    {
+        return m_isPickingROI;
     }
 
-    void SVideoHandler::setPickingROI( bool pPickingROI ) 
-    { 
-        m_isPickingROI = pPickingROI; 
+    void SVideoHandler::setPickingROI( bool pPickingROI )
+    {
+        m_isPickingROI = pPickingROI;
     }
 
     void SVideoHandler::togglePickingROI()
@@ -293,7 +294,7 @@ namespace calibcv
                     }
                 }
             // }
-
+            cv::rectangle( _videoFrame, m_fixedROI, cv::Scalar( 0, 0, 255 ), 2 );
             cv::imshow( SVH_INPUT_WINDOW, _videoFrame );
         }
         else
@@ -308,7 +309,8 @@ namespace calibcv
                 cv::line( _videoFrame, m_roi[ _indx1 ], m_roi[ _indx2 ],
                           cv::Scalar( 0, 0, 255 ), 4 );
             }
-
+            
+            cv::rectangle( _videoFrame, m_fixedROI, cv::Scalar( 0, 0, 255 ), 2 );
             cv::imshow( SVH_INPUT_WINDOW, _videoFrame );
 
             m_lastFrame = dstFrame;
