@@ -71,6 +71,12 @@ namespace calibcv
             m_totalCost += m_stages[q]->getTimeCost();
         }
 
+        if ( m_stages.back()->success() == false )
+        {
+            m_isInitializing = true;
+            return;
+        }
+
         m_matOutput = m_stages.back()->getStageResult();
 
         _postProcessing( m_stages.back() );

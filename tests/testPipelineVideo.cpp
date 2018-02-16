@@ -8,7 +8,7 @@
 
 
 #define WINDOW_ORIGINAL_FRAME "wOriginalFrame"
-#define SAMPLE_TIME 20 // 50fps
+#define SAMPLE_TIME 15 // 30fps
 #define VIDEO_FILE_ID "../res/calibration_ps3eyecam.avi"
 
 int main()

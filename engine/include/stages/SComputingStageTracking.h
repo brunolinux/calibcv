@@ -21,8 +21,10 @@ namespace calibcv
     {
         cv::Point2f pos;
         cv::Point2f vel;
+        bool found;
     };
 
+    static cv::Point2f s_detectionPoint = cv::Point2f( 0, 0 );
 
     float dist( cv::Point2f start, cv::Point2f end );
 
@@ -39,6 +41,9 @@ namespace calibcv
 
         cv::Point2f m_cropOrigin;
         cv::Rect2f m_cropROI;
+
+        void _estimateLostPattern();
+        void _estimateLostSingle( int indx );
 
         protected :
 
@@ -57,6 +62,8 @@ namespace calibcv
         void initialize( vector< cv::KeyPoint > positions );
         void setDetectedKeypoints( const vector< cv::KeyPoint >& keypoints );
         void getCroppedByWindow( const cv::Mat& src, cv::Mat& dst );
+
+        void reset() override;
     };
 
 

@@ -17,7 +17,7 @@ namespace calibcv
     {
 
         private :
-            
+
         chrono::high_resolution_clock::time_point m_timeStart;
         chrono::high_resolution_clock::time_point m_timeStop;
 

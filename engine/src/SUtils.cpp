@@ -36,7 +36,7 @@ namespace calibcv
         }
 
         SCpuTimer::INSTANCE = new SCpuTimer();
-        
+
         return SCpuTimer::INSTANCE;
     }
 

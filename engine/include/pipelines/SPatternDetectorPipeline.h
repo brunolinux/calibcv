@@ -6,6 +6,7 @@
 #include <stages/SComputingStageLightCompensation.h>
 #include <stages/SComputingStageMasking.h>
 #include <stages/SComputingStageEdges.h>
+#include <stages/SComputingStageEllipses.h>
 #include <stages/SComputingStageFeatures.h>
 #include <stages/SComputingStageTracking.h>
 
@@ -45,7 +46,7 @@ namespace calibcv
         SPatternDetectorPipeline();
         ~SPatternDetectorPipeline();
 
-
+        void reset();
     };
 
 

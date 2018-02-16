@@ -11,8 +11,8 @@ namespace calibcv
     {
         cv::SimpleBlobDetector::Params _detectorCreationParams;
         _detectorCreationParams.filterByArea = true;
-        _detectorCreationParams.minArea = 200;
-        _detectorCreationParams.maxArea = 1000;
+        _detectorCreationParams.minArea = 100;
+        _detectorCreationParams.maxArea = 1500;
         _detectorCreationParams.filterByColor = true;
         _detectorCreationParams.blobColor = 0;
         _detectorCreationParams.filterByConvexity = true;
@@ -29,7 +29,7 @@ namespace calibcv
 
     void SComputingStageFeatures::_run( const cv::Mat& input )
     {
-        m_keypoints.clear();
+        //m_keypoints.clear();
         m_blobsDetector->detect( input, m_keypoints );
 
         m_stageResult = m_frame.clone();

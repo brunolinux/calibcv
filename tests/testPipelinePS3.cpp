@@ -45,8 +45,8 @@ int main()
         // ********************************************
 
         float delta = ( ( double ) cv::getTickCount() - timer )/ cv::getTickFrequency();
-        cout << "delta: " << delta << endl;
-        cout << "totalCost: " << _pipeline->getTotalCost() + _captureTime << endl;
+        //cout << "delta: " << delta << endl;
+        //cout << "totalCost: " << _pipeline->getTotalCost() + _captureTime << endl;
         _panel->setFPS( 1.0f / delta );
 
         int _key = cv::waitKey( SAMPLE_TIME ) & 0xff;
@@ -55,15 +55,16 @@ int main()
         {
             _videoHandler->togglePause();
         }
-        else if ( _key == KEY_ENTER && _videoHandler->isPaused() )
+        else if ( _key == KEY_ENTER )
         {
-            _videoHandler->togglePickingROI();
+            _pipeline->reset();
         }
         else if ( _key == KEY_ESCAPE )
         {
             break;
         }
 
+        free( _frame.data );
     }
 
     calibcv::SVideoHandler::release();

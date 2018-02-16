@@ -4,7 +4,7 @@
 #include <SComputingStage.h>
 
 #define MASKING_STAGE_MAX_VALUE 255
-#define MASKING_STAGE_BLOCKSIZE 41
+#define MASKING_STAGE_BLOCKSIZE 21
 #define MASKING_STAGE_C         15
 
 namespace calibcv

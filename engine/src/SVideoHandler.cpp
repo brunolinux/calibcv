@@ -116,6 +116,10 @@ namespace calibcv
             m_totalFrames = m_capDevice->get( CV_CAP_PROP_FRAME_COUNT );
             cv::setTrackbarMax( "tbFrame", SVH_INPUT_WINDOW, m_totalFrames );
 
+            cout << "fps: " << m_capDevice->get( cv::CAP_PROP_FPS ) << endl;
+            m_capDevice->set( cv::CAP_PROP_FPS, 60 );
+            cout << "nfps: " << m_capDevice->get( cv::CAP_PROP_FPS ) << endl;
+
             return true;
         }
 
@@ -309,7 +313,7 @@ namespace calibcv
                 cv::line( _videoFrame, m_roi[ _indx1 ], m_roi[ _indx2 ],
                           cv::Scalar( 0, 0, 255 ), 4 );
             }
-            
+
             cv::rectangle( _videoFrame, m_fixedROI, cv::Scalar( 0, 0, 255 ), 2 );
             cv::imshow( SVH_INPUT_WINDOW, _videoFrame );
 

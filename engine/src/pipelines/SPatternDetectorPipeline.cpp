@@ -118,6 +118,7 @@ namespace calibcv
         addStage( new SComputingStageMasking() );
         addStage( new SComputingStageEdges() );
         addStage( new SComputingStageFeatures() );
+        //addStage( new SComputingStageEllipses() );
         addStage( new SComputingStageTracking() );
 
         m_isInitializing = true;
@@ -158,13 +159,9 @@ namespace calibcv
         // Run the pipeline in the ROI
         auto _roi = params.roi;
 
-        auto _imgROI = input( _roi ).clone();
-        auto _x = _roi.x;
-        auto _y = _roi.y;
-
         for ( int q = 0; q < m_stages.size(); q++ )
         {
-            m_stages[q]->begin( _imgROI );
+            m_stages[q]->begin( input );
         }
 
         m_stages[0]->run( input );
@@ -181,15 +178,21 @@ namespace calibcv
 
         auto _keypoints = reinterpret_cast< SComputingStageFeatures* >( m_stages[2] )->getKeypoints();
 
-        if ( _keypoints.size() == 20 )
+        int _count = 0;
+
+        if ( _keypoints.size() >= 20 )
         {
-            bool _foundPattern = true;
+            bool _foundPattern = false;
             for ( auto _keypoint : _keypoints )
             {
-                if ( _roi.contains( _keypoint.pt ) == false )
+                if ( _roi.contains( _keypoint.pt ) )
                 {
-                    _foundPattern = false;
-                    break;
+                    _count++;
+                    if ( _count == 20 )
+                    {
+                        _foundPattern = true;
+                        break;
+                    }
                 }
             }
 
@@ -242,4 +245,15 @@ namespace calibcv
 
         reinterpret_cast< SComputingStageTracking* >( m_stages[3] )->initialize( _ordererKeypoints );
     }
+
+
+
+    void SPatternDetectorPipeline::reset()
+    {
+        cout << "reset!!!" << endl;
+        m_isInitializing = true;
+    }
+
+
+
 }

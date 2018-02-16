@@ -12,18 +12,18 @@ namespace calibcv { namespace detection {
 
     CDetectionPipeline::CDetectionPipeline()
     {
-        m_morphElement = cv::getStructuringElement( cv::MORPH_CROSS, 
-                                                    cv::Size( 2 * DETECT_PIPELINE_MORPH_ELEMENT_SIZE + 1, 
+        m_morphElement = cv::getStructuringElement( cv::MORPH_CROSS,
+                                                    cv::Size( 2 * DETECT_PIPELINE_MORPH_ELEMENT_SIZE + 1,
                                                               2 * DETECT_PIPELINE_MORPH_ELEMENT_SIZE + 1 ),
-                                                    cv::Point( DETECT_PIPELINE_MORPH_ELEMENT_SIZE, 
+                                                    cv::Point( DETECT_PIPELINE_MORPH_ELEMENT_SIZE,
                                                                DETECT_PIPELINE_MORPH_ELEMENT_SIZE ) );
 
-        m_cspaceMin = cv::Scalar( DETECT_PIPELINE_CS0MIN, 
-                                  DETECT_PIPELINE_CS1MIN, 
+        m_cspaceMin = cv::Scalar( DETECT_PIPELINE_CS0MIN,
+                                  DETECT_PIPELINE_CS1MIN,
                                   DETECT_PIPELINE_CS2MIN );
 
-        m_cspaceMax = cv::Scalar( DETECT_PIPELINE_CS0MAX, 
-                                  DETECT_PIPELINE_CS1MAX, 
+        m_cspaceMax = cv::Scalar( DETECT_PIPELINE_CS0MAX,
+                                  DETECT_PIPELINE_CS1MAX,
                                   DETECT_PIPELINE_CS2MAX );
 
         m_isTracking = false;
@@ -58,7 +58,7 @@ namespace calibcv { namespace detection {
 
     CDetectionPipeline::~CDetectionPipeline()
     {
-        
+
     }
 
 
@@ -109,15 +109,15 @@ namespace calibcv { namespace detection {
         cv::blur( masked, _iEdges, cv::Size( blurSize,
                                              blurSize ) );
 
-        cv::Canny( _iEdges, edges, 
+        cv::Canny( _iEdges, edges,
                    cannyMin,
                    cannyMax,
                    cannyMaskSize );
     }
 
-    void CDetectionPipeline::stepFindEllipses( const cv::Mat& edges, 
+    void CDetectionPipeline::stepFindEllipses( const cv::Mat& edges,
                                                cv::Mat& matContours,
-                                               CTypeContours& contours, 
+                                               CTypeContours& contours,
                                                CTypeHierarchy& hierarchy,
                                                vector< cv::RotatedRect >& ellipsesBOB,
                                                int ellipsesCountThrehsold )

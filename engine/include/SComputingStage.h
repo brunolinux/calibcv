@@ -22,6 +22,7 @@ namespace calibcv
         virtual void _run( const cv::Mat& input ) {}
 
         bool m_enabled;
+        bool m_success;
 
         public :
 
@@ -32,6 +33,7 @@ namespace calibcv
         void begin( const cv::Mat& frame ) { m_frame = frame; }
 
         virtual void grabParamsFromParent( SComputingStage* parent ) {}
+        virtual void reset() {}
         void run( const cv::Mat& input );
 
         void setTimeCost( float cost ) { m_timeCost = cost; }
@@ -39,6 +41,8 @@ namespace calibcv
         cv::Mat getStageResult() { return m_stageResult; }
 
         bool isEnabled() { return m_enabled; }
+
+        virtual bool success() { return m_success; }
     };
 
 
