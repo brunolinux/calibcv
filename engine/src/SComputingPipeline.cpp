@@ -66,6 +66,7 @@ namespace calibcv
 
         for ( int q = 1; q < m_stages.size(); q++ )
         {
+            m_stages[q]->grabParamsFromParent( m_stages[ q - 1 ] );
             m_stages[q]->run( m_stages[ q - 1 ]->getStageResult() );
             m_totalCost += m_stages[q]->getTimeCost();
         }

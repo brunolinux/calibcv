@@ -11,6 +11,7 @@ namespace calibcv
     SPatternDetectorPanel::SPatternDetectorPanel()
     {
         m_windowsStates[BASE] = 1;
+        m_windowsStates[PREPROCESSING] = 0;
         m_windowsStates[MASK] = 0;
         m_windowsStates[EDGES] = 0;
         m_windowsStates[BLOBS] = 0;
@@ -26,6 +27,11 @@ namespace calibcv
         // cv::namedWindow( WINDOW_MAP[ EDGES ] );
         // cv::namedWindow( WINDOW_MAP[ BLOBS ] );
         // cv::namedWindow( WINDOW_MAP[ TRACKING ] );
+
+        cv::createTrackbar( "hide-preprocessing", WINDOW_MAP[ BASE ],
+                            &m_windowsStates[ PREPROCESSING ],
+                            1,
+                            SPatternDetectorPanel::onHideWindowCallback );
 
         cv::createTrackbar( "hide-mask", WINDOW_MAP[ BASE ],
                             &m_windowsStates[ MASK ],
@@ -118,6 +124,13 @@ namespace calibcv
         }
     }
 
+    void SPatternDetectorPanel::showPreprocessing( const cv::Mat& mat )
+    {
+        if ( m_windowsStates[ PREPROCESSING ] == 1 )
+        {
+            cv::imshow( WINDOW_MAP[ PREPROCESSING ], mat );
+        }
+    }
 
     void SPatternDetectorPanel::_updateWindowMode( _pdWindowID windowId )
     {
@@ -158,10 +171,10 @@ namespace calibcv
     {
         // std::cout << WINDOW_MAP[ stageId ] << ": " << msCost << std::endl;
         string _costText = WINDOW_MAP[ stageId ];
-        _costText += ": "; 
+        _costText += ": ";
         _costText += to_string( msCost );
 
-        cv::putText( m_baseBg, _costText, 
+        cv::putText( m_baseBg, _costText,
                      cv::Point( TEXT_MARGIN_LEFT, TEXT_COSTS_START_OFFSET + TEXT_COSTS_OFFSETS[ stageId ] ),
                      cv::FONT_HERSHEY_SIMPLEX, TEXT_FONT_SCALE, TEXT_FONT_COLOR_COST,
                      TEXT_THICKNESS );
@@ -177,7 +190,7 @@ namespace calibcv
     void SPatternDetectorPanel::cleanInfo()
     {
         m_baseBg.setTo( cv::Scalar( 0, 0, 0 ) );
-        cv::putText( m_baseBg, m_logInfo, 
+        cv::putText( m_baseBg, m_logInfo,
                      cv::Point( 320, 240 ),
                      cv::FONT_HERSHEY_SIMPLEX, TEXT_FONT_SCALE, TEXT_FONT_COLOR_INFO,
                      TEXT_THICKNESS );

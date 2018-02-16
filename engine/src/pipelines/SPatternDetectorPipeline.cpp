@@ -11,7 +11,7 @@ namespace calibcv
     {
         float aCmp = abs( a.pt.x - s_middle.x ) + abs( a.pt.y - s_middle.y );
         float bCmp = abs( b.pt.x - s_middle.x ) + abs( b.pt.y - s_middle.y );
-        
+
         return aCmp > bCmp;
     }
 
@@ -50,7 +50,7 @@ namespace calibcv
             if( keyPt.pt != st.pt && keyPt.pt != en.pt )
             {
                 tmpDist = distanceToLine( st.pt, en.pt, keyPt.pt );
-                
+
                 if( tmpDist < distUp )
                 {
                     distDown = distUp;
@@ -168,19 +168,23 @@ namespace calibcv
         }
 
         m_stages[0]->run( input );
-        m_stages[1]->run( m_stages[0] );
-        m_stages[2]->run( m_stages[1] );
+        m_stages[1]->run( m_stages[0]->getStageResult() );
+        m_stages[2]->run( m_stages[1]->getStageResult() );
 
         SPatternDetectorPanel::INSTANCE->showMask( m_stages[0]->getStageResult() );
         SPatternDetectorPanel::INSTANCE->showEdges( m_stages[1]->getStageResult() );
         SPatternDetectorPanel::INSTANCE->showBlobs( m_stages[2]->getStageResult() );
+
+        SPatternDetectorPanel::INSTANCE->setStageCost( m_stages[0]->getTimeCost() * 1000, MASK );
+        SPatternDetectorPanel::INSTANCE->setStageCost( m_stages[1]->getTimeCost() * 1000, EDGES );
+        SPatternDetectorPanel::INSTANCE->setStageCost( m_stages[2]->getTimeCost() * 1000, BLOBS );
 
         auto _keypoints = reinterpret_cast< SComputingStageFeatures* >( m_stages[2] )->getKeypoints();
 
         if ( _keypoints.size() == 20 )
         {
             bool _foundPattern = true;
-            for ( auto _keypoint : _keypoints ) 
+            for ( auto _keypoint : _keypoints )
             {
                 if ( _roi.contains( _keypoint.pt ) == false )
                 {

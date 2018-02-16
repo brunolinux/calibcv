@@ -14,30 +14,34 @@
 
 using namespace std;
 
-namespace calibcv 
+namespace calibcv
 {
 
     enum _pdWindowID
     {
         BASE,
+        PREPROCESSING,
         MASK,
         EDGES,
         BLOBS,
         TRACKING
     };
 
-    static unordered_map< _pdWindowID, int > TEXT_COSTS_OFFSETS( { { MASK, 80 },
-                                                                   { EDGES, 160 },
-                                                                   { BLOBS, 240 },
-                                                                   { TRACKING, 320 } } );
+    static unordered_map< _pdWindowID, int > TEXT_COSTS_OFFSETS( { { PREPROCESSING, 80 },
+                                                                   { MASK, 160 },
+                                                                   { EDGES, 240 },
+                                                                   { BLOBS, 320 },
+                                                                   { TRACKING, 400 } } );
 
     static unordered_map< _pdWindowID, string > WINDOW_MAP( { { BASE, "pd - base" },
+                                                              { PREPROCESSING, "pd - preprocessing" },
                                                               { MASK, "pd - mask" },
                                                               { EDGES, "pd - edges" },
                                                               { BLOBS, "pd - blobs" },
                                                               { TRACKING, "pd - tracking" } } );
 
     static unordered_map< _pdWindowID, int > ACTIVE_WINDOWS( { { BASE, 1 },
+                                                               { PREPROCESSING, 0 },
                                                                { MASK, 0 },
                                                                { EDGES, 0 },
                                                                { BLOBS, 0 },
@@ -71,6 +75,7 @@ namespace calibcv
         void cleanInfo();
 
         void showBase( const cv::Mat& mat );
+        void showPreprocessing( const cv::Mat& mat );
         void showMask( const cv::Mat& mat );
         void showEdges( const cv::Mat& mat );
         void showBlobs( const cv::Mat& mat );
