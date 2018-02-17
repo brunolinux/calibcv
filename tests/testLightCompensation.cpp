@@ -1,5 +1,5 @@
 
-#include <SVideoHandlerPSEye.h>
+#include <SVideoHandler.h>
 
 #include <opencv2/opencv.hpp>
 
@@ -12,7 +12,7 @@
 int main()
 {
 
-    calibcv::SVideoHandlerPSEye* _videoHandler = calibcv::SVideoHandlerPSEye::create();
+    calibcv::SVideoHandler* _videoHandler = calibcv::SVideoHandler::create();
 
     if ( !_videoHandler->openCamera( CAMERA_DEVICE_ID ) )
     {

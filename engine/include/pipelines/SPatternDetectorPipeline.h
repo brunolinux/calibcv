@@ -21,12 +21,12 @@ namespace calibcv
 
     bool comparator1( cv::KeyPoint a, cv::KeyPoint b );
     bool comparator2( cv::KeyPoint a, cv::KeyPoint b );
-    bool sort3( cv::KeyPoint &a, cv::KeyPoint &b, cv::KeyPoint &c );
+    void sort3( cv::KeyPoint &a, cv::KeyPoint &b, cv::KeyPoint &c );
 
     float distanceToLine( cv::Point2f start, cv::Point2f end, cv::Point2f from );
     float distanceToPoint( cv::Point2f start, cv::Point2f end );
-    float computeBorders( vector< cv::KeyPoint > &keypoints, cv::KeyPoint &st, cv::KeyPoint &en, cv::KeyPoint &minUp, cv::KeyPoint &minDown );
-    float computeLines( vector< cv::KeyPoint > &keypoints, cv::KeyPoint &st, cv::KeyPoint &en, cv::KeyPoint &minUp, cv::KeyPoint &minMid, cv::KeyPoint &minDown );
+    void computeBorders( vector< cv::KeyPoint > &keypoints, cv::KeyPoint &st, cv::KeyPoint &en, cv::KeyPoint &minUp, cv::KeyPoint &minDown );
+    void computeLines( vector< cv::KeyPoint > &keypoints, cv::KeyPoint &st, cv::KeyPoint &en, cv::KeyPoint &minUp, cv::KeyPoint &minMid, cv::KeyPoint &minDown );
 
     class SPatternDetectorPipeline : public SComputingPipeline
     {

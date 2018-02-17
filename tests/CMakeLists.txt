@@ -16,7 +16,21 @@ function( FnBuildTest pSources pExecutableId )
     
 endfunction()
 
-FILE( GLOB TestSources *.cpp )
+if( WIN32 )
+
+    set( TestSources
+         testPipeline.cpp
+         testPipelineVideo.cpp
+         testVideoHandler.cpp
+         testLightCompensation.cpp )
+
+else()
+
+    FILE( GLOB TestSources *.cpp )
+
+endif()
+
+
 
 foreach( testFile ${TestSources} )
 

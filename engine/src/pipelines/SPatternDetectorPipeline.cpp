@@ -20,7 +20,7 @@ namespace calibcv
         return a.pt.y < b.pt.y;
     }
 
-    bool sort3( cv::KeyPoint &a, cv::KeyPoint &b, cv::KeyPoint &c )
+    void sort3( cv::KeyPoint &a, cv::KeyPoint &b, cv::KeyPoint &c )
     {
         if ( a.pt.x > b.pt.x )
             swap( a, b );
@@ -41,7 +41,7 @@ namespace calibcv
         return sqrt( ( end.y - start.y ) * ( end.y - start.y ) + ( end.x - start.x ) * ( end.x - start.x ) );
     }
 
-    float computeBorders( vector< cv::KeyPoint > &keypoints, cv::KeyPoint &st, cv::KeyPoint &en, cv::KeyPoint &minUp, cv::KeyPoint &minDown )
+    void computeBorders( vector< cv::KeyPoint > &keypoints, cv::KeyPoint &st, cv::KeyPoint &en, cv::KeyPoint &minUp, cv::KeyPoint &minDown )
     {
         float tmpDist, distUp = 100, distDown = 100;
 
@@ -70,7 +70,7 @@ namespace calibcv
             swap(minUp, minDown);
     }
 
-    float computeLines( vector< cv::KeyPoint > &keypoints, cv::KeyPoint &st, cv::KeyPoint &en, cv::KeyPoint &minUp, cv::KeyPoint &minMid, cv::KeyPoint &minDown )
+    void computeLines( vector< cv::KeyPoint > &keypoints, cv::KeyPoint &st, cv::KeyPoint &en, cv::KeyPoint &minUp, cv::KeyPoint &minMid, cv::KeyPoint &minDown )
     {
         float tmpDist, distUp = 100, distDown = 100, distMid = 100;
 
