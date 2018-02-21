@@ -27,20 +27,20 @@ namespace calibcv
         TRACKING
     };
 
-    static unordered_map< _pdWindowID, int > TEXT_COSTS_OFFSETS( { { PREPROCESSING, 80 },
+    static map< _pdWindowID, int > TEXT_COSTS_OFFSETS( { { PREPROCESSING, 80 },
                                                                    { MASK, 160 },
                                                                    { EDGES, 240 },
                                                                    { BLOBS, 320 },
                                                                    { TRACKING, 400 } } );
 
-    static unordered_map< _pdWindowID, string > WINDOW_MAP( { { BASE, "pd - base" },
+    static map< _pdWindowID, string > WINDOW_MAP( { { BASE, "pd - base" },
                                                               { PREPROCESSING, "pd - preprocessing" },
                                                               { MASK, "pd - mask" },
                                                               { EDGES, "pd - edges" },
                                                               { BLOBS, "pd - blobs" },
                                                               { TRACKING, "pd - tracking" } } );
 
-    static unordered_map< _pdWindowID, int > ACTIVE_WINDOWS( { { BASE, 1 },
+    static map< _pdWindowID, int > ACTIVE_WINDOWS( { { BASE, 1 },
                                                                { PREPROCESSING, 0 },
                                                                { MASK, 0 },
                                                                { EDGES, 0 },
