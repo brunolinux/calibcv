@@ -21,3 +21,5 @@ Release
 *.dir
 *.dll
 *.vs
+
+build/

@@ -1,7 +1,13 @@
 
 cmake_minimum_required( VERSION 3.5.0 )
 
+set( CMAKE_CXX_STANDARD 11 )
+
 project( calibcv )
+
+add_definitions( -DRESOURCES_PATH="${CMAKE_SOURCE_DIR}/res/" )
+
+message( "Resources path: ${CMAKE_SOURCE_DIR}/res/" )
 
 if ( WIN32 )
 	message( "CONFIGURING FOR WINDOWS" )

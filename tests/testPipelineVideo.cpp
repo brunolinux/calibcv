@@ -6,19 +6,25 @@
 
 #include <opencv2/opencv.hpp>
 
+#ifndef RESOURCES_PATH
+#define RESOURCES_PATH "../res/"
+#endif
 
 #define WINDOW_ORIGINAL_FRAME "wOriginalFrame"
 #define SAMPLE_TIME 15 // 30fps
-#define VIDEO_FILE_ID "../res/calibration_ps3eyecam.avi"
+#define VIDEO_FILE_ID "calibration_ps3eyecam.avi"
 
 int main()
 {
 
     calibcv::SVideoHandler* _videoHandler = calibcv::SVideoHandler::create();
 
-    if ( !_videoHandler->openVideo( VIDEO_FILE_ID ) )
+    string _videoFileStr = RESOURCES_PATH;
+    _videoFileStr += VIDEO_FILE_ID;
+
+    if ( !_videoHandler->openVideo( _videoFileStr ) )
     {
-        cout << "couldn't open webcam with deviceid: " << VIDEO_FILE_ID << endl;
+        cout << "couldn't open webcam with deviceid: " << _videoFileStr << endl;
         exit( -1 );
     }
 
