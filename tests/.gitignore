@@ -4,3 +4,5 @@ testLightCompensation
 testPipelineVideo
 testPipeline
 testPipelinePS3
+testCvCalibration
+testVideoCalibration

@@ -22,7 +22,8 @@ if( WIN32 )
          testPipeline.cpp
          testPipelineVideo.cpp
          testVideoHandler.cpp
-         testLightCompensation.cpp )
+         testLightCompensation.cpp
+         testCvCalibration.cpp )
 
 else()
 
