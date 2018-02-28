@@ -184,6 +184,14 @@ namespace calibcv
         // cout << "isPickingROI: " << m_isPickingROI << endl;
     }
 
+    cv::Size SVideoHandler::getVideoFrameSize()
+    {
+        auto _fw = m_capDevice->get( CV_CAP_PROP_FRAME_WIDTH );
+        auto _fh = m_capDevice->get( CV_CAP_PROP_FRAME_HEIGHT );
+
+        return cv::Size( _fw, _fh );
+    }
+
     void SVideoHandler::setPlaybackAtFrameIndex( int indx )
     {
         assert( m_capDevice != NULL );

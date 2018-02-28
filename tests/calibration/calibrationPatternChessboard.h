@@ -15,12 +15,12 @@ namespace calibration { namespace chessboard {
 
     void getKnownPlanePositions( vector< cv::Point3f >& kCorners, const PatternInfo& pInfo )
     {
-        for ( int x = 0; x < pInfo.cb_size.width; x++ )
+        for ( int y = 0; y < pInfo.cb_size.height; y++ )
         {
-            for ( int y = 0; y < pInfo.cb_size.height; y++ )
+            for ( int x = 0; x < pInfo.cb_size.width; x++ )
             {
-                kCorners.push_back( cv::Point3f( x * pInfo.cb_squareLength, 
-                                                 y * pInfo.cb_squareLength, 
+                kCorners.push_back( cv::Point3f( y * pInfo.cb_squareLength, 
+                                                 x * pInfo.cb_squareLength, 
                                                  0.0f ) );
             }
         }

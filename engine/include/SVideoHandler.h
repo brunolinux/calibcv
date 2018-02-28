@@ -72,6 +72,8 @@ namespace calibcv
 
         bool isReadingFromVideo() { return m_readingFromVideo; }
 
+        cv::Size getVideoFrameSize();
+
         static void onTrackbarCallback( int dummyInt, void* dummyPtr );
         static void onMouseCallback( int event, int x, int y, int flags, void* userData );
 

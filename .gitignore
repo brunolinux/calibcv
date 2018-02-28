@@ -7,6 +7,10 @@
 *.mpeg
 *.mp4
 
+
+*.kdev4
+*.zip
+
 CMakeCache.txt
 Makefile
 CMakeFiles/
@@ -23,3 +27,4 @@ Release
 *.vs
 
 build/
+.kdev4/

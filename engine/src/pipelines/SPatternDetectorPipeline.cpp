@@ -117,8 +117,8 @@ namespace calibcv
     {
         addStage( new SComputingStageMasking() );
         addStage( new SComputingStageEdges() );
-        addStage( new SComputingStageFeatures() );
-        //addStage( new SComputingStageEllipses() );
+        //addStage( new SComputingStageFeatures() );
+        addStage( new SComputingStageEllipses() );
         addStage( new SComputingStageTracking() );
 
         m_isInitializing = true;

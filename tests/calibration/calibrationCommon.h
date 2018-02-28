@@ -2,10 +2,12 @@
 #pragma once
 
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 
 #include <opencv2/opencv.hpp>
+#include <opencv2/calib3d.hpp>
 
 namespace calibration
 {
@@ -24,15 +26,5 @@ namespace calibration
         
         float cb_squareLength;
         cv::Size cb_size;
-    };
-
-
-    struct CalibrationData
-    {
-    	cv::Mat cameraMatrix;
-    	cv::Mat distanceCoeffMatrix;
-
-    	vector< cv::Mat > frames;
-    	vector< vector< cv::Point2f > > allCorners;
     };
 }
