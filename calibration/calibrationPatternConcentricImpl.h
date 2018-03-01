@@ -6,12 +6,22 @@
 
 using namespace std;
 
-namespace calibcv
-{
+#define PIPELINE_MASKING_STAGE_MAX_VALUE 255
+#define PIPELINE_MASKING_STAGE_BLOCKSIZE 21
+#define PIPELINE_MASKING_STAGE_C         15
+
+#define PIPELINE_EDGES_STAGE_SCALE 1
+#define PIPELINE_EDGES_STAGE_DELTA 0
+
+namespace calibration { namespace concentric { namespace calibcv {
 
 
-	void drawConcentricPatternCorners( const vector< cv::Point2f >& iCorners, cv::Mat& image, const PatternInfo& pInfo );
-	bool findConcentricGrid( const cv::Mat& image, const cv::Size pSize, vector< cv::Point2f >& iCorners );
+	void drawConcentricPatternCorners( const vector< cv::Point2f >& iCorners, 
+									   cv::Mat& image, const PatternInfo& pInfo );
+
+	bool findConcentricGrid( const cv::Mat& image, const cv::Size pSize, 
+                             const vector< cv::Point2f >& roi,
+                             vector< cv::Point2f >& iCorners );
 
 
 	namespace detection
@@ -49,7 +59,7 @@ namespace calibcv
 			cv::Size m_size;
 			int m_numPoints;
 
-			cv::Rect2i m_initialROI;
+			vector< cv::Point2f > m_initialROI;
 
 			vector< cv::Point2f > m_candidatePoints;
 			vector< cv::Point2f > m_matchedPoints;
@@ -69,29 +79,36 @@ namespace calibcv
 			void _runEdgesGenerator( const cv::Mat& input, cv::Mat& output );
 			void _runMaskGenerator( const cv::Mat& input, cv::Mat& output );
 
-			void _computeInitialPattern( vector< cv::Point2f >& candidatePoints );
+			bool _computeInitialPattern( const vector< cv::Point2f >& candidatePatternPoints,
+                                         vector< cv::Point2f >& matchedPoints );
 			void _pipeline( const cv::Mat& input );
 
 			bool runInitialDetectionMode( const cv::Mat& input );
 			bool runTrackingMode( const cv::Mat& input );
 			bool runRecoveringMode( const cv::Mat& input );
 
+			Detector( const cv::Size& size );
+
 			public :
 
-			Detector( const cv::Size& size );
+			static Detector* INSTANCE;
+			static Detector* create( const cv::Size& size );
+			static void release();
+
 			~Detector();
 
-			void run( const cv::Mat& input );
+			void setPatternSize( const cv::Size& size );
 
-			void setInitialROI( const cv::Rect2i& roi ) { m_initialROI = roi; }
+			bool run( const cv::Mat& input, const vector< cv::Point2f >& roi );
 
-			bool getDetectedPoints( vector< cv::Point2f >& iPoints );
+			void setInitialROI( const vector< cv::Point2f >& roi ) { m_initialROI = roi; }
+
+			void getDetectedPoints( vector< cv::Point2f >& iPoints );
 			void getTimeCosts( vector< float >& timeCosts );
 			void getStageFrameResults( vector< cv::Mat >& vStageResults );
-		};
 
+			string getCurrentDetectionMode();
+		};
 	}
 
-
-
-}
+}}}

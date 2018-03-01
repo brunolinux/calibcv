@@ -1,7 +1,7 @@
 
 #include "calibrationPatternConcentricUtils.h"
 
-namespace calibcv { namespace detection { namespace utils {
+namespace utils {
 
 
 	// Pattern should be like :
@@ -28,7 +28,7 @@ namespace calibcv { namespace detection { namespace utils {
 
 		vector< cv::Point2f > _patternPoints;
 
-		constructGridPattern( _p0, _p1, _p2, _p3, _patternPoints );
+		constructGridPattern( _p0, _p1, _p2, _p3, boardSize, _patternPoints );
 
 		vector< bool > _found( candidates.size(), false );
 
@@ -103,18 +103,18 @@ namespace calibcv { namespace detection { namespace utils {
 				float _ee = ( 1.0f / ( se - 1 ) ) * e;
 
 				cv::Point2f _pTop 	 = p0 + _ee * _p0p1;
-				cv::Point2f _pBottom = p3 - _ee * _p3p2;
+				cv::Point2f _pBottom = p3 - _ee * _p2p3;
 				cv::Point2f _pLeft 	 = p0 - _nn * _p3p0;
 				cv::Point2f _pRight  = p1 + _nn * _p1p2;
 
 				cv::Point2f _point = ( 1.0f - _ee ) * _pLeft + ( _ee ) * _pRight +
 									 ( 1.0f - _nn ) * _pBottom + ( _nn ) * _pTop -
-									 ( 1.0f - _nn ) * ( 1.0f - _ee ) * _p3 - 
-									 ( 1.0f - _ee ) * ( _nn ) * _p0 -
-									 ( 1.0f - _nn ) * ( _ee ) * _p2 -
-									 ( _nn ) * ( _ee ) * _p1;
+									 ( 1.0f - _nn ) * ( 1.0f - _ee ) * p3 - 
+									 ( 1.0f - _ee ) * ( _nn ) * p0 -
+									 ( 1.0f - _nn ) * ( _ee ) * p2 -
+									 ( _nn ) * ( _ee ) * p1;
 
-				vGridPattern.push_back( _point )
+				vGridPattern.push_back( _point );
 			}
 		}
 	}
@@ -124,4 +124,4 @@ namespace calibcv { namespace detection { namespace utils {
 		return cv::norm( p1 - p2 );
 	}
 
-}}}
+}

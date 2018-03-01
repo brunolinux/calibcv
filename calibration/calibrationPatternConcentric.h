@@ -8,9 +8,12 @@
 namespace calibration { namespace concentric {
 
 
-	bool getCorners( vector< cv::Point2f >& iCorners, const cv::Mat& image, const PatternInfo& pInfo )
+	bool getCorners( vector< cv::Point2f >& iCorners, 
+                     const cv::Mat& image, 
+                     const PatternInfo& pInfo,
+                     const DetectionInfo& dInfo )
 	{
-		return calibcv::findConcentricGrid( image, pInfo.cb_size, iCorners );
+		return calibcv::findConcentricGrid( image, pInfo.cb_size, dInfo.roi, iCorners );
 	}
 
     void getKnownPlanePositions( vector< cv::Point3f >& kCorners, const PatternInfo& pInfo )

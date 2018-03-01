@@ -48,6 +48,12 @@ namespace calibration
 
                 break;
 
+            case PATTERN_TYPE_CONCENTRIC_CIRCLES :
+
+                concentric::getKnownPlanePositions( corners, pInfo );
+
+                break;
+
             default :
                 
                 cout << "pattern type: " << pInfo.type << " not found" << endl;
@@ -59,7 +65,7 @@ namespace calibration
         return success;
     }
   
-    bool getPatternCorners( vector< cv::Point2f >& iCorners, const cv::Mat& image, const PatternInfo& pInfo )
+    bool getPatternCorners( vector< cv::Point2f >& iCorners, const cv::Mat& image, const PatternInfo& pInfo, const DetectionInfo& dInfo )
     {
 
         cv::Mat _imgGray;
@@ -71,7 +77,7 @@ namespace calibration
         {
             case PATTERN_TYPE_CHESSBOARD :
                 
-                success = chessboard::getCorners( iCorners, _imgGray, pInfo );
+                success = chessboard::getCorners( iCorners, _imgGray, pInfo, dInfo );
 
                 // refine only if chessboard pattern
                 if ( success )
@@ -85,13 +91,19 @@ namespace calibration
                 
             case PATTERN_TYPE_SYMMETRIC_CIRCLES :
 
-                success = circleGridSymmetric::getCorners( iCorners, _imgGray, pInfo );
+                success = circleGridSymmetric::getCorners( iCorners, _imgGray, pInfo, dInfo );
 
                 break;
 
             case PATTERN_TYPE_ASYMMETRIC_CIRCLES :
 
-                success = circleGridAsymmetric::getCorners( iCorners, _imgGray, pInfo );
+                success = circleGridAsymmetric::getCorners( iCorners, _imgGray, pInfo, dInfo );
+
+                break;
+
+            case PATTERN_TYPE_CONCENTRIC_CIRCLES :
+
+                success = concentric::getCorners( iCorners, image, pInfo, dInfo );
 
                 break;
 
@@ -115,6 +127,10 @@ namespace calibration
             case PATTERN_TYPE_ASYMMETRIC_CIRCLES :
 
                 chessboard::drawPatternCorners( iCorners, image, pInfo );
+
+            case PATTERN_TYPE_CONCENTRIC_CIRCLES :
+
+                concentric::drawPatternCorners( iCorners, image, pInfo );
 
             break;
         }

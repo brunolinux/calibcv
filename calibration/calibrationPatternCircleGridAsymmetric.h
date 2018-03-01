@@ -7,7 +7,10 @@
 namespace calibration { namespace circleGridAsymmetric {
 
 
-    bool getCorners( vector< cv::Point2f >& iCorners, const cv::Mat& image, const PatternInfo& pInfo )
+    bool getCorners( vector< cv::Point2f >& iCorners, 
+                     const cv::Mat& image, 
+                     const PatternInfo& pInfo,
+                     const DetectionInfo& dInfo )
     {
         return cv::findCirclesGrid( image, pInfo.cb_size, iCorners, cv::CALIB_CB_ASYMMETRIC_GRID );
     }

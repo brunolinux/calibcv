@@ -29,7 +29,7 @@ namespace calibcv
 
         bool m_readingFromVideo;
 
-        vector< cv::Point > m_roi;
+        vector< cv::Point2f > m_roi;
 
         int m_frameWidth;
         int m_frameHeight;
@@ -61,7 +61,7 @@ namespace calibcv
         virtual void setPlaybackAtFrameIndex( int indx );
         void takeFrame( cv::Mat& dstFrame );
 
-        vector< cv::Point > roi() { return m_roi; }
+        vector< cv::Point2f > roi() { return m_roi; }
 
         bool isReadingFromVideo() { return m_readingFromVideo; }
 

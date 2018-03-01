@@ -11,6 +11,8 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/calib3d.hpp>
 
+using namespace std;
+
 namespace calibration
 {
 
@@ -28,6 +30,11 @@ namespace calibration
         
         float cb_squareLength;
         cv::Size cb_size;
+    };
+
+    struct DetectionInfo
+    {
+        vector< cv::Point2f > roi;
     };
 
     class CpuTimer

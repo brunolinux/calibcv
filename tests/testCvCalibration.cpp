@@ -28,6 +28,13 @@
 // #define VIDEO_FILE_ID "calibration_test_asymmetric_1.avi"
 // #define TEST_CALIBRATION_SAVE_FILE "calibration_test_asymmetric_1.yaml"
 
+// #define TEST_PATTERN_TYPE calibration::PATTERN_TYPE_CONCENTRIC_CIRCLES
+// #define TEST_PATTERN_SQUARE_LENGTH 0.0235
+// #define TEST_PATTERN_SIZE cv::Size( 5, 4 )
+// #define TEST_CALIBRATION_THRESHOLD_COUNT 30
+// #define VIDEO_FILE_ID "calibration_test_concentric_1.avi"
+// #define TEST_CALIBRATION_SAVE_FILE "calibration_test_concentric_1.yaml"
+
 using namespace std;
 
 
@@ -95,7 +102,10 @@ int main()
 
         vector< cv::Point2f > _corners;
 
-        if ( calibration::getPatternCorners( _corners, _frame, _patternInfo ) )
+        calibration::DetectionInfo _detInfo;
+        _detInfo.roi = _videoHandler->roi();
+
+        if ( calibration::getPatternCorners( _corners, _frame, _patternInfo, _detInfo ) )
         {
             calibration::drawPatternCorners( _corners, _frame, _patternInfo );
 

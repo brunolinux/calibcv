@@ -7,7 +7,7 @@ using namespace std;
 
 #define RANGE_CLOSE 5
 
-namespace calibcv { namespace detection { namespace utils {
+namespace utils {
 
 
 	struct ComparatorKeyPointsCentric
@@ -53,6 +53,7 @@ namespace calibcv { namespace detection { namespace utils {
 
 
 	bool isGridPatternFit( const vector< cv::Point2f >& candidates,
+						   vector< cv::Point2f >& matchedPattern,
 						   const cv::Size boardSize,
 						   int indxp0, int indxp1,
 						   int indxp2, int indxp3 );
@@ -66,4 +67,4 @@ namespace calibcv { namespace detection { namespace utils {
 
 	float dist( const cv::Point2f& p1, const cv::Point2f& p2 );
 
-}}}
+}

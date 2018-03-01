@@ -187,7 +187,7 @@ namespace calibcv
             if ( 0 < m_roi.size() && m_roi.size() < 4 )
             {
                 auto _roi = m_roi;
-                _roi.push_back( cv::Point( m_px, m_py ) );
+                _roi.push_back( cv::Point2f( m_px, m_py ) );
 
                 for ( int q = 0; q < _roi.size(); q++ )
                 {
@@ -237,7 +237,7 @@ namespace calibcv
             if ( 0 < m_roi.size() && m_roi.size() < 4 )
             {
                 auto _roi = m_roi;
-                _roi.push_back( cv::Point( m_px, m_py ) );
+                _roi.push_back( cv::Point2f( m_px, m_py ) );
 
                 for ( int q = 0; q < _roi.size(); q++ )
                 {
@@ -306,7 +306,7 @@ namespace calibcv
 
         if ( event == cv::EVENT_LBUTTONDOWN )
         {
-            SVideoHandler::INSTANCE->m_roi.push_back( cv::Point( x, y ) );
+            SVideoHandler::INSTANCE->m_roi.push_back( cv::Point2f( x, y ) );
         }
 
         if ( SVideoHandler::INSTANCE->m_roi.size() == 4 )

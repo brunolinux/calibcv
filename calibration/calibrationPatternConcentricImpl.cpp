@@ -1,10 +1,10 @@
 
 #include "calibrationPatternConcentricImpl.h"
+#include "calibrationPatternConcentricUtils.h"
 
 using namespace std;
 
-namespace calibcv
-{
+namespace calibration { namespace concentric { namespace calibcv {
 
     void drawConcentricPatternCorners( const vector< cv::Point2f >& iCorners, cv::Mat& image, const PatternInfo& pInfo )
     {
@@ -24,17 +24,29 @@ namespace calibcv
 
             cv::Scalar _color = _colors[ _currentColorIndx ];
 
-            cv::line( iCorners[q], iCorners[q + 1], _color, 2 );
+            cv::line( image, iCorners[q], iCorners[q + 1], _color, 2 );
         }
     }
 
-    bool findConcentricGrid( const cv::Mat& image, const cv::Size pSize, vector< cv::Point2f >& iCorners )
+    bool findConcentricGrid( const cv::Mat& image, const cv::Size pSize, 
+                             const vector< cv::Point2f >& roi,
+                             vector< cv::Point2f >& iCorners )
     {
-        return false;
+        detection::Detector* _detector = detection::Detector::create( pSize );
+
+        bool _found = _detector->run( image, roi );
+        if ( _found )
+        {
+            _detector->getDetectedPoints( iCorners );
+        }
+
+        return _found;
     }
 
     namespace detection
     {
+
+        Detector* Detector::INSTANCE = NULL;
 
         Detector::Detector( const cv::Size& size )
         {
@@ -57,8 +69,6 @@ namespace calibcv
             m_blobsDetector = cv::SimpleBlobDetector::create( _detectorCreationParams );
 
             m_mode = MODE_FINDING_PATTERN;
-
-            m_initialROI = cv::Rect2i( 0, 0, 1, 1 );
         }
 
         Detector::~Detector()
@@ -66,8 +76,37 @@ namespace calibcv
 
         }
 
-        bool Detector::run( const cv::Mat& input )
+        Detector* Detector::create( const cv::Size& size )
         {
+            if ( Detector::INSTANCE == NULL )
+            {
+                std::cout << "created new detector instance" << std::endl;
+                Detector::INSTANCE = new Detector( size );
+            }
+                
+            return Detector::INSTANCE;
+        }
+
+        void Detector::release()
+        {
+            if ( Detector::INSTANCE != NULL )
+            {
+                delete Detector::INSTANCE;
+                Detector::INSTANCE = NULL;
+            }
+        }
+
+        void Detector::setPatternSize( const cv::Size& size )
+        {
+            m_numPoints      = size.width * size.height;
+            m_size           = size;
+            m_trackingPoints = vector< TrackingPoint >( m_numPoints );
+        }
+
+        bool Detector::run( const cv::Mat& input, const vector< cv::Point2f >& roi )
+        {
+            setInitialROI( roi );
+
             bool _ret = false;
 
             switch ( m_mode )
@@ -96,8 +135,7 @@ namespace calibcv
 
         bool Detector::runInitialDetectionMode( const cv::Mat& input )
         {
-            if ( m_initialROI.width == 1 ||
-                 m_initialROI.height == 1 )
+            if ( m_initialROI.size() != 4 )
             {
                 cout << "Must initialize with a given region of interest" << endl;
                 return false;
@@ -112,7 +150,7 @@ namespace calibcv
 
                 for ( cv::Point2f& _candidatePoint : m_candidatePoints )
                 {
-                    if ( m_initialROI.contains( _candidatePoint ) )
+                    if ( cv::pointPolygonTest( m_initialROI, _candidatePoint, false ) > 0 )
                     {
                         _countInROI++;
                         if ( _countInROI == m_numPoints )
@@ -133,6 +171,8 @@ namespace calibcv
                             _tpt.pos    = m_matchedPoints[q];
                             _tpt.vel    = cv::Point2f( 0.0f, 0.0f );
                             _tpt.found  = true;
+
+                            m_trackingPoints.push_back( _tpt );
                         }
 
                         m_mode = MODE_TRACKING;
@@ -144,7 +184,7 @@ namespace calibcv
             return false;
         }
 
-        bool Detector::_computeInitialPattern( const vector< cv::Point2f >& candidatePatternPoints
+        bool Detector::_computeInitialPattern( const vector< cv::Point2f >& candidatePatternPoints,
                                                vector< cv::Point2f >& matchedPoints )
         {
             vector< cv::Point2f > _orderedKeypoints( m_numPoints );
@@ -241,9 +281,9 @@ namespace calibcv
             cv::Mat _grayScale;
 
             cv::cvtColor( input, _grayScale, CV_RGB2GRAY );
-            cv::adaptiveThreshold( _grayScale, output, MASKING_STAGE_MAX_VALUE,
+            cv::adaptiveThreshold( _grayScale, output, PIPELINE_MASKING_STAGE_MAX_VALUE,
                                    cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV,
-                                   MASKING_STAGE_BLOCKSIZE, MASKING_STAGE_C );
+                                   PIPELINE_MASKING_STAGE_BLOCKSIZE, PIPELINE_MASKING_STAGE_C );
 
             // m_stageFrameResults[ STAGE_THRESHOLDING ] = output;
         }
@@ -253,11 +293,11 @@ namespace calibcv
             cv::Mat _gradX, _gradY, _gradAbsX, _gradAbsY;
 
             cv::Scharr( input, _gradX, CV_16S, 1, 0,
-                        EDGES_STAGE_SCALE, EDGES_STAGE_DELTA, cv::BORDER_DEFAULT );
+                        PIPELINE_EDGES_STAGE_SCALE, PIPELINE_EDGES_STAGE_DELTA, cv::BORDER_DEFAULT );
             cv::convertScaleAbs( _gradX, _gradAbsX );
 
             cv::Scharr( input, _gradY, CV_16S, 0, 1,
-                        EDGES_STAGE_SCALE, EDGES_STAGE_DELTA, cv::BORDER_DEFAULT );
+                        PIPELINE_EDGES_STAGE_SCALE, PIPELINE_EDGES_STAGE_DELTA, cv::BORDER_DEFAULT );
             cv::convertScaleAbs( _gradY, _gradAbsY );
 
             cv::addWeighted( _gradAbsX, 0.5, _gradAbsY, 0.5, 0, output );
@@ -292,9 +332,52 @@ namespace calibcv
         }
 
 
+        void Detector::getDetectedPoints( vector< cv::Point2f >& iPoints )
+        {
+
+        }
+
+        void Detector::getTimeCosts( vector< float >& timeCosts )
+        {
+
+        }
+
+        void Detector::getStageFrameResults( vector< cv::Mat >& vStageResults )
+        {
+            for ( int q = 0; q < m_stageFrameResults.size(); q++ )
+            {
+                vStageResults.push_back( m_stageFrameResults[q] );
+            }
+        }
+
+        string Detector::getCurrentDetectionMode()
+        {
+            string _modeStr = "None";
+
+            switch ( m_mode )
+            {
+                case MODE_FINDING_PATTERN :
+
+                    _modeStr = "Finding Pattern";
+
+                break;
+
+                case MODE_TRACKING :
+
+                    _modeStr = "Tracking pattern";
+
+                break;
+
+                case MODE_RECOVERING :
+
+                    _modeStr = "Recovering pattern";
+
+                break;
+            }
+
+            return _modeStr;
+        }
+
     }
 
-
-
-
-}
+}}}
