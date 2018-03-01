@@ -1,7 +1,8 @@
 
 #include <SVideoHandler.h>
-#include "calibration/calibrationInterface.h"
+#include <calibrationInterface.h>
 
+#include <iostream>
 #include <opencv2/opencv.hpp>
 
 #ifndef RESOURCES_PATH
@@ -66,11 +67,17 @@ int main()
 
         int _key = cv::waitKey( SAMPLE_TIME ) & 0xff;
 
+        // cout << "key: " << _key << endl;
+
         bool _pickCalibrationBucket = false;
 
         if ( _key == KEY_SPACE )
         {
             _videoHandler->togglePause();
+        }
+        else if ( _key == KEY_R )
+        {
+            _videoHandler->togglePickingROI();
         }
         else if ( _key == KEY_ENTER )
         {

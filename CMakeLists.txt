@@ -17,6 +17,7 @@ if ( WIN32 )
 	find_package( Threads REQUIRED )
 
 	add_subdirectory( engine )
+	add_subdirectory( calibration )
 	add_subdirectory( tests )
 
 else()
@@ -26,6 +27,7 @@ else()
 
 	add_subdirectory( ext )
 	add_subdirectory( engine )
+	add_subdirectory( calibration )
 	add_subdirectory( tests )
 endif()
 

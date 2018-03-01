@@ -18,27 +18,8 @@ namespace calibcv
         m_isPickingROI = false;
         m_readingFromVideo = true;
 
-        m_fixedROIwidth = 265;
-        m_fixedROIheight = 202;
-
-        m_fixedROIoffX = 13;
-        m_fixedROIoffY = -85;
-
-        m_fixedROI = cv::Rect2i( 0, 0, 1, 1 );
-
         m_frameWidth = 640;
         m_frameHeight = 480;
-
-        auto _fw = m_frameWidth;
-        auto _fh = m_frameHeight;
-        auto _rw = m_fixedROIwidth;
-        auto _rh = m_fixedROIheight;
-        auto _offX = m_fixedROIoffX;
-        auto _offY = m_fixedROIoffY;
-
-        m_fixedROI = cv::Rect2i( 0.5 * _fw - 0.5 * _rw + _offX,
-                                 0.5 * _fh - 0.5 * _rh + _offY,
-                                 _rw, _rh );
     }
 
     void SVideoHandler::init()
@@ -48,24 +29,6 @@ namespace calibcv
         m_currentFrame = 0;
 
         cv::setMouseCallback( SVH_INPUT_WINDOW, SVideoHandler::onMouseCallback, NULL );
-        cv::createTrackbar( "tbROIwidth", SVH_INPUT_WINDOW,
-                            &SVideoHandler::INSTANCE->m_fixedROIwidth,
-                            400, SVideoHandler::onTrackbarROIcallback );
-        cv::createTrackbar( "tbROIheight", SVH_INPUT_WINDOW,
-                            &SVideoHandler::INSTANCE->m_fixedROIheight,
-                            400, SVideoHandler::onTrackbarROIcallback );
-        cv::createTrackbar( "tbROIoffX", SVH_INPUT_WINDOW,
-                            &SVideoHandler::INSTANCE->m_fixedROIoffX,
-                            200, SVideoHandler::onTrackbarROIcallback );
-        cv::createTrackbar( "tbROIoffY", SVH_INPUT_WINDOW,
-                            &SVideoHandler::INSTANCE->m_fixedROIoffY,
-                            200, SVideoHandler::onTrackbarROIcallback );
-
-        cv::setTrackbarMin( "tbROIoffX", SVH_INPUT_WINDOW, -200 );
-        cv::setTrackbarMax( "tbROIoffX", SVH_INPUT_WINDOW, 200 );
-
-        cv::setTrackbarMin( "tbROIoffY", SVH_INPUT_WINDOW, -200 );
-        cv::setTrackbarMax( "tbROIoffY", SVH_INPUT_WINDOW, 200 );
     }
 
     SVideoHandler::~SVideoHandler()
@@ -148,18 +111,6 @@ namespace calibcv
 
     void SVideoHandler::togglePause()
     {
-        if ( m_isPaused && m_isPickingROI )
-        {
-            // if paused and picking roi, keep paused
-            return;
-        }
-
-        if ( m_isPaused && m_roi.size() == 4 )
-        {
-            m_roi.clear();
-        }
-
-        // cout << "isPaused: " << m_isPaused << endl;
         m_isPaused = !m_isPaused;
     }
 
@@ -180,8 +131,6 @@ namespace calibcv
         {
             m_roi.clear();
         }
-
-        // cout << "isPickingROI: " << m_isPickingROI << endl;
     }
 
     cv::Size SVideoHandler::getVideoFrameSize()
@@ -214,48 +163,44 @@ namespace calibcv
 
     void SVideoHandler::_takeFrameFromVideo( cv::Mat& dstFrame )
     {
+        cv::Mat _videoFrame;
+
         if ( m_isPaused )
         {
             m_capDevice->read( dstFrame );
-            cv::Mat _videoFrame = dstFrame.clone();
+            _videoFrame = dstFrame.clone();
 
-            // if ( m_isPickingROI )
-            // {
-                if ( m_roi.size() > 0 && m_roi.size() < 4 )
-                {
-                    auto _roi = m_roi;
-                    _roi.push_back( cv::Point( m_px, m_py ) );
-
-                    for ( int q = 0; q < _roi.size(); q++ )
-                    {
-                        int _indx1 = q;
-                        int _indx2 = ( q + 1 ) % _roi.size();
-                        cv::line( _videoFrame, _roi[ _indx1 ], _roi[ _indx2 ],
-                                  cv::Scalar( 0, 0, 255 ), 4 );
-                    }
-                }
-                else
-                {
-                    for ( int q = 0; q < m_roi.size(); q++ )
-                    {
-                        int _indx1 = q;
-                        int _indx2 = ( q + 1 ) % m_roi.size();
-                        cv::line( _videoFrame, m_roi[ _indx1 ], m_roi[ _indx2 ],
-                                  cv::Scalar( 0, 0, 255 ), 4 );
-                    }
-                }
-            // }
-            cv::rectangle( _videoFrame, m_fixedROI, cv::Scalar( 0, 0, 255 ), 2 );
-            cv::imshow( SVH_INPUT_WINDOW, _videoFrame );
             m_capDevice->set( CV_CAP_PROP_POS_FRAMES, m_currentFrame );
         }
         else
         {
             m_capDevice->read( dstFrame );
-            cv::Mat _videoFrame = dstFrame.clone();
+            _videoFrame = dstFrame.clone();
+
             m_currentFrame++;
             cv::setTrackbarPos( "tbFrame", SVH_INPUT_WINDOW, m_currentFrame );
 
+        }
+
+        if ( m_isPickingROI )
+        {
+            if ( 0 < m_roi.size() && m_roi.size() < 4 )
+            {
+                auto _roi = m_roi;
+                _roi.push_back( cv::Point( m_px, m_py ) );
+
+                for ( int q = 0; q < _roi.size(); q++ )
+                {
+                    int _indx1 = q;
+                    int _indx2 = ( q + 1 ) % _roi.size();
+                    cv::line( _videoFrame, _roi[ _indx1 ], _roi[ _indx2 ],
+                              cv::Scalar( 0, 0, 255 ), 4 );
+                }
+            }
+        }
+        
+        if ( m_roi.size() == 4 )
+        {
             for ( int q = 0; q < m_roi.size(); q++ )
             {
                 int _indx1 = q;
@@ -263,57 +208,49 @@ namespace calibcv
                 cv::line( _videoFrame, m_roi[ _indx1 ], m_roi[ _indx2 ],
                           cv::Scalar( 0, 0, 255 ), 4 );
             }
-
-            cv::rectangle( _videoFrame, m_fixedROI, cv::Scalar( 0, 0, 255 ), 2 );
-
-            cv::imshow( SVH_INPUT_WINDOW, _videoFrame );
         }
+
+        cv::imshow( SVH_INPUT_WINDOW, _videoFrame );
 
         m_lastFrame = dstFrame;
     }
 
     void SVideoHandler::_takeFrameFromCamera( cv::Mat& dstFrame )
     {
+        cv::Mat _videoFrame;
+
         if ( m_isPaused )
         {
-            cv::Mat _videoFrame;
             m_capDevice->read( _videoFrame );
             dstFrame = m_lastFrame;
-
-            // if ( m_isPickingROI )
-            // {
-                if ( m_roi.size() > 0 && m_roi.size() < 4 )
-                {
-                    auto _roi = m_roi;
-                    _roi.push_back( cv::Point( m_px, m_py ) );
-
-                    for ( int q = 0; q < _roi.size(); q++ )
-                    {
-                        int _indx1 = q;
-                        int _indx2 = ( q + 1 ) % _roi.size();
-                        cv::line( _videoFrame, _roi[ _indx1 ], _roi[ _indx2 ],
-                                  cv::Scalar( 0, 0, 255 ), 4 );
-                    }
-                }
-                else
-                {
-                    for ( int q = 0; q < m_roi.size(); q++ )
-                    {
-                        int _indx1 = q;
-                        int _indx2 = ( q + 1 ) % m_roi.size();
-                        cv::line( _videoFrame, m_roi[ _indx1 ], m_roi[ _indx2 ],
-                                  cv::Scalar( 0, 0, 255 ), 4 );
-                    }
-                }
-            // }
-            cv::rectangle( _videoFrame, m_fixedROI, cv::Scalar( 0, 0, 255 ), 2 );
-            cv::imshow( SVH_INPUT_WINDOW, _videoFrame );
         }
         else
         {
             m_capDevice->read( dstFrame );
-            cv::Mat _videoFrame = dstFrame.clone();
+            _videoFrame = dstFrame.clone();
 
+            m_lastFrame = dstFrame;
+        }
+
+        if ( m_isPickingROI )
+        {
+            if ( 0 < m_roi.size() && m_roi.size() < 4 )
+            {
+                auto _roi = m_roi;
+                _roi.push_back( cv::Point( m_px, m_py ) );
+
+                for ( int q = 0; q < _roi.size(); q++ )
+                {
+                    int _indx1 = q;
+                    int _indx2 = ( q + 1 ) % _roi.size();
+                    cv::line( _videoFrame, _roi[ _indx1 ], _roi[ _indx2 ],
+                              cv::Scalar( 0, 0, 255 ), 4 );
+                }
+            }
+        }
+        
+        if ( m_roi.size() == 4 )
+        {
             for ( int q = 0; q < m_roi.size(); q++ )
             {
                 int _indx1 = q;
@@ -321,12 +258,9 @@ namespace calibcv
                 cv::line( _videoFrame, m_roi[ _indx1 ], m_roi[ _indx2 ],
                           cv::Scalar( 0, 0, 255 ), 4 );
             }
-
-            cv::rectangle( _videoFrame, m_fixedROI, cv::Scalar( 0, 0, 255 ), 2 );
-            cv::imshow( SVH_INPUT_WINDOW, _videoFrame );
-
-            m_lastFrame = dstFrame;
         }
+
+        cv::imshow( SVH_INPUT_WINDOW, _videoFrame );
     }
 
     void SVideoHandler::takeFrame( cv::Mat& dstFrame )
@@ -383,18 +317,4 @@ namespace calibcv
 
     }
 
-
-    void SVideoHandler::onTrackbarROIcallback( int dummyInt, void* dummyPtr )
-    {
-        auto _fw = SVideoHandler::INSTANCE->m_frameWidth;
-        auto _fh = SVideoHandler::INSTANCE->m_frameHeight;
-        auto _rw = SVideoHandler::INSTANCE->m_fixedROIwidth;
-        auto _rh = SVideoHandler::INSTANCE->m_fixedROIheight;
-        auto _offX = SVideoHandler::INSTANCE->m_fixedROIoffX;
-        auto _offY = SVideoHandler::INSTANCE->m_fixedROIoffY;
-
-        SVideoHandler::INSTANCE->m_fixedROI = cv::Rect2i( 0.5 * _fw - 0.5 * _rw + _offX,
-                                                          0.5 * _fh - 0.5 * _rh + _offY,
-                                                          _rw, _rh );
-    }
 }

@@ -9,6 +9,7 @@
 #include "calibrationPatternChessboard.h"
 #include "calibrationPatternCircleGridSymmetric.h"
 #include "calibrationPatternCircleGridAsymmetric.h"
+#include "calibrationPatternConcentric.h"
 
 using namespace std;
 
@@ -118,7 +119,6 @@ namespace calibration
             break;
         }
     }
-
 
 
 

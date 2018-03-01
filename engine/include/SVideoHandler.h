@@ -30,12 +30,6 @@ namespace calibcv
         bool m_readingFromVideo;
 
         vector< cv::Point > m_roi;
-        cv::Rect2i m_fixedROI;
-
-        int m_fixedROIwidth;
-        int m_fixedROIheight;
-        int m_fixedROIoffX;
-        int m_fixedROIoffY;
 
         int m_frameWidth;
         int m_frameHeight;
@@ -68,7 +62,6 @@ namespace calibcv
         void takeFrame( cv::Mat& dstFrame );
 
         vector< cv::Point > roi() { return m_roi; }
-        cv::Rect2i fixedROI() { return m_fixedROI; }
 
         bool isReadingFromVideo() { return m_readingFromVideo; }
 
@@ -76,8 +69,6 @@ namespace calibcv
 
         static void onTrackbarCallback( int dummyInt, void* dummyPtr );
         static void onMouseCallback( int event, int x, int y, int flags, void* userData );
-
-        static void onTrackbarROIcallback( int dummyInt, void* dummyPtr );
     };
 
 

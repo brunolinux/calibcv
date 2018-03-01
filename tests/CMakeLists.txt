@@ -1,7 +1,10 @@
 
 message( "configuring tests" )
 
-include_directories( ../engine/include ${OpenCV_INCLUDE_DIRS} ../ext/felixcam/lib/include )
+include_directories( ../engine/include 
+                     ${OpenCV_INCLUDE_DIRS} 
+                     ../ext/felixcam/lib/include
+                     ../calibration/ )
 
 # TODO: add checks for windows support
 
@@ -12,26 +15,12 @@ function( FnBuildTest pSources pExecutableId )
     add_executable( ${pExecutableId}
                     ${pSources} )
     target_link_libraries( ${pExecutableId}
-                           calibcvEngine )
+                           calibcvEngine
+                           calibration )
     
 endfunction()
 
-if( WIN32 )
-
-    set( TestSources
-         testPipeline.cpp
-         testPipelineVideo.cpp
-         testVideoHandler.cpp
-         testLightCompensation.cpp
-         testCvCalibration.cpp )
-
-else()
-
-    FILE( GLOB TestSources *.cpp )
-
-endif()
-
-
+FILE( GLOB TestSources *.cpp )
 
 foreach( testFile ${TestSources} )
 
