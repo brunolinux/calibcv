@@ -26,6 +26,19 @@ namespace calibration { namespace concentric {
 
             cv::line( image, iCorners[q], iCorners[q + 1], _color, 2 );
         }
+
+        int _w = pInfo.cb_size.width;
+        int _h = pInfo.cb_size.height;
+
+        string _cornerText = "p";
+        cv::putText( image, _cornerText + std::to_string( 0 ), 
+                     iCorners[ 0 ], cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar( 255, 255, 0 ), 2 );
+        cv::putText( image, _cornerText + std::to_string( 1 ), 
+                     iCorners[ _w - 1 ], cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar( 255, 255, 0 ), 2 );
+        cv::putText( image, _cornerText + std::to_string( 2 ), 
+                     iCorners[ _w * _h - 1 ], cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar( 255, 255, 0 ), 2 );
+        cv::putText( image, _cornerText + std::to_string( 3 ), 
+                     iCorners[ _w * ( _h - 1 ) ], cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar( 255, 255, 0 ), 2 );
     }
 
     bool findConcentricGrid( const cv::Mat& image, const cv::Size pSize, 
@@ -247,9 +260,17 @@ namespace calibration { namespace concentric {
             {
                 matchedPoints.clear();
 
+                // Make sure the orientation is the base one ( nor p0 or p1 are bottom )
+                if ( q == 1 || q == 2 )
+                {
+                    continue;
+                }
+		
                 _isFit = utils::isGridPatternFit( candidatePatternPoints, matchedPoints, m_size, 
                                                   _cornerOptions[( 0 + q ) % 4], _cornerOptions[( 1 + q ) % 4],
                                                   _cornerOptions[( 2 + q ) % 4], _cornerOptions[( 3 + q ) % 4] );
+
+
                 if ( _isFit )
                 {
                     float _xmin = candidatePatternPoints[ _leftIndx ].x;
