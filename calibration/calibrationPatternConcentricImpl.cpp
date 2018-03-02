@@ -4,7 +4,7 @@
 
 using namespace std;
 
-namespace calibration { namespace concentric { namespace calibcv {
+namespace calibration { namespace concentric {
 
     void drawConcentricPatternCorners( const vector< cv::Point2f >& iCorners, cv::Mat& image, const PatternInfo& pInfo )
     {
@@ -69,11 +69,14 @@ namespace calibration { namespace concentric { namespace calibcv {
             m_blobsDetector = cv::SimpleBlobDetector::create( _detectorCreationParams );
 
             m_mode = MODE_FINDING_PATTERN;
+
+            m_pipelinePanel = calibcv::SPatternDetectorPanel::create();
         }
 
         Detector::~Detector()
         {
-
+            m_pipelinePanel = NULL;
+            calibcv::SPatternDetectorPanel::release();
         }
 
         Detector* Detector::create( const cv::Size& size )
@@ -130,18 +133,28 @@ namespace calibration { namespace concentric { namespace calibcv {
                 break;
             }
 
+            //m_pipelinePanel->showBase( input );
+            m_pipelinePanel->showMask( m_stageFrameResults[ STAGE_THRESHOLDING ] );
+            m_pipelinePanel->showEdges( m_stageFrameResults[ STAGE_EDGE_DETECTION ] );
+            m_pipelinePanel->showBlobs( m_stageFrameResults[ STAGE_FEATURES_EXTRACTION ] );
+            m_pipelinePanel->showTracking( m_stageFrameResults[ STAGE_KEYPOINTS_TRACKING ] );
+
+            m_pipelinePanel->cleanInfo();
+            m_pipelinePanel->setLogInfo( getCurrentDetectionMode() );
+            
+
             return _ret;
         }
 
         bool Detector::runInitialDetectionMode( const cv::Mat& input )
         {
+            _pipeline( input );
+
             if ( m_initialROI.size() != 4 )
             {
-                cout << "Must initialize with a given region of interest" << endl;
+                // cout << "Must initialize with a given region of interest" << endl;
                 return false;
             }
-
-            _pipeline( input );
 
             if ( m_candidatePoints.size() >= m_numPoints )
             {
@@ -172,7 +185,7 @@ namespace calibration { namespace concentric { namespace calibcv {
                             _tpt.vel    = cv::Point2f( 0.0f, 0.0f );
                             _tpt.found  = true;
 
-                            m_trackingPoints.push_back( _tpt );
+                            m_trackingPoints[q] = _tpt;
                         }
 
                         m_mode = MODE_TRACKING;
@@ -228,6 +241,19 @@ namespace calibration { namespace concentric { namespace calibcv {
                                                   _cornerOptions[( 2 + q ) % 4], _cornerOptions[( 3 + q ) % 4] );
                 if ( _isFit )
                 {
+                    float _xmin = candidatePatternPoints[ _leftIndx ].x;
+                    float _xmax = candidatePatternPoints[ _rightIndx ].x;
+                    float _ymin = candidatePatternPoints[ _topIndx ].y;
+                    float _ymax = candidatePatternPoints[ _bottomIndx ].y;
+
+                    m_cropROI = cv::Rect2f( cv::Point2f( _xmin, _ymin ), cv::Point2f( _xmax, _ymax ) );
+                    m_cropOrigin = cv::Point2f( _xmin, _ymin );
+
+                    cout << "_xmin = " << candidatePatternPoints[ _leftIndx ].x << endl;
+                    cout << "_xmax = " << candidatePatternPoints[ _rightIndx ].x << endl;
+                    cout << "_ymin = " << candidatePatternPoints[ _topIndx ].y << endl;
+                    cout << "_ymax = " << candidatePatternPoints[ _bottomIndx ].y << endl;
+
                     return true;
                 }
             }
@@ -248,19 +274,52 @@ namespace calibration { namespace concentric { namespace calibcv {
                     return false;
                 }
             }
+
+            return true;
         }
 
         bool Detector::runRecoveringMode( const cv::Mat& input )
         {
+            _pipeline( input );
+
+            if ( m_candidatePoints.size() >= m_numPoints )
+            {
+                if ( _computeInitialPattern( m_candidatePoints, m_matchedPoints ) )
+                {
+                    for ( int q = 0; q < m_matchedPoints.size(); q++ )
+                    {
+                        TrackingPoint _tpt;
+                        _tpt.pos    = m_matchedPoints[q];
+                        _tpt.vel    = cv::Point2f( 0.0f, 0.0f );
+                        _tpt.found  = true;
+
+                        m_trackingPoints[q] = _tpt;
+                    }
+
+                    m_mode = MODE_TRACKING;
+                    return true;
+                }
+            }
+
             return false;
         }
 
         void Detector::_pipeline( const cv::Mat& input )
         {
             m_stageFrameResults.clear();
+            m_frame = input;
+
+            // if ( m_mode == MODE_TRACKING )
+            // {
+            //     m_workingInput = input( m_cropROI ).clone();
+            // }
+            // else
+            // {
+                m_workingInput = input;
+            // }
 
             // thresholding step
-            _runMaskGenerator( input, 
+            _runMaskGenerator( m_workingInput, 
                                m_stageFrameResults[ STAGE_THRESHOLDING ] );
             // edge detection step
             _runEdgesGenerator( m_stageFrameResults[ STAGE_THRESHOLDING ], 
@@ -269,11 +328,10 @@ namespace calibration { namespace concentric { namespace calibcv {
             _runFeaturesExtractor( m_stageFrameResults[ STAGE_EDGE_DETECTION ],
                                    m_stageFrameResults[ STAGE_FEATURES_EXTRACTION ] );
             // tracking step
-            if ( m_mode == MODE_TRACKING )
-            {
-                _runTracking( m_stageFrameResults[ STAGE_FEATURES_EXTRACTION ],
-                              m_stageFrameResults[ STAGE_KEYPOINTS_TRACKING ] );
-            }
+            _runTracking( m_stageFrameResults[ STAGE_FEATURES_EXTRACTION ],
+                          m_stageFrameResults[ STAGE_KEYPOINTS_TRACKING ] );
+
+
         }
 
         void Detector::_runMaskGenerator( const cv::Mat& input, cv::Mat& output )
@@ -310,7 +368,7 @@ namespace calibration { namespace concentric { namespace calibcv {
             vector< cv::KeyPoint > _keypoints;
             m_blobsDetector->detect( input, _keypoints );
 
-            output = input.clone();
+            output = m_workingInput.clone();
 
             for ( cv::KeyPoint& _keypoint : _keypoints )
             {
@@ -328,13 +386,65 @@ namespace calibration { namespace concentric { namespace calibcv {
 
         void Detector::_runTracking( const cv::Mat& input, cv::Mat& output )
         {
+            if ( m_mode == MODE_TRACKING )
+            {
+                vector< bool > _assigned( m_candidatePoints.size(), false );
 
+                for ( int t = 0; t < m_trackingPoints.size(); t++ )
+                {
+                    m_trackingPoints[t].found = false;
+
+                    for ( int q = 0; q < m_candidatePoints.size(); q++ )
+                    {
+                        cv::Point2f _candidate = m_candidatePoints[q];
+
+                        if ( !_assigned[q] && utils::dist( m_trackingPoints[t].pos, _candidate/* + m_cropOrigin*/ ) < 30 )
+                        {
+                            m_trackingPoints[t].vel = _candidate/* + m_cropOrigin*/ - m_trackingPoints[t].pos;
+                            m_trackingPoints[t].pos = _candidate/* + m_cropOrigin*/;
+                            m_trackingPoints[t].found = true;
+                            _assigned[q] = true;
+                            break;
+                        }
+                    }
+                }
+
+                vector<cv::Point2f> corners = { m_trackingPoints[0].pos,
+                                                m_trackingPoints[ m_size.width - 1 ].pos,
+                                                m_trackingPoints[ m_size.width * ( m_size.height - 1 ) ].pos,
+                                                m_trackingPoints[ m_size.width * m_size.height - 1 ].pos };
+                float minX = 1000, maxX = -1000, minY = 1000, maxY = -1000;
+
+                for( cv::Point2f& tPoint : corners )
+                {
+                    minX = min( tPoint.x, minX );
+                    maxX = max( tPoint.x, maxX );
+                    minY = min( tPoint.y, minY );
+                    maxY = max( tPoint.y, maxY );
+                }
+                minX = max( minX - ROI_MARGIN, 0.0f );
+                minY = max( minY - ROI_MARGIN, 0.0f );
+                maxX = min( maxX + ROI_MARGIN, (float) m_frame.cols );
+                maxY = min( maxY + ROI_MARGIN, (float) m_frame.rows );
+
+                m_cropOrigin.x = minX;
+                m_cropOrigin.y = minY;
+
+                m_cropROI = cv::Rect2f( cv::Point2f( minX , minY ), cv::Point2f( maxX, maxY ) );
+            }
+            else
+            {
+                output = input.clone();
+            }
         }
 
 
         void Detector::getDetectedPoints( vector< cv::Point2f >& iPoints )
         {
-
+            for ( int q = 0; q < m_trackingPoints.size(); q++ )
+            {
+                iPoints.push_back( m_trackingPoints[q].pos );
+            }
         }
 
         void Detector::getTimeCosts( vector< float >& timeCosts )
@@ -380,4 +490,4 @@ namespace calibration { namespace concentric { namespace calibcv {
 
     }
 
-}}}
+}}

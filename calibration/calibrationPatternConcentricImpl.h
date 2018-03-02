@@ -4,6 +4,8 @@
 #include "calibrationCommon.h"
 #include "calibrationPatternConcentricUtils.h"
 
+#include <panels/SPatternDetectorPanel.h>
+
 using namespace std;
 
 #define PIPELINE_MASKING_STAGE_MAX_VALUE 255
@@ -13,7 +15,9 @@ using namespace std;
 #define PIPELINE_EDGES_STAGE_SCALE 1
 #define PIPELINE_EDGES_STAGE_DELTA 0
 
-namespace calibration { namespace concentric { namespace calibcv {
+#define ROI_MARGIN 80
+
+namespace calibration { namespace concentric {
 
 
 	void drawConcentricPatternCorners( const vector< cv::Point2f >& iCorners, 
@@ -54,6 +58,8 @@ namespace calibration { namespace concentric { namespace calibcv {
 
 			private :
 
+			calibcv::SPatternDetectorPanel* m_pipelinePanel;
+
 			int m_mode;
 
 			cv::Size m_size;
@@ -61,12 +67,17 @@ namespace calibration { namespace concentric { namespace calibcv {
 
 			vector< cv::Point2f > m_initialROI;
 
+			cv::Point2f m_cropOrigin;
+			cv::Rect2f m_cropROI;
+
 			vector< cv::Point2f > m_candidatePoints;
 			vector< cv::Point2f > m_matchedPoints;
 			vector< TrackingPoint > m_trackingPoints;
 			cv::Point2f m_patternCenter;
 			cv::Point2f m_patternOrientation;
 
+			cv::Mat m_frame;
+			cv::Mat m_workingInput;
 			vector< cv::Mat > m_stageFrameResults;
 
 			CpuTimer m_timer;
@@ -111,4 +122,4 @@ namespace calibration { namespace concentric { namespace calibcv {
 		};
 	}
 
-}}}
+}}
