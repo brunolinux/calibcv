@@ -28,7 +28,7 @@
 Camera calibration is an important step in several applications, like augmented reality. To do calibration properly using current calibration methods we need to get features we can related in both 2D camera space and 3D world space to estimate the camera parameters that give this mapping. In this context, the use of grid patterns help by giving us the features we need, being the components in the pattern which we must detect in every frame in video.
 \\
 \\
-In this paper we use Zhang camera calibration technique implemented by OpenCV, and compare results using feature extraction of chessboard corners, symmetric/asymmetric circle grids, and concentric circle grid patterns, the first two, using funnctions implemented in OpenCV and the third one using our algorithm.
+In this paper we use Zhang \cite{CameraCalibration1} camera calibration technique implemented by OpenCV, and compare results using feature extraction of chessboard corners, symmetric/asymmetric circle grids, and concentric circle grid patterns, the first two, using funnctions implemented in OpenCV and the third one using our algorithm.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -65,24 +65,27 @@ Camera calibration, calibration pattern, circle grid, image processing.
 %
 \end{equation}
 
-To find these parameters, camera calibration methods make use of correspondances between 2D and 3D spaces in order to fit the parameters that best describe this mapping. We achieve this by minimizing the following function :
+In this equation we can detail each of the variables: $x,y,z$ are original coordinates of an object, $r_{ij}$ and $t_{ij}$ means the rotation and translation values respectively in the model matrix, $\alpha$ and $\beta$ represents the focal length in x and y axis respectively, $\mu_0$ and $\nu_0$ are the coordinates x and y at the optical centre.
+\\
+\\
+To find these parameters, camera calibration methods make use of correspondances between 2D and 3D spaces in order to fit the parameters that best describe this mapping. We achieve this by minimizing the following function:
 
 \begin{equation}
   \sum^{m}_{i} \sum^{n}_{j} \Vert TP^{ij}_{3D} - P^{ij}_{2D} \Vert^{2}
 \end{equation}
 
-Where we are trying to minimize the difference between the expected projection and the actual projection over some set of features.The key idea is that supplying sufficient features that have a correct mapping, we can get the 11 parameters needed that minimize this function. So, a key part is the detection of these features.
+Where we are trying to minimize the difference between the expected projection and the actual projection over some set of features. The key idea is that supplying sufficient features that have a correct mapping, we can get the 11 parameters needed that minimize this function. So, a key part is the detection of these features.
 \\
 \\
 In equation $2$ we are looping through a set of features $n$ that are found in each frame of a video of $m$ frames, so, we basically need to detect some feature points in each frame of video, which is what we focus in this paper.
 
 \section{About the method}
-To extract these features from every frame of video we implemented the following pipeline using image processing primitives.
+To compare results of feature extraction, we implemented the following pipeline.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=2.5in]{_img/algorithm_overview.png}
-\caption{Pattern detection pipeline.}
+\includegraphics[width=2.5in]{_img/img_report3_pipeline.png}
+\caption{Comparison pipeline.}
 \end{figure}
 
 \subsection{ Use of ROI }
