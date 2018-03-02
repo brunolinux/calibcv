@@ -140,6 +140,17 @@ namespace calibration { namespace concentric {
             m_pipelinePanel->showTracking( m_stageFrameResults[ STAGE_KEYPOINTS_TRACKING ] );
 
             m_pipelinePanel->cleanInfo();
+
+            // string _logString = "";
+            // _logString += "log ******************\n\r";
+
+            // _logString += "numPoints: "; _logString += std::to_string( m_candidatePoints.size() ); _logString += "\n\r";
+            // _logString += "state: "; _logString += getCurrentDetectionMode(); _logString += "\n\r";
+
+            // _logString += "**********************\n\r";
+
+            // cout << "numCandidatePoints: " << m_candidatePoints.size() << endl;
+
             m_pipelinePanel->setLogInfo( getCurrentDetectionMode() );
             
 
@@ -249,10 +260,10 @@ namespace calibration { namespace concentric {
                     m_cropROI = cv::Rect2f( cv::Point2f( _xmin, _ymin ), cv::Point2f( _xmax, _ymax ) );
                     m_cropOrigin = cv::Point2f( _xmin, _ymin );
 
-                    cout << "_xmin = " << candidatePatternPoints[ _leftIndx ].x << endl;
-                    cout << "_xmax = " << candidatePatternPoints[ _rightIndx ].x << endl;
-                    cout << "_ymin = " << candidatePatternPoints[ _topIndx ].y << endl;
-                    cout << "_ymax = " << candidatePatternPoints[ _bottomIndx ].y << endl;
+                    // cout << "_xmin = " << candidatePatternPoints[ _leftIndx ].x << endl;
+                    // cout << "_xmax = " << candidatePatternPoints[ _rightIndx ].x << endl;
+                    // cout << "_ymin = " << candidatePatternPoints[ _topIndx ].y << endl;
+                    // cout << "_ymax = " << candidatePatternPoints[ _bottomIndx ].y << endl;
 
                     return true;
                 }
@@ -398,7 +409,7 @@ namespace calibration { namespace concentric {
                     {
                         cv::Point2f _candidate = m_candidatePoints[q];
 
-                        if ( !_assigned[q] && utils::dist( m_trackingPoints[t].pos, _candidate/* + m_cropOrigin*/ ) < 30 )
+                        if ( !_assigned[q] && utils::dist( m_trackingPoints[t].pos, _candidate/* + m_cropOrigin*/ ) < 20 )
                         {
                             m_trackingPoints[t].vel = _candidate/* + m_cropOrigin*/ - m_trackingPoints[t].pos;
                             m_trackingPoints[t].pos = _candidate/* + m_cropOrigin*/;
