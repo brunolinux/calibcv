@@ -184,15 +184,19 @@ namespace calibcv
 
     void SPatternDetectorPanel::setLogInfo( string txtInfo )
     {
-        m_logInfo = txtInfo;
+        m_logInfo = "log: ";
+        m_logInfo += txtInfo;
+
+        cv::putText( m_baseBg, m_logInfo,
+                     cv::Point( 320, 240 ),
+                     cv::FONT_HERSHEY_SIMPLEX, TEXT_FONT_SCALE, TEXT_FONT_COLOR_INFO,
+                     TEXT_THICKNESS );
+
+        showBase( m_baseBg );
     }
 
     void SPatternDetectorPanel::cleanInfo()
     {
         m_baseBg.setTo( cv::Scalar( 0, 0, 0 ) );
-        cv::putText( m_baseBg, m_logInfo,
-                     cv::Point( 320, 240 ),
-                     cv::FONT_HERSHEY_SIMPLEX, TEXT_FONT_SCALE, TEXT_FONT_COLOR_INFO,
-                     TEXT_THICKNESS );
     }
 }

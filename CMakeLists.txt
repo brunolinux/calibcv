@@ -3,6 +3,13 @@ cmake_minimum_required( VERSION 3.5.0 )
 
 set( CMAKE_CXX_STANDARD 11 )
 
+set( CMAKE_BUILD_TYPE Debug )
+
+#set( CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}" )
+#set( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3" )
+
+message( "build mode is: ${CMAKE_BUILD_TYPE}" )
+
 project( calibcv )
 
 add_definitions( -DRESOURCES_PATH="${CMAKE_SOURCE_DIR}/res/" )
