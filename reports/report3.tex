@@ -16,7 +16,7 @@
 
 
 \begin{document}
-\title{Detection and tracking of circle grid patterns \\ for camera calibration}
+\title{Camera calibration using OpenCV}
 
 \author{Wilbert~Pumacay,~\textit{Catholic University San Pablo},~wilbert.pumacay@ucsp.edu.pe\\
         Gerson~Vizcarra,~\textit{Catholic University San Pablo},~gerson.vizcarra@ucsp.edu.pe}
@@ -28,7 +28,7 @@
 Camera calibration is an important step in several applications, like augmented reality. To do calibration properly using current calibration methods we need to get features we can related in both 2D camera space and 3D world space to estimate the camera parameters that give this mapping. In this context, the use of grid patterns help by giving us the features we need, being the components in the pattern which we must detect in every frame in video.
 \\
 \\
-In this paper we use Zhang \cite{CameraCalibration1} camera calibration technique implemented by OpenCV, and compare results using feature extraction of chessboard corners, symmetric/asymmetric circle grids, and concentric circle grid patterns, the first two, using funnctions implemented in OpenCV and the third one using our algorithm.
+In this paper we use Zhang \cite{CameraCalibration1} camera calibration technique implemented by OpenCV, and compare results using feature extraction of chessboard corners, symmetric/asymmetric circle grids, and concentric circle grid patterns, the first two, using funnctions implemented in OpenCV and the third one using our own algorithm by implementing a pipeline that gets these features by combining various techniques from classical image processing.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -38,7 +38,7 @@ Camera calibration, calibration pattern, circle grid, image processing.
 
 \section{Introduction}
 
-\IEEEPARstart{T}{he} camera calibration problem consists of finding 11 parameters that describe the mapping between 2D camera space and 3D world space. Six parameters, called extrinsic, come from an homogeneous transform, giving 6 parameters ( rotation and translation around the axes ). The other 5 parameters, called intrinsic, define some internal properties of the camera. This can be expressed in the following transformation equation :
+\IEEEPARstart{T}{he} camera calibration problem consists of finding 11 parameters that describe the mapping between 2D camera space and 3D world space. Six parameters, called extrinsic, come from an homogeneous transform, giving 6 parameters ( rotation and translation around the axes ). The other 5 parameters, called intrinsic, define some internal properties of the camera. This can be expressed in the following transformation equation:
 
 \begin{equation}
   \begin{bmatrix}
@@ -65,10 +65,10 @@ Camera calibration, calibration pattern, circle grid, image processing.
 %
 \end{equation}
 
-In this equation we can detail each of the variables: $x,y,z$ are original coordinates of an object, $r_{ij}$ and $t_{ij}$ means the rotation and translation values respectively in the model matrix, $\alpha$ and $\beta$ represents the focal length in x and y axis respectively, $\mu_0$ and $\nu_0$ are the coordinates x and y at the optical centre.
+In this equation we can detail each of the variables: $x,y,z$ are original coordinates of an object, $r_{ij}$ and $t_{ij}$ means the rotation and translation values respectively in the model matrix, $\alpha$ and $\beta$ represents the focal length in x and y axis respectively, $\mu_0$ and $\nu_0$ are the coordinates x and y at the optical center.
 \\
 \\
-To find these parameters, camera calibration methods make use of correspondances between 2D and 3D spaces in order to fit the parameters that best describe this mapping. We achieve this by minimizing the following function:
+To find these parameters, camera calibration methods make use of correspondences between 2D and 3D spaces in order to fit the parameters that best describe this mapping. We achieve this by minimizing the following function:
 
 \begin{equation}
   \sum^{m}_{i} \sum^{n}_{j} \Vert TP^{ij}_{3D} - P^{ij}_{2D} \Vert^{2}
@@ -88,7 +88,31 @@ To compare results of feature extraction, we implemented the following pipeline.
 \caption{Comparison pipeline.}
 \end{figure}
 
-\subsection{ Use of ROI }
+\subsection{ Pattern detection }
+We used three principal patterns to calibrate the camera with OpenCV calibration: Chessboard pattern, Circle symmetric/asymmetric pattern and circle concentric pattern. In the first two patterns we applied OpenCV implemented functions, in chessboard pattern we have to recognize corners and save their position, in circle pattern we have to detect circles and save the position of their centers.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/img_report3_detect_chessboard.png}
+\caption{Chessboard pattern detection.}
+\end{figure}
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/img_report3_detect_asymmetric.png}
+\caption{Circle asymmetric grid pattern detection.}
+\end{figure}
+
+
+\subsection{ Circle concentric pattern detection}
+The pipeline of our pattern detection and tracking algorithm works as follows:
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/algorithm_overview.png}
+\caption{Pipeline of previous work.}
+\end{figure}
+
+\subsubsection{ Use of ROI }
 We setted a ROI (Region Of Interest) based on the firsts iterations, after we extract enough features on \textit{Feature extraction} stage, we used a ROI based on coordinates in features and a margin for predicting next frame features in order to reduce processing and avoid noise produced by ambient, we will apply next masking, edge detection, and feature extraction using ROI.
 \\
 \\
@@ -98,7 +122,7 @@ We setted a ROI (Region Of Interest) based on the firsts iterations, after we ex
 \caption{ROI crop.}
 \end{figure}
 
-\subsection{ Masking }
+\subsubsection{ Masking }
 This step is in charge of isolating the pattern by using threhsolding operations.
 \\
 \\
@@ -124,7 +148,7 @@ The approach consists on creating a mask from the grayscale transformed image ap
 \caption{Image mask applied to ROI.}
 \end{figure}
 
-\subsection{Edge detection}
+\subsubsection{Edge detection}
 In this stage of the pipeline we extract edges from the result of the previous stage. In order to do this, we applied \textbf{Scharr operators} on \textit{x} and \textit{y} axis (as described in algorithm 2); Scharr is the result from Sobel algorithm minimizing weighted mean squared angular error in Fourier domain.
 %% TODO: Gerson
 \begin{algorithm}
@@ -145,10 +169,11 @@ In this stage of the pipeline we extract edges from the result of the previous s
 \caption{Edge detection to mask.}
 \end{figure}
 
-\subsection{Feature extraction}
+\subsubsection{Feature extraction}
 The last stage consist of extracting the features needed for the calibration from the edges detected in the previous stage. We used OpenCV's \textbf{SimpleBlobDetector} that apply an extra thresholding on image, applies the findContours algorithm calculating their centers, groups centers of several images by their coordinates in blobs, finally, estimates the final centers of blobs. For detecting only pattern blobs, we had to apply similar heuristics to avobe (color blobs, area, aspect ratio, and convexity of points) specified in \textit{Algorithm 3}.
 \\
 \\
+%%%%%CHANGE THIS WILBERT%%%%%%
 Also, in this stage we recognized the order of features detected. We started calculating the center of pattern given by the average coordinates of all features, then we computed features which are located in the corners of the pattern given by the farthest features from the center point. Next, we detected the vertical border points, selecting the nearest point to the line that pass through two corners. Similarly, we used border points to recognize the horizontal strips of points.
 \\
 \\ 
@@ -158,6 +183,24 @@ Finally, we used this information to give an ID number to every key point in pat
 It should be noted that we only do recognition of features once, in next frames we only will extract features using \textit{SimpleBlobDetector} and track key points result in next step.
 \\
 \\
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/img_report3_pattern_matching.jpg}
+\caption{Edge detection to mask.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/img_report3_pattern_order_check.jpg}
+\caption{Edge detection to mask.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/img_pattern_orientation_checking.jpg}
+\caption{Edge detection to mask.}
+\end{figure}
+
 %% TODO: Gerson
 \begin{algorithm}
 \caption{Feature extraction}
@@ -179,28 +222,14 @@ It should be noted that we only do recognition of features once, in next frames 
 \caption{Result after feature detection.}
 \end{figure}
 
-\subsection{Tracking}
-To track Feature Points extracted in previous phase, we compared stored keyPoints of the last frame and the new Keypoints of the current frame, we stored new positions using a range of movement and a delta that represents speed in movement between frames.
-\\
-\\
-Also, when not all keypoints are detected in previous phase, we try to predice the position of the lost points using neighbors information (position and speed).
-\\
-\\
-\section{Results}
-We implemented the pipeline using the \textbf{OpenCV} library. The following images show some results of applying the approach to a video recording.
 
-%
-\begin{figure}[H]
-\centering
-\includegraphics[width=2.5in]{_img/img_report2_pattern.png}
-\caption{Resulting detected pattern.}
-\end{figure}
-%
+
+
+\section{Results}
+%todo wilbert
+
 \section{Conclusions and Future improvements}
-The main issue in our pipeline implementation is that we cannot predict accuratedly the lost points when tracking, and we depend of a neighborhood to predict position.
-\\
-\\
-We plan on using more object information, like rectangular layout shape of the features combined to aspect ratio of circunferences.
+%todo wilbert
 
 \IEEEtriggeratref{8}
 
@@ -219,10 +248,8 @@ We plan on using more object information, like rectangular layout shape of the f
   Derek Bradley, Gerhard Roth \\
   \textit{Adaptive Thresholding Using the Integral Image.} - 2011
 
-
 \end{thebibliography}
 
 
 \end{document}
-
 
