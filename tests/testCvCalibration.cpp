@@ -18,22 +18,22 @@
 // #define TEST_PATTERN_SQUARE_LENGTH 0.0235
 // #define TEST_PATTERN_SIZE cv::Size( 9, 6 )
 // #define TEST_CALIBRATION_THRESHOLD_COUNT 30
-// #define VIDEO_FILE_ID "calibration_test_chessboard_1.avi"
-// #define TEST_CALIBRATION_SAVE_FILE "calibration_test_chessboard_1.yaml"
+// #define VIDEO_FILE_ID "Camera_Play_3/calib_ps3_chessboard.avi"
+// #define TEST_CALIBRATION_SAVE_FILE "calib_ps3_chessboard.yaml"
 
 // #define TEST_PATTERN_TYPE calibration::PATTERN_TYPE_ASYMMETRIC_CIRCLES
 // #define TEST_PATTERN_SQUARE_LENGTH 0.0367
 // #define TEST_PATTERN_SIZE cv::Size( 4, 11 )
 // #define TEST_CALIBRATION_THRESHOLD_COUNT 30
-// #define VIDEO_FILE_ID "calibration_test_asymmetric_1.avi"
-// #define TEST_CALIBRATION_SAVE_FILE "calibration_test_asymmetric_1.yaml"
+// #define VIDEO_FILE_ID "Camera_Play_3/calib_ps3_asymmetric_2.avi"
+// #define TEST_CALIBRATION_SAVE_FILE "calib_ps3_asymmetric_2.yaml"
 
-// #define TEST_PATTERN_TYPE calibration::PATTERN_TYPE_CONCENTRIC_CIRCLES
-// #define TEST_PATTERN_SQUARE_LENGTH 0.0235
-// #define TEST_PATTERN_SIZE cv::Size( 5, 4 )
-// #define TEST_CALIBRATION_THRESHOLD_COUNT 30
-// #define VIDEO_FILE_ID "calibration_test_concentric_1.avi"
-// #define TEST_CALIBRATION_SAVE_FILE "calibration_test_concentric_1.yaml"
+#define TEST_PATTERN_TYPE calibration::PATTERN_TYPE_CONCENTRIC_CIRCLES
+#define TEST_PATTERN_SQUARE_LENGTH 0.0235
+#define TEST_PATTERN_SIZE cv::Size( 5, 4 )
+#define TEST_CALIBRATION_THRESHOLD_COUNT 30
+#define VIDEO_FILE_ID "Camera_Play_3/calib_ps3_concentric.avi"
+#define TEST_CALIBRATION_SAVE_FILE "calib_ps3_concentric.yaml"
 
 // #define TEST_PATTERN_TYPE calibration::PATTERN_TYPE_CONCENTRIC_CIRCLES
 // #define TEST_PATTERN_SQUARE_LENGTH 0.0235
@@ -49,12 +49,19 @@
 // #define VIDEO_FILE_ID "calibrationVideos/Camera_Play_3/calib_ps3_concentric.avi"
 // #define TEST_CALIBRATION_SAVE_FILE "calibration_test_concentric_3.yaml"
 
-#define TEST_PATTERN_TYPE calibration::PATTERN_TYPE_CONCENTRIC_CIRCLES
-#define TEST_PATTERN_SQUARE_LENGTH 0.0235
-#define TEST_PATTERN_SIZE cv::Size( 5, 4 )
-#define TEST_CALIBRATION_THRESHOLD_COUNT 30
-#define VIDEO_FILE_ID "calibration_ps3eyecam.avi"
-#define TEST_CALIBRATION_SAVE_FILE "calibration_test_concentric_4.yaml"
+// #define TEST_PATTERN_TYPE calibration::PATTERN_TYPE_CONCENTRIC_CIRCLES
+// #define TEST_PATTERN_SQUARE_LENGTH 0.0235
+// #define TEST_PATTERN_SIZE cv::Size( 5, 4 )
+// #define TEST_CALIBRATION_THRESHOLD_COUNT 30
+// #define VIDEO_FILE_ID "calibration_ps3eyecam.avi"
+// #define TEST_CALIBRATION_SAVE_FILE "calibration_test_concentric_4.yaml"
+
+// #define TEST_PATTERN_TYPE calibration::PATTERN_TYPE_CONCENTRIC_CIRCLES
+// #define TEST_PATTERN_SQUARE_LENGTH 0.0235
+// #define TEST_PATTERN_SIZE cv::Size( 5, 4 )
+// #define TEST_CALIBRATION_THRESHOLD_COUNT 30
+// #define VIDEO_FILE_ID "LifeCam/calib_rings_1.avi"
+// #define TEST_CALIBRATION_SAVE_FILE "calib_rings_1.yaml"
 
 using namespace std;
 
