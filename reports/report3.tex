@@ -180,42 +180,51 @@ Lastly, we check that the orientation of the board is in some range, as shown in
 \caption{Pattern final ordering after matching.}
 \end{figure}
 
+\subsection{Calibration process}
+To do camera calibration process, we took some frames using tools to show the distribution of points in frames in order to improve results: better calibration requires better distribution of points.
+\\
+\\
+We used 30 calibration frames trying to distribute points location as max as possible. In figure 9 we show screenshots of heatmap and point distribution of a calibration process.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=1.5in]{_img/img_report3_heatmap.png}
+\includegraphics[width=1.5in]{_img/img_report3_points_distribution.png}
+\caption{Left: Heatmap. Right: Points distribution.}
+\end{figure}
+
+Also we created a screen that shows the angle histogram of taken frames, like previous tools, it helps us to distribute angles better.
+\begin{figure}[H]
+\centering
+\includegraphics[width=1.5in]{_img/img_report3_angle_histogram.png}
+\caption{Angle distribution histogram screen.}
+\end{figure}
+
 \section{Results}
 We calibrated two cameras using as feature detection the three detection algorithms described earlier ( OpenCV's chessboard and circle finder and our algorithm )
 
-For each calibration, we took a fixed batch of 30 correctly processed images. The results are the following :
+For each calibration, we took a fixed batch of 30 correctly processed images. The results are the following:
 \\
 \\
-\begin{table}[H]
-\begin{tabular}{ |p{2cm}||p{2cm}|p{2cm}|p{2cm}|  }
+\begin{table}[h]
+\centering 
+\begin{tabular}{ |c||c|c|c|c|c|c|c|  }
  \hline
- Parameter & Chessboard & Asymmetric & Rings \\
+ Parameter & \multicolumn{3}{c|}{PS3 Eye cam} & \multicolumn{3}{c|}{MS lifecam}\\
+ \cline{2-7}
+ & Chessboard & Circles & Rings & Chessboard & Circles & Rings \\
  \hline
- fx        & 609.6& 609.5& 627.0\\
- fy        & 609.4& 612.6& 631.8\\
- vx        & 326.9& 351.5& 342.7\\
- vy 	   & 223.8& 227.2& 231.2\\
- RMS error & 0.74 & 0.22 & 0.19\\
+ fx        & 876.2 & 933.2 & 829.5 & 609.6 & 609.5 & 627.0\\
+ fy        & 876.6 & 935.4 & 834.8 & 609.4 & 612.6 & 631.8\\
+ vx        & 325.0 & 342.3 & 320.0 & 326.9 & 351.5 & 342.7\\
+ vy 	       & 251.4 & 220.7 & 243.5 & 223.8 & 227.2 & 231.2\\
+ RMS error & 0.313 & 0.184 & 0.187 & 0.74 & 0.22 & 0.19\\
+ Colinearity before & 0.152 & 0.051 & 0.17 & 0.546 & 0.068 & 0.05\\
+ Colinearity after & 0.127 & 0.054 & 0.152 & 0.166 & 0.011 & 0.005\\
  \hline
 \end{tabular}
 \\
-\caption{MS Life Cam calibration}
-\end{table}
-
-\begin{table}[H]
-\begin{tabular}{ |p{2cm}||p{2cm}|p{2cm}|p{2cm}|  }
- \hline
- Parameter & Chessboard & Asymmetric & Rings \\
- \hline
- fx        & 876.2& 933.2& 829.5\\
- fy        & 876.6& 935.4& 834.8\\
- vx        & 325.0& 342.3& 320.0\\
- vy 	   & 251.4& 220.7& 243.5\\
- RMS error & 0.313& 0.184& 0.187\\
- \hline
-\end{tabular}
-\\
-\caption{PS3 Eye Cam calibration}
+\caption{PS3 Eye Cam and MS Lifecam calibration results}
 \end{table}
 
 \section{Conclusions and Future improvements}
