@@ -1,4 +1,8 @@
 %YAML:1.0
 ---
 SquareSpacing: 0.0443
-CalibrationVideo: "PS3_rings.avi"
+PatternType: 3
+PatternSizeWidth: 5
+PatternSizeHeight: 4
+CalibrationVideo: "LifeCam_rings.avi"
+CalibrationFile: "LifeCam_rings_calibration.yaml"

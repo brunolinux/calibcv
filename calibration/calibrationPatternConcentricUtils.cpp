@@ -139,9 +139,9 @@ namespace utils {
 		float _xEnd = points[ points.size() - 1 ].x;
 		float _yEnd = points[ points.size() - 1 ].y;
 
-		float _a = yEnd - yStart;
-		float _b = xStart - xEnd;
-		float _c = xEnd * yStart - xStart * yEnd;
+		float _a = _yEnd - _yStart;
+		float _b = _xStart - _xEnd;
+		float _c = _xEnd * _yStart - _xStart * _yEnd;
 
 		float _divider = sqrt( _a * _a + _b * _b );
 
@@ -149,7 +149,7 @@ namespace utils {
 
 		for ( int q = 1; q < points.size() - 1; q++ )
 		{
-			_distCum += abs( _a * points[q].x + _b * points[q].y + c ) / _divider;
+			_distCum += abs( _a * points[q].x + _b * points[q].y + _c ) / _divider;
 		}
 
 		return _distCum / ( points.size() - 2 );

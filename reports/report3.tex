@@ -1,5 +1,3 @@
-
-
 \documentclass[journal]{IEEEtran}
 
 \usepackage{cite}
@@ -91,19 +89,7 @@ To compare results of feature extraction, we implemented the following pipeline.
 \subsection{ Pattern detection }
 We used three principal patterns to calibrate the camera with OpenCV calibration: Chessboard pattern, Circle symmetric/asymmetric pattern and circle concentric pattern. In the first two patterns we applied OpenCV implemented functions, in chessboard pattern we have to recognize corners and save their position, in circle pattern we have to detect circles and save the position of their centers.
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=2.5in]{_img/img_report3_detect_chessboard.png}
-\caption{Chessboard pattern detection.}
-\end{figure}
-\begin{figure}[H]
-\centering
-\includegraphics[width=2.5in]{_img/img_report3_detect_asymmetric.png}
-\caption{Circle asymmetric grid pattern detection.}
-\end{figure}
-
-
-\subsection{ Circle concentric pattern detection}
+\subsection{Circle concentric pattern detection}
 The pipeline of our pattern detection and tracking algorithm works as follows:
 
 \begin{figure}[H]
@@ -112,24 +98,11 @@ The pipeline of our pattern detection and tracking algorithm works as follows:
 \caption{Pipeline of previous work.}
 \end{figure}
 
-\subsubsection{ Use of ROI }
-We setted a ROI (Region Of Interest) based on the firsts iterations, after we extract enough features on \textit{Feature extraction} stage, we used a ROI based on coordinates in features and a margin for predicting next frame features in order to reduce processing and avoid noise produced by ambient, we will apply next masking, edge detection, and feature extraction using ROI.
-\\
-\\
-\begin{figure}[H]
-\centering
-\includegraphics[width=2.5in]{_img/img_report2_processing_window.png}
-\caption{ROI crop.}
-\end{figure}
-
 \subsubsection{ Masking }
 This step is in charge of isolating the pattern by using threhsolding operations.
 \\
 \\
 The approach consists on creating a mask from the grayscale transformed image applying \textbf{Adaptive Thresholding algorithm}, this algorithm relies on Integral Image technique especified in \cite{IntegralImageThresholding}.
-\\
-\\
-%% TODO: Gerson
 \begin{algorithm}
 \caption{Masking}
 \label{alg:mask2}
@@ -141,7 +114,6 @@ The approach consists on creating a mask from the grayscale transformed image ap
 \end{algorithmic}
 \end{algorithm}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 \begin{figure}[H]
 \centering
 \includegraphics[width=2.5in]{_img/img_report2_mask.png}
@@ -170,51 +142,7 @@ In this stage of the pipeline we extract edges from the result of the previous s
 \end{figure}
 
 \subsubsection{Feature extraction}
-The last stage consist of extracting the features needed for the calibration from the edges detected in the previous stage. We used OpenCV's \textbf{SimpleBlobDetector} that apply an extra thresholding on image, applies the findContours algorithm calculating their centers, groups centers of several images by their coordinates in blobs, finally, estimates the final centers of blobs. For detecting only pattern blobs, we had to apply similar heuristics to avobe (color blobs, area, aspect ratio, and convexity of points) specified in \textit{Algorithm 3}.
-\\
-\\
-%%%%%CHANGE THIS WILBERT%%%%%%
-Also, in this stage we recognized the order of features detected. We started calculating the center of pattern given by the average coordinates of all features, then we computed features which are located in the corners of the pattern given by the farthest features from the center point. Next, we detected the vertical border points, selecting the nearest point to the line that pass through two corners. Similarly, we used border points to recognize the horizontal strips of points.
-\\
-\\ 
-Finally, we used this information to give an ID number to every key point in pattern and store their location to track in next phase.
-\\
-\\
-It should be noted that we only do recognition of features once, in next frames we only will extract features using \textit{SimpleBlobDetector} and track key points result in next step.
-\\
-\\
-\begin{figure}[H]
-\centering
-\includegraphics[width=2.5in]{_img/img_report3_pattern_matching.jpg}
-\caption{Edge detection to mask.}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=2.5in]{_img/img_report3_pattern_order_check.jpg}
-\caption{Edge detection to mask.}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=2.5in]{_img/img_pattern_orientation_checking.jpg}
-\caption{Edge detection to mask.}
-\end{figure}
-
-%% TODO: Gerson
-\begin{algorithm}
-\caption{Feature extraction}
-\begin{algorithmic}[1]
-\State $\textit{Set up detector parameters}$
-\State $\textit{SimpleBlobDetector}(params)$
-\State $keypoints   = \textit{detect}(mask)$ 
-\State $midPt   = \textit{avg}(keypoints)$
-\State $newKeypts[corners] = farthest(keypoints, midPt)$
-\State $newKeypts[bord] = near(newKeypts[corners], keypoints)$
-\State $newKeypts[rest] = near(newKeypts[bord], keypoints)$\\
-\Return $newKeypts$
-\end{algorithmic}
-\end{algorithm}
+The last stage consist of extracting the features needed for the calibration from the edges detected in the previous stage. We used OpenCV's \textbf{SimpleBlobDetector} that applies an extra thresholding on the image, applies the \textbf{findContours} algorithm to calculate the blob centers, groups centers of several images by their coordinates in blobs and finally, estimates the final centers of the blobs. For detecting only pattern blobs, we had to apply similar heuristics to above (color blobs, area, aspect ratio, and convexity of points).
 
 \begin{figure}[H]
 \centering
@@ -222,14 +150,88 @@ It should be noted that we only do recognition of features once, in next frames 
 \caption{Result after feature detection.}
 \end{figure}
 
+\subsection{Pattern Matching and Ordering}
+Once we have the features extracted, we have to order them for them to be used in the calibration algorithm. To achieve this, we made a simple algorithm that matches the best candidate grid to the current features, and correct by the orientation in order to choose a correct ordering.
+\\
+\\
+We first create a bounding box of the current possible corners. Then, we take the outer most corners as the corners of the pattern. With this information, we can compute a candidate grid that represents the positions where the candidate points should be, as seen in figure 7.
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/img_report3_pattern_matching.jpg}
+\caption{Grid pattern matching.}
+\end{figure}
 
+We check for each combination of outer most corners, which ordering gives the best fit. This will give us a correct ordering of the outer most corners of the pattern.
+\\
+\\
+Lastly, we check that the orientation of the board is in some range, as shown in figure 8, which will complete the corner ordering, as shown in figure 9.
+\\
+\\
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/img_pattern_orientation_checking.jpg}
+\caption{Pattern orientation check.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/img_report3_pattern_order_check.jpg}
+\caption{Pattern final ordering after matching.}
+\end{figure}
 
 \section{Results}
-%todo wilbert
+We calibrated two cameras using as feature detection the three detection algorithms described earlier ( OpenCV's chessboard and circle finder and our algorithm )
+
+For each calibration, we took a fixed batch of 30 correctly processed images. The results are the following :
+\\
+\\
+\begin{table}[H]
+\begin{tabular}{ |p{2cm}||p{2cm}|p{2cm}|p{2cm}|  }
+ \hline
+ Parameter & Chessboard & Asymmetric & Rings \\
+ \hline
+ fx        & 609.6& 609.5& 627.0\\
+ fy        & 609.4& 612.6& 631.8\\
+ vx        & 326.9& 351.5& 342.7\\
+ vy 	   & 223.8& 227.2& 231.2\\
+ RMS error & 0.74 & 0.22 & 0.19\\
+ \hline
+\end{tabular}
+\\
+\caption{MS Life Cam calibration}
+\end{table}
+
+\begin{table}[H]
+\begin{tabular}{ |p{2cm}||p{2cm}|p{2cm}|p{2cm}|  }
+ \hline
+ Parameter & Chessboard & Asymmetric & Rings \\
+ \hline
+ fx        & 876.2& 933.2& 829.5\\
+ fy        & 876.6& 935.4& 834.8\\
+ vx        & 325.0& 342.3& 320.0\\
+ vy 	   & 251.4& 220.7& 243.5\\
+ RMS error & 0.313& 0.184& 0.187\\
+ \hline
+\end{tabular}
+\\
+\caption{PS3 Eye Cam calibration}
+\end{table}
 
 \section{Conclusions and Future improvements}
-%todo wilbert
+We see by the results that our algorithm is close enough compared to OpenCV's pattern detectors. We got close to the camera matrix parameters obtained by the other detector algorithms.
+
+Also, the matching and ordering algorithm allows us to get the right ordering, allowing us to pick the right calibration frames to be used for the calibration process.
+
+This process is still quite cumbersome because we have to pick each frame that we want to use. We plan on making this process automatic, by keeping frames at some fixed rate and checking that we pick the right combination of frames from a big batch that give us a good overall distribution over the whole field of view. We have made some tools to help us with this task, as shown in Fig. 9.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/tools.png}
+\caption{Pattern final ordering after matching.}
+\end{figure}
+
+We have a heat-map that give us a distribution visualizer, as well as a histogram to be sure we are picking the patterns at some range of orientations. 
 
 \IEEEtriggeratref{8}
 

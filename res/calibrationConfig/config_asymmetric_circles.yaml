@@ -1,4 +1,8 @@
 %YAML:1.0
 ---
 SquareSpacing: 0.0353
-CalibrationVideo: "PS3_asymmetric_circles.avi"
+PatternType: 2
+PatternSizeWidth: 4
+PatternSizeHeight: 11
+CalibrationVideo: "LifeCam_asymmetric_circles.avi"
+CalibrationFile: "LifeCam_asymmetric_circles_calibration.yaml"

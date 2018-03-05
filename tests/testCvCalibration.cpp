@@ -12,89 +12,77 @@
 #define WINDOW_ORIGINAL_FRAME "wOriginalFrame"
 #define WINDOW_CORRECTED_FRAME "wCorrectedFrame"
 #define SAMPLE_TIME 33 // 30fps
-// #define VIDEO_FILE_ID "calibration_ps3eyecam_checkerboard_3.avi"
 
-// #define TEST_PATTERN_TYPE calibration::PATTERN_TYPE_CHESSBOARD
-// #define TEST_PATTERN_SQUARE_LENGTH 0.0235
-// #define TEST_PATTERN_SIZE cv::Size( 9, 6 )
-// #define TEST_CALIBRATION_THRESHOLD_COUNT 30
-// #define VIDEO_FILE_ID "Camera_Play_3/calib_ps3_chessboard.avi"
-// #define TEST_CALIBRATION_SAVE_FILE "calib_ps3_chessboard.yaml"
-
-// #define TEST_PATTERN_TYPE calibration::PATTERN_TYPE_ASYMMETRIC_CIRCLES
-// #define TEST_PATTERN_SQUARE_LENGTH 0.0367
-// #define TEST_PATTERN_SIZE cv::Size( 4, 11 )
-// #define TEST_CALIBRATION_THRESHOLD_COUNT 30
-// #define VIDEO_FILE_ID "Camera_Play_3/calib_ps3_asymmetric_2.avi"
-// #define TEST_CALIBRATION_SAVE_FILE "calib_ps3_asymmetric_2.yaml"
-
-#define TEST_PATTERN_TYPE calibration::PATTERN_TYPE_CONCENTRIC_CIRCLES
-#define TEST_PATTERN_SQUARE_LENGTH 0.0235
-#define TEST_PATTERN_SIZE cv::Size( 5, 4 )
 #define TEST_CALIBRATION_THRESHOLD_COUNT 30
-#define VIDEO_FILE_ID "Camera_Play_3/calib_ps3_concentric.avi"
-#define TEST_CALIBRATION_SAVE_FILE "calib_ps3_concentric.yaml"
-
-// #define TEST_PATTERN_TYPE calibration::PATTERN_TYPE_CONCENTRIC_CIRCLES
-// #define TEST_PATTERN_SQUARE_LENGTH 0.0235
-// #define TEST_PATTERN_SIZE cv::Size( 5, 4 )
-// #define TEST_CALIBRATION_THRESHOLD_COUNT 30
-// #define VIDEO_FILE_ID "calibrationVideos/LifeCam/calib_rings_1.avi"
-// #define TEST_CALIBRATION_SAVE_FILE "calibration_test_concentric_2.yaml"
-
-// #define TEST_PATTERN_TYPE calibration::PATTERN_TYPE_CONCENTRIC_CIRCLES
-// #define TEST_PATTERN_SQUARE_LENGTH 0.0235
-// #define TEST_PATTERN_SIZE cv::Size( 5, 4 )
-// #define TEST_CALIBRATION_THRESHOLD_COUNT 30
-// #define VIDEO_FILE_ID "calibrationVideos/Camera_Play_3/calib_ps3_concentric.avi"
-// #define TEST_CALIBRATION_SAVE_FILE "calibration_test_concentric_3.yaml"
-
-// #define TEST_PATTERN_TYPE calibration::PATTERN_TYPE_CONCENTRIC_CIRCLES
-// #define TEST_PATTERN_SQUARE_LENGTH 0.0235
-// #define TEST_PATTERN_SIZE cv::Size( 5, 4 )
-// #define TEST_CALIBRATION_THRESHOLD_COUNT 30
-// #define VIDEO_FILE_ID "calibration_ps3eyecam.avi"
-// #define TEST_CALIBRATION_SAVE_FILE "calibration_test_concentric_4.yaml"
-
-// #define TEST_PATTERN_TYPE calibration::PATTERN_TYPE_CONCENTRIC_CIRCLES
-// #define TEST_PATTERN_SQUARE_LENGTH 0.0235
-// #define TEST_PATTERN_SIZE cv::Size( 5, 4 )
-// #define TEST_CALIBRATION_THRESHOLD_COUNT 30
-// #define VIDEO_FILE_ID "LifeCam/calib_rings_1.avi"
-// #define TEST_CALIBRATION_SAVE_FILE "calib_rings_1.yaml"
 
 using namespace std;
 
 
 
-int main( int argc, char* argv )
+int main( int argc, char** argv )
 {
+
+    if ( argc < 2 )
+    {
+        cout << "Usage: ./testCvCalibration PATTERN" << endl;
+        cout << "PATTERN: chessboard, rings, asymmetric_circles" << endl;
+        return -1;
+    }
+
+    cv::FileStorage _fs;
+    
+    string _configFile = RESOURCES_PATH;
+    _configFile += "calibrationConfig/config_";
+    _configFile += argv[1];
+    _configFile += ".yaml";
+
+    _fs.open( _configFile, cv::FileStorage::READ );
+
+    if ( !_fs.isOpened() )
+    {
+        cout << "error while reading file: " << _configFile << endl;
+        return -1;
+    }
+
+    float _squareSpacing;
+    int _patternType;
+    int _patternSizeWidth, _patternSizeHeight;
+    string _videoFile;
+    string _calibrationFile;
+
+    _fs[ "SquareSpacing" ] >> _squareSpacing;
+    _fs[ "PatternType" ] >> _patternType;
+    _fs[ "PatternSizeWidth" ] >> _patternSizeWidth;
+    _fs[ "PatternSizeHeight" ] >> _patternSizeHeight;
+    _fs[ "CalibrationVideo" ] >> _videoFile;
+    _fs[ "CalibrationFile" ] >> _calibrationFile;
 
     calibcv::SVideoHandler* _videoHandler = calibcv::SVideoHandler::create();
 
     string _videoFileStr = RESOURCES_PATH;
-    _videoFileStr += VIDEO_FILE_ID;
+    _videoFileStr += "calibrationVideos/";
+    _videoFileStr += _videoFile;
     
     if ( !_videoHandler->openVideo( _videoFileStr ) )
     {
         cout << "couldn't open videofile : " << _videoFileStr << endl;
-        exit( -1 );
+        return -1;
     }
 
     cv::namedWindow( WINDOW_ORIGINAL_FRAME );
 
-    calibration::PatternInfo _patternInfo = { TEST_PATTERN_TYPE,
-                                              TEST_PATTERN_SQUARE_LENGTH, 
-                                              TEST_PATTERN_SIZE };
+    calibration::PatternInfo _patternInfo = { _patternType,
+                                              _squareSpacing, 
+                                              cv::Size( _patternSizeWidth, _patternSizeHeight ) };
 
     cv::Size _frameSize = _videoHandler->getVideoFrameSize();
     cout << "fw: " << _frameSize.width << " - fh: " << _frameSize.height << endl;
 
     calibration::Calibrator _calibrator( _frameSize, _patternInfo );
 
-    if ( !_calibrator.loadFromFile( TEST_CALIBRATION_SAVE_FILE ) )
+    if ( !_calibrator.loadFromFile( _calibrationFile ) )
     {
-        cout << "calibration file " << TEST_CALIBRATION_SAVE_FILE << " not found, using new" << endl;
+        cout << "calibration file " << _calibrationFile << " not found, using new" << endl;
     }
 
     // _videoHandler->setPlaybackAtFrameIndex( 565 );
@@ -154,7 +142,7 @@ int main( int argc, char* argv )
             _calibrator.calibrate();
             cout << "DONE calibrating" << endl;
 
-            _calibrator.saveToFile( TEST_CALIBRATION_SAVE_FILE );
+            _calibrator.saveToFile( _calibrationFile );
             
             cv::namedWindow( WINDOW_CORRECTED_FRAME );
         }
@@ -166,6 +154,8 @@ int main( int argc, char* argv )
             _calibrator.applyCalibrationCorrection( _frame, _frameCorrected );
             cv::imshow( WINDOW_CORRECTED_FRAME, _frameCorrected );
         }
+
+        _calibrator.update();
 
         cv::imshow( WINDOW_ORIGINAL_FRAME, _frame );
 
