@@ -362,6 +362,22 @@ namespace calibration
             _drawDistribution();
         }
 
+        void saveToFile()
+        {
+            auto _strHist = m_windowHistogram;
+            _strHist += ".jpg";
+
+            auto _strHeatmap = m_windowHeatmap;
+            _strHeatmap += ".jpg";
+
+            auto _strDistribution = m_windowDistribution;
+            _strDistribution += ".jpg";
+
+            cv::imwrite( _strHist, m_patternHistogram );
+            cv::imwrite( _strHeatmap, m_patternHeatmap );
+            cv::imwrite( _strDistribution, m_patternDistribution );
+        }
+
         float getMeanAngle()
         {
             float _sum = 0.0f;
@@ -543,6 +559,8 @@ namespace calibration
             _fs << TAG_CALIBRATION_ERROR_COLINEARITY_NEW << m_calibrationNewColinearityError;
             
             _fs.release();
+
+            m_visualizer->saveToFile();
         }
 
         bool loadFromFile( string filename )
