@@ -67,7 +67,7 @@ using namespace std;
 
 
 
-int main()
+int main( int argc, char* argv )
 {
 
     calibcv::SVideoHandler* _videoHandler = calibcv::SVideoHandler::create();
