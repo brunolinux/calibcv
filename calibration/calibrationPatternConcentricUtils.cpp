@@ -124,4 +124,35 @@ namespace utils {
 		return cv::norm( p1 - p2 );
 	}
 
+	float checkEnd2EndColinearity( const vector< cv::Point2f >& points )
+	{
+		// Get line parameters - compute equation ax + by + c = 0
+		/* Given pStart and pEnd, we have
+		*   a = ( yEnd - yStart )
+		*   b = ( xStart - xEnd )
+		*   c = ( xEnd * yStart - xStart * yEnd )
+		*   dist( p, Line ) = | a * px + b * py + c | / sqrt( a^2 + b^2 )
+		*/
+		float _xStart = points[0].x;
+		float _yStart = points[0].y;
+
+		float _xEnd = points[ points.size() - 1 ].x;
+		float _yEnd = points[ points.size() - 1 ].y;
+
+		float _a = yEnd - yStart;
+		float _b = xStart - xEnd;
+		float _c = xEnd * yStart - xStart * yEnd;
+
+		float _divider = sqrt( _a * _a + _b * _b );
+
+		float _distCum = 0.0f;
+
+		for ( int q = 1; q < points.size() - 1; q++ )
+		{
+			_distCum += abs( _a * points[q].x + _b * points[q].y + c ) / _divider;
+		}
+
+		return _distCum / ( points.size() - 2 );
+	}
+
 }

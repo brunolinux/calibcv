@@ -20,6 +20,9 @@ using namespace std;
 #define TAG_CAMERA_MATRIX "CameraMatrix"
 #define TAG_DISTORTION_COEFFICIENTS "DistortionCoefficients"
 
+#define DIST_VIS_X_DIV 100
+#define DIST_VIS_Y_DIV 100
+
 namespace calibration
 {
 
@@ -136,7 +139,131 @@ namespace calibration
         }
     }
 
+    // Heatmap like visualizer
+    class DistributionVisualizer
+    {
 
+        private :
+
+        string m_windowName;
+        // if uses the average of the pattern points as the value to put in the heatmap
+        bool m_usesAverage;
+
+        int m_xDiv;
+        int m_yDiv;
+
+        int m_xRes;
+        int m_yRes;
+
+        int m_fWidth;
+        int m_fHeight;
+
+        cv::Size m_patternSize;
+
+        vector< float > m_angles;// to draw a histogram of the angles
+        vector< vector< float > > m_heatmap;// heatmap of resolution xresdiv by yresdiv
+
+        cv::Mat m_patternDistribution;
+
+        public :
+
+        DistributionVisualizer( string windowName, cv::Size patternSize,
+                                int frameWidth, int frameHeight,
+                                bool useAverage = false, 
+                                int xDiv = DIST_VIS_X_DIV, 
+                                int yDiv = DIST_VIS_Y_DIV )
+        {
+            m_windowName = windowName;
+            m_usesAverage = useAverage;
+
+            cv::namedWindow( m_windowName );
+
+            m_patternSize = patternSize;
+            m_xDiv = xDiv;
+            m_yDiv = yDiv;
+
+            m_fWidth  = frameWidth;
+            m_fHeight = frameHeight;
+
+            m_xRes = m_fWidth / m_xDiv;
+            m_yRes = m_fHeight / m_yDiv;
+
+            m_heatmap = vector< vector< float > >( 1 );
+            m_heatmap[0] = vector< float >( m_yDiv, 0.0f );
+            m_heatmap.resize( m_xDiv, m_heatmap[0] );
+
+            m_patternDistribution = cv::Mat::zeros( m_fWidth, m_fHeight, CV_8UC3 );
+
+            m_angles = vector< float >( 360 );
+        }
+
+        ~DistributionVisualizer()
+        {
+            m_angles.clear();
+            m_heatmap.clear();
+        }
+
+        void processCalibrationBucket( const vector< cv::Point2f >& patternPoints )
+        {
+
+            // process heatmap
+            if ( m_usesAverage )
+            {
+                float _xAvg = 0.0f;
+                float _yAvg = 0.0f;
+
+                for ( int q = 0; q < patternPoints.size(); q++ )
+                {
+                    _xAvg += patternPoints[q].x;
+                    _yAvg += patternPoints[q].y;
+                }
+
+                _xAvg = _xAvg / patternPoints.size();
+                _yAvg = _yAvg / patternPoints.size();
+
+                int _xBin = min( max( round( _xAvg / m_xRes ), 0 ), m_xDiv - 1 );
+                int _yBin = min( max( round( _yAvg / m_yRes ), 0 ), m_yDiv - 1 );
+
+                m_heatmap[ _xBin ][ _yBin ] += 1.0f;
+            }
+            else
+            {
+                for ( int q = 0; q < patternPoints.size(); q++ )
+                {
+                    int _xBin = min( max( round( patternPoints[q].x / m_xRes ), 0 ), m_xDiv - 1 );
+                    int _yBin = min( max( round( patternPoints[q].y / m_yRes ), 0 ), m_yDiv - 1 );
+
+                    m_heatmap[ _xBin ][ _yBin ] += 1.0f;
+                }
+            }
+
+            // process angles
+            cv::Point2f _p0 = patternPoints[ 0 ];
+            cv::Point2f _p1 = patternPoints[ m_patternSize.width - 1 ];
+            float _angle = ( atan2( _p1.y - _p0.y, _p1.x - _p0.x ) / 3.14159265 + 1 ) * 180.0;
+            int _angBin = min( max( round( _angle ), 0 ), 360 );
+
+            // process into distribution
+
+
+        }
+
+        void _drawAngles()
+        {
+
+        }
+
+        void _drawHeatmap()
+        {
+
+        }
+
+        void draw()
+        {
+
+        }
+
+    };
 
     class Calibrator
     {
@@ -355,6 +482,8 @@ namespace calibration
         int getCalibrationSize() { return m_calibrationImages.size(); }
 
         float getCalibrationRMSerror() { return m_calibrationRMSerror; }
+
+        float getCalibrationColinearityError() { return m_calibrationColinearityError; }
     };
 
 
