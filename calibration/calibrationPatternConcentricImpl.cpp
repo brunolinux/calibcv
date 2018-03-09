@@ -341,26 +341,22 @@ namespace calibration { namespace concentric {
 
         void Detector::_pipeline2( const cv::Mat& input, cv::Mat& fronto_parallel )
         {
-            vector<cv::Point2f> corners = { m_trackingPoints[0].pos,
-                                            m_trackingPoints[ m_size.width - 1 ].pos,
-                                            m_trackingPoints[ m_size.width * ( m_size.height - 1 ) ].pos,
-                                            m_trackingPoints[ m_size.width * m_size.height - 1 ].pos };
 
-            cv::Point2f vecLeft = ( m_trackingPoints[0].pos - m_trackingPoints[ m_size.width - 1 ].pos ) /
-                                  cv::norm( m_trackingPoints[0].pos - m_trackingPoints[ m_size.width - 1 ].pos );
+            cv::Point2f topLeft = 2 * m_trackingPoints[0].pos -
+                                  m_trackingPoints[ m_size.width + 1 ].pos;
 
-            cv::Point2f vecRight = ( m_trackingPoints[ m_size.width - 1 ].pos - m_trackingPoints[0].pos ) /
-                                   cv::norm( m_trackingPoints[ m_size.width - 1 ].pos - m_trackingPoints[0].pos );
+            cv::Point2f topRight = 2 * m_trackingPoints[ m_size.width - 1 ].pos -
+                                   m_trackingPoints[ m_size.width * 2 - 2 ].pos;
 
-            cv::Point2f vecTop = ( m_trackingPoints[0].pos - m_trackingPoints[ m_size.width - 1 ].pos ) /
-                                  cv::norm( m_trackingPoints[0].pos - m_trackingPoints[ m_size.width - 1 ].pos );
+            cv::Point2f botLeft = 2 * m_trackingPoints[ m_size.width * ( m_size.height - 1 ) ].pos -
+                                  m_trackingPoints[ m_size.width * ( m_size.height - 2 ) + 1 ].pos;
 
-            cv::Point2f vecDown = ( m_trackingPoints[ m_size.width - 1 ].pos - m_trackingPoints[0].pos ) /
-                                cv::norm( m_trackingPoints[ m_size.width - 1 ].pos - m_trackingPoints[0].pos );
+            cv::Point2f botRight = 2 * m_trackingPoints[ m_size.width * m_size.height - 1 ].pos -
+                                   m_trackingPoints[ m_size.width * ( m_size.height - 1 )  - 2 ].pos;
 
-            vector<cv::Point2f> src = { cv::Point2f(0, 0), cv::Point2f(320, 0), cv::Point2f(0, 240), cv::Point2f(320, 240) };
+            vector<cv::Point2f> src = { topLeft, topRight, botLeft, botRight };
             vector<cv::Point2f> dst = { cv::Point2f(0, 0), cv::Point2f(320, 0), cv::Point2f(0, 240), cv::Point2f(320, 240) };
-            cv::Mat perspectiveTransform = cv::getPerspectiveTransform(corners, dst);
+            cv::Mat perspectiveTransform = cv::getPerspectiveTransform(src, dst);
 
             cv::warpPerspective( input, fronto_parallel, perspectiveTransform, cv::Size( 320, 240 ) );
 
