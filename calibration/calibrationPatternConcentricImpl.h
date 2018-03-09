@@ -72,6 +72,7 @@ namespace calibration { namespace concentric {
 			cv::Rect2f m_cropROI;
 
 			vector< cv::Point2f > m_candidatePoints;
+			vector< cv::Point2f > m_perspectivePoints;
 			vector< cv::Point2f > m_matchedPoints;
 			vector< TrackingPoint > m_trackingPoints;
 			cv::Point2f m_patternCenter;
@@ -90,6 +91,8 @@ namespace calibration { namespace concentric {
 			void _runFeaturesExtractor( const cv::Mat& input, cv::Mat& output );
 			void _runEdgesGenerator( const cv::Mat& input, cv::Mat& output );
 			void _runMaskGenerator( const cv::Mat& input, cv::Mat& output );
+
+			void _runFeaturesExtractor( const cv::Mat& input, vector< cv::Point2f >& m_candidatePoints );
 
 			bool _computeInitialPattern( const vector< cv::Point2f >& candidatePatternPoints,
                                          vector< cv::Point2f >& matchedPoints );

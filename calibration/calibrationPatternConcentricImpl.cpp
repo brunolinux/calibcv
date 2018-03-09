@@ -355,12 +355,38 @@ namespace calibration { namespace concentric {
                                    m_trackingPoints[ m_size.width * ( m_size.height - 1 )  - 2 ].pos;
 
             vector<cv::Point2f> src = { topLeft, topRight, botLeft, botRight };
-            vector<cv::Point2f> dst = { cv::Point2f(0, 0), cv::Point2f(320, 0), cv::Point2f(0, 240), cv::Point2f(320, 240) };
+            vector<cv::Point2f> dst = { cv::Point2f(0, 0), cv::Point2f(400, 0), cv::Point2f(0, 320), cv::Point2f(400, 320) };
             cv::Mat perspectiveTransform = cv::getPerspectiveTransform(src, dst);
+            cv::Mat invPerspectiveTransform = cv::getPerspectiveTransform(dst, src);
 
-            cv::warpPerspective( input, fronto_parallel, perspectiveTransform, cv::Size( 320, 240 ) );
+            cv::warpPerspective( input, fronto_parallel, perspectiveTransform, cv::Size( 400, 320 ) );
 
+            invPerspectiveTransform.convertTo(invPerspectiveTransform, CV_32FC1);
 
+            cv::Mat newMask, newEdges, newFeatures;
+            vector< cv::Point2f > candidatePoints;
+
+            _runMaskGenerator( fronto_parallel,
+                               newMask );
+            // edge detection step
+            _runEdgesGenerator( newMask,
+                                newEdges );
+            // features extractor step
+            _runFeaturesExtractor( newEdges,
+                                   candidatePoints );
+
+            m_perspectivePoints.resize( candidatePoints.size() );
+            cv::perspectiveTransform( candidatePoints, m_perspectivePoints, perspectiveTransform.inv() );
+
+            //m_stageFrameResults[ STAGE_FEATURES_EXTRACTION ] = input.clone();
+
+            for ( auto& point : m_perspectivePoints )
+            {
+                cv::circle( m_stageFrameResults[ STAGE_FEATURES_EXTRACTION ], point, 1, cv::Scalar( 255, 255, 0 ), 2 );
+            }
+            // tracking step
+            /*_runTracking( m_stageFrameResults[ STAGE_FEATURES_EXTRACTION ],
+                          m_stageFrameResults[ STAGE_KEYPOINTS_TRACKING ] );*/
         }
 
         void Detector::_pipeline( const cv::Mat& input )
@@ -443,6 +469,18 @@ namespace calibration { namespace concentric {
 
 
             // m_stageFrameResults[ STAGE_FEATURES_EXTRACTION ] = output;
+        }
+
+        void Detector::_runFeaturesExtractor( const cv::Mat& input, vector< cv::Point2f >& candidatePoints )
+        {
+            vector< cv::KeyPoint > _keypoints;
+            m_blobsDetector->detect( input, _keypoints );
+
+            candidatePoints.clear();
+            for ( cv::KeyPoint& _keypoint : _keypoints )
+            {
+                candidatePoints.push_back( _keypoint.pt );
+            }
         }
 
         void Detector::_runTracking( const cv::Mat& input, cv::Mat& output )
