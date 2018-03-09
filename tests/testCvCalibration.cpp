@@ -30,7 +30,7 @@ int main( int argc, char** argv )
     }
 
     cv::FileStorage _fs;
-    
+
     string _configFile = RESOURCES_PATH;
     _configFile += "calibrationConfig/config_";
     _configFile += argv[1];
@@ -62,7 +62,7 @@ int main( int argc, char** argv )
     string _videoFileStr = RESOURCES_PATH;
     _videoFileStr += "calibrationVideos/";
     _videoFileStr += _videoFile;
-    
+
     if ( !_videoHandler->openVideo( _videoFileStr ) )
     {
         cout << "couldn't open videofile : " << _videoFileStr << endl;
@@ -72,7 +72,7 @@ int main( int argc, char** argv )
     cv::namedWindow( WINDOW_ORIGINAL_FRAME );
 
     calibration::PatternInfo _patternInfo = { _patternType,
-                                              _squareSpacing, 
+                                              _squareSpacing,
                                               cv::Size( _patternSizeWidth, _patternSizeHeight ) };
 
     cv::Size _frameSize = _videoHandler->getVideoFrameSize();
@@ -135,7 +135,7 @@ int main( int argc, char** argv )
             }
         }
 
-        if ( !_calibrator.isCalibrated() && 
+        if ( !_calibrator.isCalibrated() &&
              _calibrator.getCalibrationSize() >= TEST_CALIBRATION_THRESHOLD_COUNT )
         {
             cout << "Calibrating ......" << endl;
@@ -143,7 +143,7 @@ int main( int argc, char** argv )
             cout << "DONE calibrating" << endl;
 
             _calibrator.saveToFile( _calibrationFile );
-            
+
             cv::namedWindow( WINDOW_CORRECTED_FRAME );
         }
 

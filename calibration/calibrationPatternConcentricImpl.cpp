@@ -31,17 +31,17 @@ namespace calibration { namespace concentric {
         int _h = pInfo.cb_size.height;
 
         string _cornerText = "p";
-        cv::putText( image, _cornerText + std::to_string( 0 ), 
+        cv::putText( image, _cornerText + std::to_string( 0 ),
                      iCorners[ 0 ], cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar( 255, 255, 0 ), 2 );
-        cv::putText( image, _cornerText + std::to_string( 1 ), 
+        cv::putText( image, _cornerText + std::to_string( 1 ),
                      iCorners[ _w - 1 ], cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar( 255, 255, 0 ), 2 );
-        cv::putText( image, _cornerText + std::to_string( 2 ), 
+        cv::putText( image, _cornerText + std::to_string( 2 ),
                      iCorners[ _w * _h - 1 ], cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar( 255, 255, 0 ), 2 );
-        cv::putText( image, _cornerText + std::to_string( 3 ), 
+        cv::putText( image, _cornerText + std::to_string( 3 ),
                      iCorners[ _w * ( _h - 1 ) ], cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar( 255, 255, 0 ), 2 );
     }
 
-    bool findConcentricGrid( const cv::Mat& image, const cv::Size pSize, 
+    bool findConcentricGrid( const cv::Mat& image, const cv::Size pSize,
                              const vector< cv::Point2f >& roi,
                              vector< cv::Point2f >& iCorners )
     {
@@ -67,7 +67,7 @@ namespace calibration { namespace concentric {
             m_size           = size;
             m_trackingPoints = vector< TrackingPoint >( m_numPoints );
 
-            m_stageFrameResults = vector< cv::Mat >( 4 );
+            m_stageFrameResults = vector< cv::Mat >( 5 );
 
             cv::SimpleBlobDetector::Params _detectorCreationParams;
             _detectorCreationParams.filterByArea = true;
@@ -99,7 +99,7 @@ namespace calibration { namespace concentric {
                 std::cout << "created new detector instance" << std::endl;
                 Detector::INSTANCE = new Detector( size );
             }
-                
+
             return Detector::INSTANCE;
         }
 
@@ -151,6 +151,7 @@ namespace calibration { namespace concentric {
             m_pipelinePanel->showEdges( m_stageFrameResults[ STAGE_EDGE_DETECTION ] );
             m_pipelinePanel->showBlobs( m_stageFrameResults[ STAGE_FEATURES_EXTRACTION ] );
             m_pipelinePanel->showTracking( m_stageFrameResults[ STAGE_KEYPOINTS_TRACKING ] );
+            m_pipelinePanel->showPreprocessing( m_stageFrameResults[ STAGE_KEYPOINTS_TRANSFORMATION ] );
 
             m_pipelinePanel->cleanInfo();
 
@@ -165,7 +166,7 @@ namespace calibration { namespace concentric {
             // cout << "numCandidatePoints: " << m_candidatePoints.size() << endl;
 
             m_pipelinePanel->setLogInfo( getCurrentDetectionMode() );
-            
+
 
             return _ret;
         }
@@ -252,7 +253,7 @@ namespace calibration { namespace concentric {
                     _bottomIndx = q;
                 }
             }
-            
+
             vector< int > _cornerOptions = { _topIndx, _rightIndx, _bottomIndx, _leftIndx };
             bool _isFit = false;
 
@@ -265,8 +266,8 @@ namespace calibration { namespace concentric {
                 {
                     continue;
                 }
-		
-                _isFit = utils::isGridPatternFit( candidatePatternPoints, matchedPoints, m_size, 
+
+                _isFit = utils::isGridPatternFit( candidatePatternPoints, matchedPoints, m_size,
                                                   _cornerOptions[( 0 + q ) % 4], _cornerOptions[( 1 + q ) % 4],
                                                   _cornerOptions[( 2 + q ) % 4], _cornerOptions[( 3 + q ) % 4] );
 
@@ -307,6 +308,8 @@ namespace calibration { namespace concentric {
                 }
             }
 
+            _pipeline2( input, m_stageFrameResults[ STAGE_KEYPOINTS_TRANSFORMATION ] );
+
             return true;
         }
 
@@ -336,6 +339,34 @@ namespace calibration { namespace concentric {
             return false;
         }
 
+        void Detector::_pipeline2( const cv::Mat& input, cv::Mat& fronto_parallel )
+        {
+            vector<cv::Point2f> corners = { m_trackingPoints[0].pos,
+                                            m_trackingPoints[ m_size.width - 1 ].pos,
+                                            m_trackingPoints[ m_size.width * ( m_size.height - 1 ) ].pos,
+                                            m_trackingPoints[ m_size.width * m_size.height - 1 ].pos };
+
+            cv::Point2f vecLeft = ( m_trackingPoints[0].pos - m_trackingPoints[ m_size.width - 1 ].pos ) /
+                                  cv::norm( m_trackingPoints[0].pos - m_trackingPoints[ m_size.width - 1 ].pos );
+
+            cv::Point2f vecRight = ( m_trackingPoints[ m_size.width - 1 ].pos - m_trackingPoints[0].pos ) /
+                                   cv::norm( m_trackingPoints[ m_size.width - 1 ].pos - m_trackingPoints[0].pos );
+
+            cv::Point2f vecTop = ( m_trackingPoints[0].pos - m_trackingPoints[ m_size.width - 1 ].pos ) /
+                                  cv::norm( m_trackingPoints[0].pos - m_trackingPoints[ m_size.width - 1 ].pos );
+
+            cv::Point2f vecDown = ( m_trackingPoints[ m_size.width - 1 ].pos - m_trackingPoints[0].pos ) /
+                                cv::norm( m_trackingPoints[ m_size.width - 1 ].pos - m_trackingPoints[0].pos );
+
+            vector<cv::Point2f> src = { cv::Point2f(0, 0), cv::Point2f(320, 0), cv::Point2f(0, 240), cv::Point2f(320, 240) };
+            vector<cv::Point2f> dst = { cv::Point2f(0, 0), cv::Point2f(320, 0), cv::Point2f(0, 240), cv::Point2f(320, 240) };
+            cv::Mat perspectiveTransform = cv::getPerspectiveTransform(corners, dst);
+
+            cv::warpPerspective( input, fronto_parallel, perspectiveTransform, cv::Size( 320, 240 ) );
+
+
+        }
+
         void Detector::_pipeline( const cv::Mat& input )
         {
             m_stageFrameResults.clear();
@@ -351,10 +382,10 @@ namespace calibration { namespace concentric {
             // }
 
             // thresholding step
-            _runMaskGenerator( m_workingInput, 
+            _runMaskGenerator( m_workingInput,
                                m_stageFrameResults[ STAGE_THRESHOLDING ] );
             // edge detection step
-            _runEdgesGenerator( m_stageFrameResults[ STAGE_THRESHOLDING ], 
+            _runEdgesGenerator( m_stageFrameResults[ STAGE_THRESHOLDING ],
                                 m_stageFrameResults[ STAGE_EDGE_DETECTION ] );
             // features extractor step
             _runFeaturesExtractor( m_stageFrameResults[ STAGE_EDGE_DETECTION ],
@@ -412,6 +443,8 @@ namespace calibration { namespace concentric {
             {
                 m_candidatePoints.push_back( _keypoint.pt );
             }
+
+
 
             // m_stageFrameResults[ STAGE_FEATURES_EXTRACTION ] = output;
         }

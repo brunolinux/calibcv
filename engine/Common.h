@@ -3,7 +3,7 @@
 
 #define KEY_ESCAPE 27
 #define KEY_SPACE 32
-#define KEY_ENTER 13
+#define KEY_ENTER 10
 #define KEY_R     114
 
 #include <vector>
@@ -22,6 +22,6 @@
 namespace calibcv
 {
 
-	
+
 
 }

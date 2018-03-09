@@ -20,10 +20,10 @@ using namespace std;
 namespace calibration { namespace concentric {
 
 
-	void drawConcentricPatternCorners( const vector< cv::Point2f >& iCorners, 
+	void drawConcentricPatternCorners( const vector< cv::Point2f >& iCorners,
 									   cv::Mat& image, const PatternInfo& pInfo );
 
-	bool findConcentricGrid( const cv::Mat& image, const cv::Size pSize, 
+	bool findConcentricGrid( const cv::Mat& image, const cv::Size pSize,
                              const vector< cv::Point2f >& roi,
                              vector< cv::Point2f >& iCorners );
 
@@ -43,7 +43,8 @@ namespace calibration { namespace concentric {
 	    	STAGE_THRESHOLDING = 0,
 	    	STAGE_EDGE_DETECTION = 1,
 	    	STAGE_FEATURES_EXTRACTION = 2,
-	    	STAGE_KEYPOINTS_TRACKING = 3
+	    	STAGE_KEYPOINTS_TRACKING = 3,
+			STAGE_KEYPOINTS_TRANSFORMATION = 4
 	    };
 
 	    enum
@@ -93,6 +94,7 @@ namespace calibration { namespace concentric {
 			bool _computeInitialPattern( const vector< cv::Point2f >& candidatePatternPoints,
                                          vector< cv::Point2f >& matchedPoints );
 			void _pipeline( const cv::Mat& input );
+			void _pipeline2( const cv::Mat& input, cv::Mat& fronto_parallel );
 
 			bool runInitialDetectionMode( const cv::Mat& input );
 			bool runTrackingMode( const cv::Mat& input );
