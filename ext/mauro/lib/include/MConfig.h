@@ -1,0 +1,5 @@
+
+#pragma once
+
+#define MAURO_GL_CONTEXT_VERSION_MAJOR 3
+#define MAURO_GL_CONTEXT_VERSION_MINOR 3
