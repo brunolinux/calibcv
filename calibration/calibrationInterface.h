@@ -30,19 +30,19 @@ using namespace std;
 namespace calibration
 {
 
-    
+
     bool getPatternKnownPlanePositions( vector< cv::Point3f >& corners, const PatternInfo& pInfo )
     {
         bool success = true;
-        
+
         switch ( pInfo.type )
         {
             case PATTERN_TYPE_CHESSBOARD :
-                
+
                 chessboard::getKnownPlanePositions( corners, pInfo );
-                
+
                 break;
-                
+
             case PATTERN_TYPE_SYMMETRIC_CIRCLES :
 
                 circleGridSymmetric::getKnownPlanePositions( corners, pInfo );
@@ -62,40 +62,40 @@ namespace calibration
                 break;
 
             default :
-                
+
                 cout << "pattern type: " << pInfo.type << " not found" << endl;
                 success = false;
-                
+
                 break;
         }
-        
+
         return success;
     }
-  
+
     bool getPatternCorners( vector< cv::Point2f >& iCorners, const cv::Mat& image, const PatternInfo& pInfo, const DetectionInfo& dInfo )
     {
 
         cv::Mat _imgGray;
         cv::cvtColor( image, _imgGray, CV_BGR2GRAY );
-        
+
         bool success = true;
-        
+
         switch ( pInfo.type )
         {
             case PATTERN_TYPE_CHESSBOARD :
-                
+
                 success = chessboard::getCorners( iCorners, _imgGray, pInfo, dInfo );
 
                 // refine only if chessboard pattern
                 if ( success )
                 {
-                    cv::cornerSubPix( _imgGray, iCorners, cv::Size( 11,11 ), cv::Size( -1,-1 ), 
-                                      cv::TermCriteria( cv::TermCriteria::EPS + 
+                    cv::cornerSubPix( _imgGray, iCorners, cv::Size( 11,11 ), cv::Size( -1,-1 ),
+                                      cv::TermCriteria( cv::TermCriteria::EPS +
                                                         cv::TermCriteria::COUNT, 30, 0.1 ) );
                 }
 
                 break;
-                
+
             case PATTERN_TYPE_SYMMETRIC_CIRCLES :
 
                 success = circleGridSymmetric::getCorners( iCorners, _imgGray, pInfo, dInfo );
@@ -115,10 +115,63 @@ namespace calibration
                 break;
 
             default :
-                
+
                 cout << "pattern type: " << pInfo.type << " not found" << endl;
                 success = false;
-                
+
+                break;
+        }
+
+        return success;
+    }
+
+    bool getPatternCorners( vector< cv::Point2f >& iCorners, const cv::Mat& image, const PatternInfo& pInfo, const DetectionInfo& dInfo, bool isFirstIteration )
+    {
+
+        cv::Mat _imgGray;
+        cv::cvtColor( image, _imgGray, CV_BGR2GRAY );
+
+        bool success = true;
+
+        switch ( pInfo.type )
+        {
+            case PATTERN_TYPE_CHESSBOARD :
+
+                success = chessboard::getCorners( iCorners, _imgGray, pInfo, dInfo );
+
+                // refine only if chessboard pattern
+                if ( success )
+                {
+                    cv::cornerSubPix( _imgGray, iCorners, cv::Size( 11,11 ), cv::Size( -1,-1 ),
+                                      cv::TermCriteria( cv::TermCriteria::EPS +
+                                                        cv::TermCriteria::COUNT, 30, 0.1 ) );
+                }
+
+                break;
+
+            case PATTERN_TYPE_SYMMETRIC_CIRCLES :
+
+                success = circleGridSymmetric::getCorners( iCorners, _imgGray, pInfo, dInfo );
+
+                break;
+
+            case PATTERN_TYPE_ASYMMETRIC_CIRCLES :
+
+                success = circleGridAsymmetric::getCorners( iCorners, _imgGray, pInfo, dInfo );
+
+                break;
+
+            case PATTERN_TYPE_CONCENTRIC_CIRCLES :
+
+                success = concentric::getCorners( iCorners, image, pInfo, dInfo, isFirstIteration );
+
+                break;
+
+            default :
+
+                cout << "pattern type: " << pInfo.type << " not found" << endl;
+                success = false;
+
                 break;
         }
 
@@ -178,8 +231,8 @@ namespace calibration
 
         DistributionVisualizer( string windowBaseName, cv::Size patternSize,
                                 int frameWidth, int frameHeight,
-                                bool useAverage = false, 
-                                int xDiv = DIST_VIS_X_DIV, 
+                                bool useAverage = false,
+                                int xDiv = DIST_VIS_X_DIV,
                                 int yDiv = DIST_VIS_Y_DIV )
         {
             m_windowBaseName = windowBaseName;
@@ -295,9 +348,9 @@ namespace calibration
                 _y = min( max( _y, 0.0f ), ( float ) m_fHeight );
 
                 _xNext = min( max( _xNext, 0.0f ), ( float ) m_fWidth );
-                _yNext = min( max( _yNext, 0.0f ), ( float ) m_fHeight );                
+                _yNext = min( max( _yNext, 0.0f ), ( float ) m_fHeight );
 
-                cv::line( m_patternHistogram, 
+                cv::line( m_patternHistogram,
                           cv::Point2f( _x, _y ),
                           cv::Point2f( _xNext, _yNext ),
                           cv::Scalar( 255, 0, 0 ), 4 );
@@ -338,7 +391,7 @@ namespace calibration
                     _y = min( max( _y, 0.0f ), ( float ) m_fHeight );
 
                     _xn = min( max( _xn, 0.0f ), ( float ) m_fWidth );
-                    _yn = min( max( _yn, 0.0f ), ( float ) m_fHeight );                
+                    _yn = min( max( _yn, 0.0f ), ( float ) m_fHeight );
 
                     cv::rectangle( m_patternHeatmap,
                                    cv::Point2f( _x, _y ), cv::Point2f( _xn, _yn ),
@@ -403,6 +456,8 @@ namespace calibration
         vector< vector< cv::Point2f > > m_pointsInImage;
         vector< vector< cv::Point3f > > m_pointsInWorld;
 
+        bool m_isFirstIteration;
+
         cv::Mat m_cameraMatrix;
         cv::Mat m_distortionCoefficients;
 
@@ -434,6 +489,8 @@ namespace calibration
             m_visualizer = new DistributionVisualizer( "CalibrationViz",
                                                        m_patternInfo.cb_size,
                                                        m_frameSize.width, m_frameSize.height );
+
+            m_isFirstIteration = true;
         }
 
         ~Calibrator()
@@ -455,6 +512,7 @@ namespace calibration
             m_pointsInWorld.clear();
 
             m_isCalibrated = false;
+            m_isFirstIteration = true;
         }
 
         void addCalibrationBucket( const cv::Mat& image,
@@ -485,8 +543,8 @@ namespace calibration
                                                          m_calibrationRotMatrices,
                                                          m_calibrationTranMatrices );
 
-            cv::initUndistortRectifyMap( m_cameraMatrix, m_distortionCoefficients, 
-                                         cv::Mat(), cv::Mat(), 
+            cv::initUndistortRectifyMap( m_cameraMatrix, m_distortionCoefficients,
+                                         cv::Mat(), cv::Mat(),
                                          m_frameSize,
                                          CV_32FC1, m_transformationMap1, m_transformationMap2 );
 
@@ -494,16 +552,16 @@ namespace calibration
 
             vector< float > _perViewErrors;
 
-            m_calibrationReprojectionError = computeReprojectionErrors( m_pointsInWorld, 
-                                                                        m_pointsInImage, 
-                                                                        m_calibrationRotMatrices, 
-                                                                        m_calibrationTranMatrices, 
+            m_calibrationReprojectionError = computeReprojectionErrors( m_pointsInWorld,
+                                                                        m_pointsInImage,
+                                                                        m_calibrationRotMatrices,
+                                                                        m_calibrationTranMatrices,
                                                                         _perViewErrors );
 
-            computeColinearityErrors( m_pointsInWorld, 
-                                      m_pointsInImage, 
-                                      m_calibrationRotMatrices, 
-                                      m_calibrationTranMatrices, 
+            computeColinearityErrors( m_pointsInWorld,
+                                      m_pointsInImage,
+                                      m_calibrationRotMatrices,
+                                      m_calibrationTranMatrices,
                                       m_calibrationOldColinearityError,
                                       m_calibrationNewColinearityError );
 
@@ -546,9 +604,9 @@ namespace calibration
                 std::cout << "not calibrated yet, can't save" << std::endl;
                 return;
             }
-            
+
             cv::FileStorage _fs( filename, cv::FileStorage::WRITE );
- 
+
             _fs << TAG_FRAME_WIDTH << m_frameSize.width;
             _fs << TAG_FRAME_HEIGHT << m_frameSize.height;
             _fs << TAG_CAMERA_MATRIX << m_cameraMatrix;
@@ -557,7 +615,7 @@ namespace calibration
             _fs << TAG_CALIBRATION_ERROR_REPROJECTION << m_calibrationReprojectionError;
             _fs << TAG_CALIBRATION_ERROR_COLINEARITY_OLD << m_calibrationOldColinearityError;
             _fs << TAG_CALIBRATION_ERROR_COLINEARITY_NEW << m_calibrationNewColinearityError;
-            
+
             _fs.release();
 
             m_visualizer->saveToFile();
@@ -566,9 +624,9 @@ namespace calibration
         bool loadFromFile( string filename )
         {
             cv::FileStorage _fs;
-            
+
             _fs.open( filename, cv::FileStorage::READ );
-            
+
             if ( !_fs.isOpened() )
             {
                 std::cout << "couldn't find calibration file: " << filename << std::endl;
@@ -576,29 +634,29 @@ namespace calibration
             }
 
             init();
-            
+
             _fs[ TAG_CAMERA_MATRIX ] >> m_cameraMatrix;
             _fs[ TAG_DISTORTION_COEFFICIENTS ] >> m_distortionCoefficients;
-            
+
             int _fw, _fh;
             _fs[ TAG_FRAME_WIDTH ] >> _fw;
             _fs[ TAG_FRAME_HEIGHT ] >> _fh;
-            
+
             _fs.release();
-            
+
             if ( m_frameSize.width != _fw ||
                  m_frameSize.height != _fh )
             {
                 std::cout << "WARNING: Size from previous calibration does not match" << std::endl;
             }
-            
-            cv::initUndistortRectifyMap( m_cameraMatrix, m_distortionCoefficients, 
-                                         cv::Mat(), cv::Mat(), 
+
+            cv::initUndistortRectifyMap( m_cameraMatrix, m_distortionCoefficients,
+                                         cv::Mat(), cv::Mat(),
                                          m_frameSize,
                                          CV_32FC1, m_transformationMap1, m_transformationMap2 );
-            
+
             m_isCalibrated = true;
-            
+
             return true;
         }
 
@@ -612,13 +670,13 @@ namespace calibration
                 std::cout << "camera not calibrated yet" << std::endl;
                 return -1;
             }
-            
+
             vector< cv::Point2f > _reprojectedPoints;
             size_t _totalPoints = 0;
-            
+
             float _totalErr = 0;
             float _err = 0;
-            
+
             perViewErrors.resize( worldPoints.size() );
 
             for( size_t i = 0; i < worldPoints.size(); ++i )
@@ -644,18 +702,18 @@ namespace calibration
             {
                 std::cout << "camera not calibrated yet" << std::endl;
             }
-            
+
             vector< cv::Point2f > _reprojectedPoints;
             size_t _totalPoints = 0;
-            
+
             float _totalErrOld = 0;
             float _totalErrNew = 0;
-            float _err = 0;        
+            float _err = 0;
 
             for( size_t i = 0; i < worldPoints.size(); ++i )
             {
                 cv::projectPoints( worldPoints[i], rvecs[i], tvecs[i], m_cameraMatrix, m_distortionCoefficients, _reprojectedPoints );
-                
+
                 _err = utils::checkEnd2EndColinearity( _reprojectedPoints );
                 _totalErrNew           += _err * _err;
                 _err = utils::checkEnd2EndColinearity( imagePoints[i] );
@@ -672,6 +730,8 @@ namespace calibration
         bool isCalibrated() { return m_isCalibrated; }
 
         int getCalibrationSize() { return m_calibrationImages.size(); }
+
+        vector< cv::Mat > getCalibrationImages() { return m_calibrationImages; }
 
         float getCalibrationRMSerror() { return m_calibrationRMSerror; }
 

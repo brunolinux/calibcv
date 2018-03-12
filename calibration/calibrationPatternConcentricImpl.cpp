@@ -46,6 +46,24 @@ namespace calibration { namespace concentric {
                              vector< cv::Point2f >& iCorners )
     {
         detection::Detector* _detector = detection::Detector::create( pSize );
+        _detector->m_isFirstIteration = true;
+
+        bool _found = _detector->run( image, roi );
+        if ( _found )
+        {
+            _detector->getDetectedPoints( iCorners );
+        }
+
+        return _found;
+    }
+
+    bool findConcentricGrid( const cv::Mat& image, const cv::Size pSize,
+                             const vector< cv::Point2f >& roi,
+                             vector< cv::Point2f >& iCorners,
+                             bool isFirstIteration )
+    {
+        detection::Detector* _detector = detection::Detector::create( pSize );
+        _detector->m_isFirstIteration = isFirstIteration;
 
         bool _found = _detector->run( image, roi );
         if ( _found )
@@ -121,7 +139,10 @@ namespace calibration { namespace concentric {
 
         bool Detector::run( const cv::Mat& input, const vector< cv::Point2f >& roi )
         {
-            setInitialROI( roi );
+            if( !m_isFirstIteration )
+                setInitialROI();
+            else
+                setInitialROI( roi );
 
             bool _ret = false;
 
@@ -144,6 +165,11 @@ namespace calibration { namespace concentric {
                 _ret = runRecoveringMode( input );
 
                 break;
+            }
+            if( !m_isFirstIteration )
+            {
+                //_ret = runRecoveringMode( input );
+                _pipeline2( input, m_stageFrameResults[ STAGE_KEYPOINTS_TRANSFORMATION ] );
             }
 
             //m_pipelinePanel->showBase( input );
@@ -218,6 +244,7 @@ namespace calibration { namespace concentric {
                     }
                 }
             }
+
 
             return false;
         }
@@ -307,7 +334,7 @@ namespace calibration { namespace concentric {
                     return false;
                 }
             }
-            _pipeline2( input, m_stageFrameResults[ STAGE_KEYPOINTS_TRANSFORMATION ] );
+
             return true;
         }
 
@@ -358,8 +385,6 @@ namespace calibration { namespace concentric {
             cv::Mat invPerspectiveTransform = cv::getPerspectiveTransform(dst, src);
 
             cv::warpPerspective( input, fronto_parallel, perspectiveTransform, cv::Size( 400, 320 ) );
-
-            invPerspectiveTransform.convertTo(invPerspectiveTransform, CV_32FC1);
 
             cv::Mat newMask, newEdges, newFeatures;
             vector< cv::Point2f > candidatePoints;
@@ -471,7 +496,7 @@ namespace calibration { namespace concentric {
 
         void Detector::_runFeaturesExtractor( const cv::Mat& input, vector< cv::Point2f >& candidatePoints )
         {
-            vector< vector< cv::Point > > _contours;
+            /*vector< vector< cv::Point > > _contours;
             vector< cv::Vec4i > _hierarchy;
             vector< cv::RotatedRect > _ellipsesBB;
 
@@ -506,6 +531,14 @@ namespace calibration { namespace concentric {
             for ( cv::RotatedRect _rect : _filteredEllipses )
             {
                 candidatePoints.push_back( _rect.center );
+            }*/
+            vector< cv::KeyPoint > _keypoints;
+            m_blobsDetector->detect( input, _keypoints );
+
+            m_candidatePoints.clear();
+            for ( cv::KeyPoint& _keypoint : _keypoints )
+            {
+                candidatePoints.push_back( _keypoint.pt );
             }
         }
 
@@ -533,7 +566,8 @@ namespace calibration { namespace concentric {
                             break;
                         }
                     }
-
+                    if( m_isFirstIteration )
+                        continue;
                     for ( int q = 0; q < m_perspectivePoints.size(); q++ )
                     {
                         cv::Point2f _candidate = m_perspectivePoints[q];
@@ -541,7 +575,7 @@ namespace calibration { namespace concentric {
                         if ( !_assignedPerspective[q] && utils::dist( m_trackingPoints[t].pos, _candidate/* + m_cropOrigin*/ ) < 20 )
                         {
                             m_trackingPoints[t].vel = _candidate/* + m_cropOrigin*/ - m_trackingPoints[t].pos;
-                            m_trackingPoints[t].pos = m_trackingPoints[t].pos + _candidate / 2 /* + m_cropOrigin*/;
+                            m_trackingPoints[t].pos = ( m_trackingPoints[t].pos + _candidate ) / 2 /* + m_cropOrigin*/;
                             m_trackingPoints[t].found = true;
                             _assignedPerspective[q] = true;
                             break;

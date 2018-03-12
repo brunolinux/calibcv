@@ -32,6 +32,11 @@ namespace calibration { namespace concentric {
                              const vector< cv::Point2f >& roi,
                              vector< cv::Point2f >& iCorners );
 
+	bool findConcentricGrid( const cv::Mat& image, const cv::Size pSize,
+	                      	 const vector< cv::Point2f >& roi,
+	                      	 vector< cv::Point2f >& iCorners,
+						  	 bool isFirstIteration );
+
 
 	namespace detection
 	{
@@ -73,6 +78,7 @@ namespace calibration { namespace concentric {
 
 			vector< cv::Point2f > m_initialROI;
 
+
 			cv::Point2f m_cropOrigin;
 			cv::Rect2f m_cropROI;
 
@@ -111,6 +117,7 @@ namespace calibration { namespace concentric {
 
 			public :
 
+			bool m_isFirstIteration;
 			static Detector* INSTANCE;
 			static Detector* create( const cv::Size& size );
 			static void release();
@@ -123,6 +130,14 @@ namespace calibration { namespace concentric {
 			bool run( const cv::Mat& input, const vector< cv::Point2f >& roi );
 
 			void setInitialROI( const vector< cv::Point2f >& roi ) { m_initialROI = roi; }
+			void setInitialROI( )
+			{
+				m_initialROI.clear();
+				m_initialROI.push_back( cv::Point2f(0, 480) );
+				m_initialROI.push_back( cv::Point2f(640, 480) );
+				m_initialROI.push_back( cv::Point2f(640, 0) );
+				m_initialROI.push_back( cv::Point2f(0,0) );
+			}
 
 			void getDetectedPoints( vector< cv::Point2f >& iPoints );
 			void getTimeCosts( vector< float >& timeCosts );

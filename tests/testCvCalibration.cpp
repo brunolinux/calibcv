@@ -87,6 +87,8 @@ int main( int argc, char** argv )
 
     // _videoHandler->setPlaybackAtFrameIndex( 565 );
     // _videoHandler->togglePause();
+    cv::Mat imageCorrected;
+    vector< cv::Mat > images;
 
     while( 1 )
     {
@@ -132,6 +134,7 @@ int main( int argc, char** argv )
             {
                 cout << "current buckets in calibrator: " << _calibrator.getCalibrationSize() << endl;
                 _calibrator.addCalibrationBucket( _frame, _corners );
+
             }
         }
 
@@ -141,6 +144,17 @@ int main( int argc, char** argv )
             cout << "Calibrating ......" << endl;
             _calibrator.calibrate();
             cout << "DONE calibrating" << endl;
+            images = _calibrator.getCalibrationImages();
+
+            for(int i = 0; i < 10; i++)
+            {
+                for( auto image : images )
+                {
+                    _calibrator.applyCalibrationCorrection( image, imageCorrected );
+                    calibration::getPatternCorners( _corners, imageCorrected, _patternInfo, _detInfo, false );
+                    cout<<i<<endl;
+                }
+            }
 
             _calibrator.saveToFile( _calibrationFile );
 
