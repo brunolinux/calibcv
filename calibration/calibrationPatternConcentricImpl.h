@@ -15,6 +15,11 @@ using namespace std;
 #define PIPELINE_EDGES_STAGE_SCALE 1
 #define PIPELINE_EDGES_STAGE_DELTA 0
 
+#define ELLIPSE_MIN_SIZE 60
+#define ELLIPSE_MAX_SIZE 95
+#define ELLIPSE_MIN_RATIO 0.8
+#define ELLIPSE_MAX_RATIO 1.2
+
 #define ROI_MARGIN 80
 
 namespace calibration { namespace concentric {
@@ -97,7 +102,6 @@ namespace calibration { namespace concentric {
 			bool _computeInitialPattern( const vector< cv::Point2f >& candidatePatternPoints,
                                          vector< cv::Point2f >& matchedPoints );
 			void _pipeline( const cv::Mat& input );
-			void _pipeline2( const cv::Mat& input, cv::Mat& fronto_parallel );
 
 			bool runInitialDetectionMode( const cv::Mat& input );
 			bool runTrackingMode( const cv::Mat& input );
@@ -112,6 +116,7 @@ namespace calibration { namespace concentric {
 			static void release();
 
 			~Detector();
+			void _pipeline2( const cv::Mat& input, cv::Mat& fronto_parallel );
 
 			void setPatternSize( const cv::Size& size );
 

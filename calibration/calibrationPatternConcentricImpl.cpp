@@ -72,7 +72,7 @@ namespace calibration { namespace concentric {
             cv::SimpleBlobDetector::Params _detectorCreationParams;
             _detectorCreationParams.filterByArea = true;
             _detectorCreationParams.minArea = 100;
-            _detectorCreationParams.maxArea = 1500;
+            _detectorCreationParams.maxArea = 1550;
             _detectorCreationParams.filterByColor = true;
             _detectorCreationParams.blobColor = 0;
             _detectorCreationParams.filterByConvexity = true;
@@ -307,9 +307,7 @@ namespace calibration { namespace concentric {
                     return false;
                 }
             }
-
             _pipeline2( input, m_stageFrameResults[ STAGE_KEYPOINTS_TRANSFORMATION ] );
-
             return true;
         }
 
@@ -473,13 +471,41 @@ namespace calibration { namespace concentric {
 
         void Detector::_runFeaturesExtractor( const cv::Mat& input, vector< cv::Point2f >& candidatePoints )
         {
-            vector< cv::KeyPoint > _keypoints;
-            m_blobsDetector->detect( input, _keypoints );
+            vector< vector< cv::Point > > _contours;
+            vector< cv::Vec4i > _hierarchy;
+            vector< cv::RotatedRect > _ellipsesBB;
+
+            cv::findContours( input, _contours, _hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE );
+
+            for ( auto _contour : _contours )
+            {
+                if ( _contour.size() > 5 )
+                {
+                    _ellipsesBB.push_back( cv::fitEllipse( cv::Mat( _contour ) ) );
+                }
+            }
+
+            vector< cv::RotatedRect > _filteredEllipses;
+
+            for ( int q = 0; q < _ellipsesBB.size(); q++ )
+            {
+                float _a = _ellipsesBB[q].size.width;
+                float _b = _ellipsesBB[q].size.height;
+                float _size = sqrt( _a * _a + _b * _b );
+                float _ratio = _a / _b;
+
+                if ( ( ELLIPSE_MIN_SIZE < _size && _size < ELLIPSE_MAX_SIZE ) &&
+                     ( ELLIPSE_MIN_RATIO < _ratio && _ratio < ELLIPSE_MAX_RATIO ) )
+                {
+                    _filteredEllipses.push_back( _ellipsesBB[q] );
+                }
+
+            }
 
             candidatePoints.clear();
-            for ( cv::KeyPoint& _keypoint : _keypoints )
+            for ( cv::RotatedRect _rect : _filteredEllipses )
             {
-                candidatePoints.push_back( _keypoint.pt );
+                candidatePoints.push_back( _rect.center );
             }
         }
 
@@ -488,6 +514,7 @@ namespace calibration { namespace concentric {
             if ( m_mode == MODE_TRACKING )
             {
                 vector< bool > _assigned( m_candidatePoints.size(), false );
+                vector< bool > _assignedPerspective( m_perspectivePoints.size(), false );
 
                 for ( int t = 0; t < m_trackingPoints.size(); t++ )
                 {
@@ -503,6 +530,20 @@ namespace calibration { namespace concentric {
                             m_trackingPoints[t].pos = _candidate/* + m_cropOrigin*/;
                             m_trackingPoints[t].found = true;
                             _assigned[q] = true;
+                            break;
+                        }
+                    }
+
+                    for ( int q = 0; q < m_perspectivePoints.size(); q++ )
+                    {
+                        cv::Point2f _candidate = m_perspectivePoints[q];
+
+                        if ( !_assignedPerspective[q] && utils::dist( m_trackingPoints[t].pos, _candidate/* + m_cropOrigin*/ ) < 20 )
+                        {
+                            m_trackingPoints[t].vel = _candidate/* + m_cropOrigin*/ - m_trackingPoints[t].pos;
+                            m_trackingPoints[t].pos = m_trackingPoints[t].pos + _candidate / 2 /* + m_cropOrigin*/;
+                            m_trackingPoints[t].found = true;
+                            _assignedPerspective[q] = true;
                             break;
                         }
                     }
@@ -536,6 +577,7 @@ namespace calibration { namespace concentric {
                 output = input.clone();
             }
         }
+
 
 
         void Detector::getDetectedPoints( vector< cv::Point2f >& iPoints )
