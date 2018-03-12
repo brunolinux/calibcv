@@ -7,7 +7,7 @@ find_package( OpenGL REQUIRED )
 find_package( Threads REQUIRED )
 
 set( MAURO_INCLUDE_DIRECTORIES
-	 include/
+	 lib/include/
 	 "${CMAKE_SOURCE_DIR}/ext/glfw/include"
 	 "${CMAKE_BINARY_DIR}/ext/glad/include" )
 
@@ -40,7 +40,10 @@ function( MauroFnBuildTest pSources pExecutableId )
     
 endfunction()
 
-FILE( GLOB MauroTestsSources tests *.cpp )
+set( MauroTestsSources
+     tests/testWindows.cpp )
+
+message( "mauro tests: ${MauroTestsSources}" )
 
 foreach( testFile ${MauroTestsSources} )
 

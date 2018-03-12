@@ -12,7 +12,7 @@ namespace mauro
     class MWindow
     {
 
-        private :
+        protected :
 
         GLFWwindow* m_glfwWindowHandle;
 
@@ -21,18 +21,27 @@ namespace mauro
         string m_name;
 
         bool m_initialized;
+        bool m_isVisible;
+
+        float m_bgColor[4];
+
+        virtual void _drawContents();
 
         public :
 
-        MWindow( GLFWwindow* sharedWindowResources, string windowName, int wWidth, int wHeight );
+        MWindow( GLFWwindow* sharedWindowResources, 
+                 string windowName, int wWidth, int wHeight );
 
-
+        ~MWindow();
+        
         void render();
+
+        void show();
+        void hide();
 
         int width() { return m_width; }
         int height() { return m_height; }
         string name() { return m_name; }
-
     };
 
 

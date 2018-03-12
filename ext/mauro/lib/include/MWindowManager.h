@@ -3,6 +3,7 @@
 
 #include <MWindow.h>
 #include <pthread.h>
+#include <MConfig.h>
 
 using namespace std;
 
@@ -33,7 +34,9 @@ namespace mauro
 
 		~MWindowManager();
 
-		MWindow* createWindow( string windowName, int width, int height );
+		MWindow* createWindow( string windowName, 
+							   int width = MAURO_GL_CHILD_WINDOW_DEFAULT_WIDTH, 
+							   int height = MAURO_GL_CHILD_WINDOW_DEFAULT_HEIGHT );
 
 		void run();
 		void stop();

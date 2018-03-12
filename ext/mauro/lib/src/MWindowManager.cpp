@@ -1,6 +1,5 @@
 
 #include <MWindowManager.h>
-#include <MConfig.h>
 
 using namespace std;
 
@@ -23,7 +22,9 @@ namespace mauro
         glfwWindowHint( GLFW_VISIBLE, GL_FALSE );
         glfwWindowHint( GLFW_RESIZABLE, GL_FALSE );
 
-        m_sharedWindow = glfwCreateWindow( 1024, 768, "BaseWindow", NULL, NULL );
+        m_sharedWindow = glfwCreateWindow( MAURO_GL_SHARED_WINDOW_WIDTH, 
+                                           MAURO_GL_SHARED_WINDOW_HEIGHT, 
+                                           "BaseWindow", NULL, NULL );
         if ( m_sharedWindow == NULL )
         {
             cout << "Couldn't initialize base shared res window" << endl;
@@ -39,16 +40,28 @@ namespace mauro
             glfwTerminate();
             return;
         }
+
+        // Just in case ?
+        glfwHideWindow( m_sharedWindow );
+
+        // Restore options for child windows
+        glfwWindowHint( GLFW_VISIBLE, GL_TRUE );
+        glfwWindowHint( GLFW_RESIZABLE, GL_TRUE );
     }
 
     MWindowManager::~MWindowManager()
     {
+        // Release all child windows ************
         for ( auto _keypair : m_windows )
         {
             delete _keypair.second;
         }
 
         m_windows.clear();
+
+        // Release shared window ****************
+        glfwDestroyWindow( m_sharedWindow );
+        m_sharedWindow = NULL;
     }
 
     MWindowManager* MWindowManager::create()
@@ -56,7 +69,7 @@ namespace mauro
         if ( MWindowManager::INSTANCE != NULL )
         {
             cout << "window manager already created" << endl;
-            return;
+            return MWindowManager::INSTANCE;
         }
 
         MWindowManager::INSTANCE = new MWindowManager();
@@ -79,7 +92,18 @@ namespace mauro
 
     MWindow* MWindowManager::createWindow( string windowName, int width, int height )
     {
+        if ( m_windows.find( windowName ) != m_windows.end() )
+        {
+            // Returning already existing window if there is one
+            cout << "Window with name ( " << windowName << " ) already exists in windowmanager" << endl;
+            return m_windows[ windowName ];
+        }
 
+        auto _window = new MWindow( m_sharedWindow, windowName, width, height );
+
+        m_windows[ windowName ] = _window;
+
+        return _window;
     }
 
 
