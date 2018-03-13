@@ -6,3 +6,4 @@ PatternSizeWidth: 4
 PatternSizeHeight: 11
 CalibrationVideo: "LifeCam_asymmetric_circles.avi"
 CalibrationFile: "LifeCam_asymmetric_circles_calibration.yaml"
+CalibrationFileRefined: "LifeCam_asymmetric_circles_calibration_refined.yaml"

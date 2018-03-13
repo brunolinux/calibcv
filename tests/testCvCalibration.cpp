@@ -47,6 +47,7 @@ int main( int argc, char** argv )
     int _patternSizeWidth, _patternSizeHeight;
     string _videoFile;
     string _calibrationFile;
+    string _calibrationFileRefined;
 
     _fs[ "SquareSpacing" ] >> _squareSpacing;
     _fs[ "PatternType" ] >> _patternType;
@@ -54,6 +55,9 @@ int main( int argc, char** argv )
     _fs[ "PatternSizeHeight" ] >> _patternSizeHeight;
     _fs[ "CalibrationVideo" ] >> _videoFile;
     _fs[ "CalibrationFile" ] >> _calibrationFile;
+    _fs[ "CalibrationFileRefined" ] >> _calibrationFileRefined;
+
+    _fs.release();
     // ************************************************************************************
 
     calibcv::SVideoHandler* _videoHandler = calibcv::SVideoHandler::create();
@@ -78,7 +82,7 @@ int main( int argc, char** argv )
     cv::Size _frameSize = _videoHandler->getVideoFrameSize();
     cout << "fw: " << _frameSize.width << " - fh: " << _frameSize.height << endl;
 
-    calibration::Calibrator _calibrator( _frameSize, _patternInfo );
+    calibration::Calibrator _calibrator( _frameSize, _patternInfo, _calibrationFile, _calibrationFileRefined );
 
     if ( !_calibrator.loadFromFile( _calibrationFile ) )
     {

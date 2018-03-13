@@ -69,4 +69,11 @@ namespace utils {
 
 	float checkEnd2EndColinearity( const vector< cv::Point2f >& points );
 
+    void computeReprojectionErrors( const cv::Mat& cameraMatrix, const cv::Mat& distortionCoefficients,
+                                    const vector< vector< cv::Point3f > >& worldPoints,
+                                    const vector< vector< cv::Point2f > >& imagePoints,
+                                    const vector< cv::Mat >& rvecs, const vector< cv::Mat >& tvecs,
+                                    float& reprojectionError,
+                                    vector<float>& perViewErrors );
+
 }

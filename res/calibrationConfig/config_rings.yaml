@@ -6,3 +6,4 @@ PatternSizeWidth: 5
 PatternSizeHeight: 4
 CalibrationVideo: "LifeCam_rings.avi"
 CalibrationFile: "LifeCam_rings_calibration.yaml"
+CalibrationFileRefined: "LifeCam_rings_calibration_refined.yaml"

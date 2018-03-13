@@ -19,16 +19,16 @@ namespace calibration { namespace concentric {
         int _currentColorIndx = 0;
         for ( int q = 0; q < iCorners.size() - 1; q++ )
         {
-            int _offset = q == ( pInfo.cb_size.width - 1 ) ? 0 : 1;
-            _currentColorIndx = ( ( q + _offset ) / pInfo.cb_size.width ) % _colors.size();
+            int _offset = q == ( pInfo.size.width - 1 ) ? 0 : 1;
+            _currentColorIndx = ( ( q + _offset ) / pInfo.size.width ) % _colors.size();
 
             cv::Scalar _color = _colors[ _currentColorIndx ];
 
             cv::line( image, iCorners[q], iCorners[q + 1], _color, 2 );
         }
 
-        int _w = pInfo.cb_size.width;
-        int _h = pInfo.cb_size.height;
+        int _w = pInfo.size.width;
+        int _h = pInfo.size.height;
 
         string _cornerText = "p";
         cv::putText( image, _cornerText + std::to_string( 0 ), 
@@ -296,6 +296,11 @@ namespace calibration { namespace concentric {
         bool Detector::runTrackingMode( const cv::Mat& input )
         {
             _pipeline( input );
+
+            // if ( refined )
+            // {
+            //     // TODO: Refining process
+            // }
 
             for ( int q = 0; q < m_trackingPoints.size(); q++ )
             {

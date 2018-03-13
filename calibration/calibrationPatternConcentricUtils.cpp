@@ -155,4 +155,33 @@ namespace utils {
 		return _distCum / ( points.size() - 2 );
 	}
 
+    void computeReprojectionErrors( const cv::Mat& cameraMatrix, const cv::Mat& distortionCoefficients,
+                                    const vector< vector< cv::Point3f > >& worldPoints,
+                                    const vector< vector< cv::Point2f > >& imagePoints,
+                                    const vector< cv::Mat >& rvecs, const vector< cv::Mat >& tvecs,
+                                    float& reprojectionError,
+                                    vector<float>& perViewErrors )
+    {
+        vector< cv::Point2f > _reprojectedPoints;
+        size_t _totalPoints = 0;
+            
+        float _totalErr = 0;
+        float _err = 0;
+            
+        perViewErrors.resize( worldPoints.size() );
+
+        for( size_t i = 0; i < worldPoints.size(); ++i )
+        {
+            cv::projectPoints( worldPoints[i], rvecs[i], tvecs[i], cameraMatrix, distortionCoefficients, _reprojectedPoints );
+            _err = cv::norm( imagePoints[i], _reprojectedPoints, cv::NORM_L2 );
+
+            size_t _n           = worldPoints[i].size();
+            perViewErrors[i]    = ( float ) std::sqrt( _err * _err / _n );
+            _totalErr           += _err * _err;
+            _totalPoints        += _n;
+        }
+
+        reprojectionError = std::sqrt( _totalErr / _totalPoints );
+    }
+
 }

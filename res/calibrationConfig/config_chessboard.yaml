@@ -6,3 +6,4 @@ PatternSizeWidth: 9
 PatternSizeHeight: 6
 CalibrationVideo: "LifeCam_chess.avi"
 CalibrationFile: "LifeCam_chess_calibration.yaml"
+CalibrationFileRefined: "LifeCam_chess_calibration_refined.yaml"

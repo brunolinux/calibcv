@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <fstream>
 #include <string>
+#include <cassert>
 #include <vector>
 #include <chrono>
 #include <cmath>
@@ -13,6 +14,9 @@
 #include <opencv2/calib3d.hpp>
 
 using namespace std;
+
+#define VIZ_CALIB_TYPE_SIMPLE 0
+#define VIZ_CALIB_TYPE_REFINED 1
 
 namespace calibration
 {
@@ -30,7 +34,7 @@ namespace calibration
         int type;
         
         float cb_squareLength;
-        cv::Size cb_size;
+        cv::Size size;
     };
 
     struct DetectionInfo
