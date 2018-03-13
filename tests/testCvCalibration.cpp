@@ -21,6 +21,8 @@ using namespace std;
 
 int main( int argc, char** argv )
 {
+    cout << "cv's build information" << endl;
+    cout << cv::getBuildInformation() << endl;
 
     if ( argc < 2 )
     {
