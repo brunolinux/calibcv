@@ -13,15 +13,13 @@
 #define WINDOW_CORRECTED_FRAME "wCorrectedFrame"
 #define SAMPLE_TIME 33 // 30fps
 
-#define TEST_CALIBRATION_THRESHOLD_COUNT 30
-
 using namespace std;
 
 
 
 int main( int argc, char** argv )
 {
-
+    // Parsing required data **************************************************************
     if ( argc < 2 )
     {
         cout << "Usage: ./testCvCalibration PATTERN" << endl;
@@ -56,6 +54,7 @@ int main( int argc, char** argv )
     _fs[ "PatternSizeHeight" ] >> _patternSizeHeight;
     _fs[ "CalibrationVideo" ] >> _videoFile;
     _fs[ "CalibrationFile" ] >> _calibrationFile;
+    // ************************************************************************************
 
     calibcv::SVideoHandler* _videoHandler = calibcv::SVideoHandler::create();
 
@@ -70,6 +69,7 @@ int main( int argc, char** argv )
     }
 
     cv::namedWindow( WINDOW_ORIGINAL_FRAME );
+    cv::namedWindow( WINDOW_CORRECTED_FRAME );
 
     calibration::PatternInfo _patternInfo = { _patternType,
                                               _squareSpacing, 
@@ -135,25 +135,10 @@ int main( int argc, char** argv )
             }
         }
 
-        if ( !_calibrator.isCalibrated() && 
-             _calibrator.getCalibrationSize() >= TEST_CALIBRATION_THRESHOLD_COUNT )
-        {
-            cout << "Calibrating ......" << endl;
-            _calibrator.calibrate();
-            cout << "DONE calibrating" << endl;
-
-            _calibrator.saveToFile( _calibrationFile );
-            
-            cv::namedWindow( WINDOW_CORRECTED_FRAME );
-        }
-
         cv::Mat _frameCorrected;
 
-        if ( _calibrator.isCalibrated() )
-        {
-            _calibrator.applyCalibrationCorrection( _frame, _frameCorrected );
-            cv::imshow( WINDOW_CORRECTED_FRAME, _frameCorrected );
-        }
+        _calibrator.applyCalibrationCorrection( _frame, _frameCorrected );
+        cv::imshow( WINDOW_CORRECTED_FRAME, _frameCorrected );
 
         _calibrator.update();
 

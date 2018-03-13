@@ -27,6 +27,8 @@ using namespace std;
 #define DIST_VIS_X_DIV 20
 #define DIST_VIS_Y_DIV 20
 
+#define INITIAL_INITIAL_CALIBRATION_THRESHOLD_COUNT 30
+
 namespace calibration
 {
 
@@ -391,11 +393,18 @@ namespace calibration
 
     };
 
+    enum
+    {
+        CALIB_STATE_INITIAL,
+        CALIB_STATE_REFINING
+    };
+
     class Calibrator
     {
 
         private :
 
+        // TODO: Refactor this part ************************************************
         // Info from each calibration bucket
         vector< cv::Mat > m_calibrationImages;
         vector< cv::Mat > m_calibrationRotMatrices;
@@ -403,17 +412,34 @@ namespace calibration
         vector< vector< cv::Point2f > > m_pointsInImage;
         vector< vector< cv::Point3f > > m_pointsInWorld;
 
+        // Info from each calibration bucket in the refining step
+        vector< cv::Mat > m_calibrationImagesRefining;
+        vector< cv::Mat > m_calibrationRotMatricesRefining;
+        vector< cv::Mat > m_calibrationTranMatricesRefining;
+        vector< vector< cv::Point2f > > m_pointsInImageRefining;
+        vector< vector< cv::Point3f > > m_pointsInWorldRefining;
+        // *************************************************************************
+
         cv::Mat m_cameraMatrix;
         cv::Mat m_distortionCoefficients;
 
+        cv::Mat m_cameraMatrixBackBuff;
+        cv::Mat m_distortionCoefficientsBackBuff;
+
         cv::Mat m_transformationMap1;
         cv::Mat m_transformationMap2;
+        // Work on this back buffers in the calibration thread
+        cv::Mat m_transformationMap1BackBuff;
+        cv::Mat m_transformationMap2BackBuff;
 
-        bool m_isCalibrated;
+        int m_calibState;
 
         cv::Size m_frameSize;
-
         PatternInfo m_patternInfo;
+        int m_calibInitThresholdCount;
+
+        string m_calibFile;
+
         float m_calibrationRMSerror;
         float m_calibrationReprojectionError;
         float m_calibrationNewColinearityError;
@@ -423,13 +449,16 @@ namespace calibration
 
         public :
 
-        Calibrator( const cv::Size& frameSize, const PatternInfo& pInfo )
+        Calibrator( string calibFile, const cv::Size& frameSize, const PatternInfo& patternInfo,
+                    int calibrationThresholdCount = INITIAL_CALIBRATION_THRESHOLD_COUNT )
         {
-            m_isCalibrated = false;
+            m_calibState = CALIB_STATE_INITIAL;
+
+            m_calibFile = calibFile;
 
             m_frameSize = frameSize;
-
-            m_patternInfo = pInfo;
+            m_patternInfo = patternInfo;
+            m_calibInitThresholdCount = calibrationThresholdCount;
 
             m_visualizer = new DistributionVisualizer( "CalibrationViz",
                                                        m_patternInfo.cb_size,
@@ -441,6 +470,10 @@ namespace calibration
             m_calibrationImages.clear();
             m_pointsInImage.clear();
             m_pointsInWorld.clear();
+
+            m_calibrationImagesRefining.clear();
+            m_pointsInImageRefining.clear();
+            m_pointsInWorldRefining.clear();
         }
 
         void setSize( const cv::Size& frameSize )
@@ -454,16 +487,32 @@ namespace calibration
             m_pointsInImage.clear();
             m_pointsInWorld.clear();
 
-            m_isCalibrated = false;
+            m_calibState = CALIB_STATE_INITIAL;
         }
 
         void addCalibrationBucket( const cv::Mat& image,
                                    const vector< cv::Point2f >& corners2D )
         {
-            m_calibrationImages.push_back( image );
-            m_pointsInImage.push_back( corners2D );
+            if ( m_calibState == CALIB_STATE_INITIAL )
+            {
+                m_calibrationImages.push_back( image );
+                m_pointsInImage.push_back( corners2D );
 
-            m_visualizer->processCalibrationBucket( corners2D );
+                m_visualizer->processCalibrationBucket( corners2D );
+
+                if ( m_calibrationImages.size() >= m_calibInitThresholdCount )
+                {
+                    cout << "Initial calibration ........." << endl;
+                    calibrateInitial();
+                    cout << "DONE with initial calibration" << endl;
+                }
+            }
+            else if ( m_calibState == CALIB_STATE_REFINING )
+            {
+                m_calibrationImagesRefining.push_back( image );
+                m_pointsInImageRefining.push_back()
+            }
+
         }
 
         void update()
@@ -471,7 +520,7 @@ namespace calibration
             m_visualizer->draw();
         }
 
-        void calibrate()
+        void calibrateInitial()
         {
             m_pointsInWorld = vector< vector< cv::Point3f > >( 1 );
             getPatternKnownPlanePositions( m_pointsInWorld[0], m_patternInfo );
@@ -489,8 +538,6 @@ namespace calibration
                                          cv::Mat(), cv::Mat(), 
                                          m_frameSize,
                                          CV_32FC1, m_transformationMap1, m_transformationMap2 );
-
-            m_isCalibrated = true;
 
             vector< float > _perViewErrors;
 
@@ -528,15 +575,14 @@ namespace calibration
         void applyCalibrationCorrection( const cv::Mat& src,
                                          cv::Mat& dst )
         {
-            if ( !m_isCalibrated )
+            if ( m_calibState == CALIB_STATE_REFINING )
             {
-                std::cout << "Calibrator::applyCalibrationCorrection> not calibrated yet" << std::endl;
+                // not calibrated yet, returning same image
                 dst = src.clone();
                 return;
             }
 
             cv::remap( src, dst, m_transformationMap1, m_transformationMap2, cv::INTER_LINEAR );
-            //cv::undistort( src, dst, m_cameraMatrix, m_distortionCoefficients );
         }
 
         void saveToFile( string filename )
@@ -668,8 +714,6 @@ namespace calibration
             oldColinearity = std::sqrt( _totalErrOld / _totalPoints );
             newColinearity = std::sqrt( _totalErrNew / _totalPoints );
         }
-
-        bool isCalibrated() { return m_isCalibrated; }
 
         int getCalibrationSize() { return m_calibrationImages.size(); }
 
