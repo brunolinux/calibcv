@@ -332,7 +332,7 @@ namespace calibration
             string _calibType = "calibrationType: ";
             _calibType += ( m_calibrationTypes[m_currentCalibrationFrameIndx] == VIZ_CALIB_TYPE_SIMPLE ) ? "simple" : "refined";
             cv::putText( m_patternErrors, _calibType, 
-                         cv::Point2f( 60, 20 ), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar( 255, 255, 0 ), 2 );
+                         cv::Point2f( 20, 60 ), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar( 255, 255, 0 ), 2 );
 
             cv::imshow( m_windowCalibrationErrors.c_str(), m_patternErrors );
         }

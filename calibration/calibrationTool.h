@@ -178,6 +178,7 @@ namespace calibration
                 {
                     cout << "Initial calibration started ........." << endl;
 
+                    m_calibStateOld = m_calibState;
                     m_calibState = CALIB_STATE_CALIBRATING;
                     m_isCalibrating = true;
 
@@ -196,12 +197,18 @@ namespace calibration
                 {
                     cout << "Refined calibration started ........." << endl;
 
+                    m_calibStateOld = m_calibState;
                     m_calibState = CALIB_STATE_CALIBRATING;
                     m_isCalibrating = true;
                     
                     calibrateRefined();
-
                 }
+            }
+            else
+            {
+                cout << "something went wrong" << endl;
+                cout << "state: " << m_calibState << endl;
+                cout << "stateOld: " << m_calibStateOld << endl;
             }
 
         }
@@ -211,8 +218,9 @@ namespace calibration
         	// check if still working
         	if ( m_calibState == CALIB_STATE_CALIBRATING )
         	{
-        		if ( m_isCalibrating = false )
+        		if ( m_isCalibrating == false )
         		{
+                    cout << "finished calibrating" << endl;
                     pthread_join( m_threadHandle, NULL );
 
                     // Get the maps back from the working-buffers
@@ -253,18 +261,18 @@ namespace calibration
         			// Get to the next state, accordingly
         			if ( m_calibStateOld == CALIB_STATE_UNCALIBRATED )
         			{
-        				m_calibState = CALIB_STATE_CALIBRATED_SIMPLE;
+        				m_calibState = m_calibStateOld = CALIB_STATE_CALIBRATED_SIMPLE;
                         m_useMode = USE_MODE_INITIAL;
         			}
         			else if ( m_calibStateOld == CALIB_STATE_CALIBRATED_SIMPLE )
         			{
-        				m_calibState = CALIB_STATE_CALIBRATED_REFINED;
+        				m_calibState = m_calibStateOld = CALIB_STATE_CALIBRATED_REFINED;
                         m_useMode = USE_MODE_REFINED;
         			}
         			else if ( m_calibStateOld == CALIB_STATE_CALIBRATED_REFINED )
         			{
         				// Just stay here, this is the last state we should keep
-        				m_calibState = CALIB_STATE_CALIBRATED_REFINED;
+        				m_calibState = m_calibStateOld = CALIB_STATE_CALIBRATED_REFINED;
                         m_useMode = USE_MODE_REFINED;
         			}
         		}
@@ -420,8 +428,8 @@ namespace calibration
  
             _fs << TAG_FRAME_WIDTH << m_frameSize.width;
             _fs << TAG_FRAME_HEIGHT << m_frameSize.height;
-            _fs << TAG_CAMERA_MATRIX << ( ( calibType == VIZ_CALIB_TYPE_SIMPLE ) ? m_cameraMatrixInitial : m_cameraMatrixRefined );
-            _fs << TAG_DISTORTION_COEFFICIENTS << ( ( calibType == VIZ_CALIB_TYPE_SIMPLE ) ? m_distortionCoefficientsInitial : m_distortionCoefficientsRefined );
+            _fs << TAG_CAMERA_MATRIX << m_cameraMatrixWorking;
+            _fs << TAG_DISTORTION_COEFFICIENTS << m_distortionCoefficientsWorking;
             _fs << TAG_CALIBRATION_ERROR_RMS << m_calibrationRMSerror;
             _fs << TAG_CALIBRATION_ERROR_REPROJECTION << m_calibrationReprojectionError;
             _fs << TAG_CALIBRATION_ERROR_COLINEARITY_OLD << m_calibrationOldColinearityError;
@@ -495,12 +503,13 @@ namespace calibration
 
         	// save images to calibration directory ******************
 
-        	for ( int q = 0; q < m_calibrationImagesInitial.size(); q++ )
+        	for ( int q = 0; q < images.size(); q++ )
         	{
-        		string _imgSavePath = _pathSaveFolder + "_img_";
+        		string _imgSavePath = _pathSaveFolder + "/img_";
         		_imgSavePath += to_string( q + 1 );
+                _imgSavePath += ".jpg";
 
-        		cv::imwrite( _imgSavePath, m_calibrationImagesInitial[q] );
+        		cv::imwrite( _imgSavePath, images[q] );
         	}
         }
 
