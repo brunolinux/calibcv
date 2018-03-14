@@ -110,7 +110,7 @@ namespace calibration { namespace concentric {
 
 			void setPatternSize( const cv::Size& size );
 
-			bool run( const cv::Mat& input, const vector< cv::Point2f >& roi, bool refine );
+			bool run( const cv::Mat& input, const vector< cv::Point2f >& roi );
 
 			void setInitialROI( const vector< cv::Point2f >& roi ) { m_initialROI = roi; }
 

@@ -1,6 +1,8 @@
 
 #include <SVideoHandler.h>
 #include <calibrationInterface.h>
+#include <calibrationViz.h>
+#include <calibrationTool.h>
 
 #include <iostream>
 #include <opencv2/opencv.hpp>

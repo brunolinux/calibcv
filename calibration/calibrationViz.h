@@ -160,7 +160,7 @@ namespace calibration
 
         void addCalibratedBucket( const vector< cv::Mat >& frames4calibration, const vector< float >& perViewErrors, int calibrationType )
         {
-            assert( frames4calibration.size == perViewErrors.size() );
+            assert( frames4calibration.size() == perViewErrors.size() );
 
             for ( int q = 0; q < frames4calibration.size(); q++ )
             {
@@ -316,7 +316,7 @@ namespace calibration
 
             // draw the current error given by the current frameindx
             float _xCurrent = m_fWidth * ( (float)m_currentCalibrationFrameIndx ) / m_calibrationPerViewErrors.size();
-            float _yCurrent = m_fHeight * ( 1.0f - _scaleFactor * ( m_calibrationPerViewErrors[q] / _max ) );
+            float _yCurrent = m_fHeight * ( 1.0f - _scaleFactor * ( m_calibrationPerViewErrors[m_currentCalibrationFrameIndx] / _max ) );
 
             cv::line( m_patternErrors,
                       cv::Point2f( _xCurrent, m_fHeight - 1 ),
@@ -332,7 +332,7 @@ namespace calibration
             string _calibType = "calibrationType: ";
             _calibType += ( m_calibrationTypes[m_currentCalibrationFrameIndx] == VIZ_CALIB_TYPE_SIMPLE ) ? "simple" : "refined";
             cv::putText( m_patternErrors, _calibType, 
-                         cv::Point2f( 60, 20 ), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar( 255, 255, 0 ), 2 )
+                         cv::Point2f( 60, 20 ), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar( 255, 255, 0 ), 2 );
 
             cv::imshow( m_windowCalibrationErrors.c_str(), m_patternErrors );
         }
@@ -380,11 +380,11 @@ namespace calibration
 
             if ( _visualizer->m_calibrationImages.size() < 1 )
             {
-                m_currentCalibrationFrameIndx = -1;
+                _visualizer->m_currentCalibrationFrameIndx = -1;
             }
             else
             {
-                m_currentCalibrationFrameIndx = min( max( v, 0 ), _visualizer->m_calibrationImages.size() - 1 );
+                _visualizer->m_currentCalibrationFrameIndx = min( max( v, 0 ), (int)( _visualizer->m_calibrationImages.size() - 1 ) );
             }
                 
         }

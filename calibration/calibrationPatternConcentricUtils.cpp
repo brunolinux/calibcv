@@ -184,4 +184,34 @@ namespace utils {
         reprojectionError = std::sqrt( _totalErr / _totalPoints );
     }
 
+    void computeColinearityErrors( const cv::Mat& cameraMatrix, const cv::Mat& distortionCoefficients,
+    							   const vector< vector< cv::Point3f > >& worldPoints,
+                                   const vector< vector< cv::Point2f > >& imagePoints,
+                                   const vector< cv::Mat >& rvecs, const vector< cv::Mat >& tvecs,
+                                   float& oldColinearity, float& newColinearity )
+    {
+        vector< cv::Point2f > _reprojectedPoints;
+        size_t _totalPoints = 0;
+        
+        float _totalErrOld = 0;
+        float _totalErrNew = 0;
+        float _err = 0;        
+
+        for( size_t i = 0; i < worldPoints.size(); ++i )
+        {
+            cv::projectPoints( worldPoints[i], rvecs[i], tvecs[i], cameraMatrix, distortionCoefficients, _reprojectedPoints );
+                
+            _err = utils::checkEnd2EndColinearity( _reprojectedPoints );
+            _totalErrNew           += _err * _err;
+            _err = utils::checkEnd2EndColinearity( imagePoints[i] );
+            _totalErrOld           += _err * _err;
+
+            size_t _n           = worldPoints[i].size();
+            _totalPoints        += _n;
+        }
+
+        oldColinearity = std::sqrt( _totalErrOld / _totalPoints );
+        newColinearity = std::sqrt( _totalErrNew / _totalPoints );
+	}
+
 }

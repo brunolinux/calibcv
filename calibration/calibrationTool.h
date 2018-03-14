@@ -1,14 +1,14 @@
 
 #pragma once
 
-#include "calibrationCommon.h"
+#include "calibrationInterface.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <pthread.h>
 
 #define INITIAL_CALIBRATION_THRESHOLD_COUNT 30
-#define REFINED_CALIBRATION_THRESHOLD_COUNT 5
+#define REFINED_CALIBRATION_THRESHOLD_COUNT 30
 #define CALIBRATION_FOLDER "calib_default"
 
 using namespace std;
@@ -95,6 +95,8 @@ namespace calibration
         float m_calibrationNewColinearityError;
         float m_calibrationOldColinearityError;
 
+        vector< float > m_perViewErrors;
+
         DistributionVisualizer* m_visualizer;
 
         public :
@@ -149,6 +151,8 @@ namespace calibration
             m_calibrationRotMatricesRefining.clear();
             m_calibrationTranMatricesRefining.clear();
 
+            m_perViewErrors.clear();
+
             m_calibState = CALIB_STATE_UNCALIBRATED;
             m_calibStateOld = CALIB_STATE_UNCALIBRATED;
             m_isCalibrating = false;
@@ -180,10 +184,11 @@ namespace calibration
                     calibrateInitial();
                 }
             }
-            else if ( m_calibState == CALIB_STATE_CALIBRATED_SIMPLE )
+            else if ( m_calibState == CALIB_STATE_CALIBRATED_SIMPLE ||
+                      m_calibState == CALIB_STATE_CALIBRATED_REFINED )
             {
                 m_calibrationImagesRefining.push_back( image );
-                m_pointsInImageRefining.push_back()
+                m_pointsInImageRefining.push_back( corners2D );
 
                 m_visualizer->processCalibrationBucket( corners2D );
 
@@ -217,8 +222,8 @@ namespace calibration
                         m_transformationMap2Initial      = m_transformationMap2Working.clone();
                         m_cameraMatrixInitial            = m_cameraMatrixWorking.clone();
                         m_distortionCoefficientsInitial  = m_distortionCoefficientsWorking.clone();
-                        m_calibrationRotMatricesInitial  = m_calibrationRotMatricesWorking.clone();
-                        m_calibrationTranMatricesInitial = m_calibrationTranMatricesWorking.clone();
+                        m_calibrationRotMatricesInitial  = m_calibrationRotMatricesWorking;
+                        m_calibrationTranMatricesInitial = m_calibrationTranMatricesWorking;
 
                         m_visualizer->addCalibratedBucket( m_calibrationImagesInitial, m_perViewErrors, VIZ_CALIB_TYPE_SIMPLE );
 
@@ -234,13 +239,14 @@ namespace calibration
                         m_transformationMap2Refined      = m_transformationMap2Working.clone();
                         m_cameraMatrixRefined            = m_cameraMatrixWorking.clone();
                         m_distortionCoefficientsRefined  = m_distortionCoefficientsWorking.clone();
-                        m_calibrationRotMatricesRefined  = m_calibrationRotMatricesWorking.clone();
-                        m_calibrationTranMatricesRefined = m_calibrationTranMatricesWorking.clone();
+                        m_calibrationRotMatricesRefining  = m_calibrationRotMatricesWorking;
+                        m_calibrationTranMatricesRefining = m_calibrationTranMatricesWorking;
 
                         m_visualizer->addCalibratedBucket( m_calibrationImagesRefining, m_perViewErrors, VIZ_CALIB_TYPE_REFINED );
+
                         m_calibrationImagesRefining.clear();
-                        m_calibrationRotMatricesRefined.clear();
-                        m_calibrationTranMatricesRefined.clear();
+                        m_calibrationRotMatricesRefining.clear();
+                        m_calibrationTranMatricesRefining.clear();
                         m_perViewErrors.clear();
                     }
 
@@ -248,15 +254,18 @@ namespace calibration
         			if ( m_calibStateOld == CALIB_STATE_UNCALIBRATED )
         			{
         				m_calibState = CALIB_STATE_CALIBRATED_SIMPLE;
+                        m_useMode = USE_MODE_INITIAL;
         			}
         			else if ( m_calibStateOld == CALIB_STATE_CALIBRATED_SIMPLE )
         			{
         				m_calibState = CALIB_STATE_CALIBRATED_REFINED;
+                        m_useMode = USE_MODE_REFINED;
         			}
         			else if ( m_calibStateOld == CALIB_STATE_CALIBRATED_REFINED )
         			{
         				// Just stay here, this is the last state we should keep
         				m_calibState = CALIB_STATE_CALIBRATED_REFINED;
+                        m_useMode = USE_MODE_REFINED;
         			}
         		}
         	}
@@ -321,8 +330,8 @@ namespace calibration
                                              _calibrator->m_calibrationOldColinearityError,
                                              _calibrator->m_calibrationNewColinearityError );
 
-            _calibrator->saveCalibrationImages();
-            _calibrator->saveToFile( _calibrator->m_calibSaveFile );
+            _calibrator->saveCalibrationImages( _calibrator->m_calibrationImagesInitial, VIZ_CALIB_TYPE_SIMPLE );
+            _calibrator->saveToFile( _calibrator->m_calibSaveFile, VIZ_CALIB_TYPE_SIMPLE );
             _calibrator->m_isCalibrating = false;
         }
 
@@ -338,7 +347,7 @@ namespace calibration
                                                                       _calibrator->m_distortionCoefficientsWorking,
                                                                       _calibrator->m_calibrationRotMatricesWorking,
                                                                       _calibrator->m_calibrationTranMatricesWorking );
-
+            // TODO: Check if change to undistort is necessary
             cv::initUndistortRectifyMap( _calibrator->m_cameraMatrixWorking, 
                                          _calibrator->m_distortionCoefficientsWorking, 
                                          cv::Mat(), cv::Mat(), 
@@ -365,7 +374,8 @@ namespace calibration
                                              _calibrator->m_calibrationOldColinearityError,
                                              _calibrator->m_calibrationNewColinearityError );
 
-            _calibrator->saveToFile( _calibrator->m_calibSaveFileRefined );
+            _calibrator->saveCalibrationImages( _calibrator->m_calibrationImagesRefining, VIZ_CALIB_TYPE_REFINED );
+            _calibrator->saveToFile( _calibrator->m_calibSaveFileRefined, VIZ_CALIB_TYPE_REFINED );
             _calibrator->m_isCalibrating = false;
         }
 
@@ -404,14 +414,14 @@ namespace calibration
             
         }
 
-        void saveToFile( string filename )
+        void saveToFile( string filename, int calibType )
         {
             cv::FileStorage _fs( filename, cv::FileStorage::WRITE );
  
             _fs << TAG_FRAME_WIDTH << m_frameSize.width;
             _fs << TAG_FRAME_HEIGHT << m_frameSize.height;
-            _fs << TAG_CAMERA_MATRIX << m_cameraMatrixInitial;
-            _fs << TAG_DISTORTION_COEFFICIENTS << m_distortionCoefficients;
+            _fs << TAG_CAMERA_MATRIX << ( ( calibType == VIZ_CALIB_TYPE_SIMPLE ) ? m_cameraMatrixInitial : m_cameraMatrixRefined );
+            _fs << TAG_DISTORTION_COEFFICIENTS << ( ( calibType == VIZ_CALIB_TYPE_SIMPLE ) ? m_distortionCoefficientsInitial : m_distortionCoefficientsRefined );
             _fs << TAG_CALIBRATION_ERROR_RMS << m_calibrationRMSerror;
             _fs << TAG_CALIBRATION_ERROR_REPROJECTION << m_calibrationReprojectionError;
             _fs << TAG_CALIBRATION_ERROR_COLINEARITY_OLD << m_calibrationOldColinearityError;
@@ -451,32 +461,35 @@ namespace calibration
                 std::cout << "WARNING: Size from previous calibration does not match" << std::endl;
             }
             
-            cv::initUndistortRectifyMap( m_cameraMatrixInitial, m_distortionCoefficients, 
+            cv::initUndistortRectifyMap( m_cameraMatrixInitial, m_distortionCoefficientsInitial, 
                                          cv::Mat(), cv::Mat(), 
                                          m_frameSize,
-                                         CV_32FC1, m_transformationMap1, m_transformationMap2 );
+                                         CV_32FC1, m_transformationMap1Initial, m_transformationMap2Initial );
             
             m_calibState = CALIB_STATE_CALIBRATED_SIMPLE;
             m_calibStateOld = CALIB_STATE_CALIBRATED_SIMPLE;
+            m_useMode = USE_MODE_INITIAL;
             
             return true;
         }
 
-        void saveCalibrationImages()
+        void saveCalibrationImages( const vector< cv::Mat >& images, int calibType )
         {
         	// create calibration directory **************************
         	string _pathSaveFolder = "./" + m_calibFolder;
+            _pathSaveFolder += ( calibType == VIZ_CALIB_TYPE_SIMPLE ) ? "_simple" : "_refined";
+
         	mode_t _nMode = 0733;// permissions in unix
         	int _error = 0;
 
-        #ifdef ( _WIN32 )
+        #ifdef _WIN32
         	_error = _mkdir( _pathSaveFolder.c_str() );
         #else
         	_error = mkdir( _pathSaveFolder.c_str(), _nMode );
         #endif
         	if ( _error != 0 )
         	{
-        		cout << "something went wrong while making the directory" << endl;
+        		cout << "something went wrong while making the directory, maybe it already exists" << endl;
         	}
         	// *******************************************************
 

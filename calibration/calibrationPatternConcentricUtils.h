@@ -76,4 +76,10 @@ namespace utils {
                                     float& reprojectionError,
                                     vector<float>& perViewErrors );
 
+    void computeColinearityErrors( const cv::Mat& cameraMatrix, const cv::Mat& distortionCoefficients,
+    							   const vector< vector< cv::Point3f > >& worldPoints,
+                                   const vector< vector< cv::Point2f > >& imagePoints,
+                                   const vector< cv::Mat >& rvecs, const vector< cv::Mat >& tvecs,
+                                   float& oldColinearity, float& newColinearity );
+
 }

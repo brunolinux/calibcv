@@ -15,6 +15,18 @@
 
 using namespace std;
 
+#define TAG_FRAME_WIDTH "FrameWidth"
+#define TAG_FRAME_HEIGHT "FrameHeight"
+#define TAG_CALIBRATION_ERROR_RMS "CalibrationRMSerror"
+#define TAG_CALIBRATION_ERROR_REPROJECTION "CalibrationReprojectionError"
+#define TAG_CALIBRATION_ERROR_COLINEARITY_OLD "CalibrationColinearityErrorOld"
+#define TAG_CALIBRATION_ERROR_COLINEARITY_NEW "CalibrationColinearityErrorNew"
+#define TAG_CAMERA_MATRIX "CameraMatrix"
+#define TAG_DISTORTION_COEFFICIENTS "DistortionCoefficients"
+
+#define DIST_VIS_X_DIV 20
+#define DIST_VIS_Y_DIV 20
+
 #define VIZ_CALIB_TYPE_SIMPLE 0
 #define VIZ_CALIB_TYPE_REFINED 1
 

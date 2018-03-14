@@ -5,4 +5,4 @@ add_library( calibration
 			 calibrationPatternConcentricImpl.cpp
 			 calibrationPatternConcentricUtils.cpp )
 
-target_link_libraries( calibration ${OpenCV_LIBS} calibcvEngine )
+target_link_libraries( calibration ${OpenCV_LIBS} calibcvEngine ${CMAKE_THREAD_LIBS_INIT} )
