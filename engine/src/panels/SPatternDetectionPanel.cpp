@@ -11,27 +11,34 @@ namespace calibcv
     SPatternDetectorPanel::SPatternDetectorPanel()
     {
         m_windowsStates[BASE] = 1;
-        m_windowsStates[PREPROCESSING] = 0;
         m_windowsStates[MASK] = 0;
         m_windowsStates[EDGES] = 0;
         m_windowsStates[BLOBS] = 0;
         m_windowsStates[TRACKING] = 0;
 
-        m_baseBg = cv::Mat::zeros( 640, 480, CV_8UC3 );
+        m_windowsStates[REFINING_FRONTO] = 0;
+        m_windowsStates[REFINING_MASK] = 0;
+        m_windowsStates[REFINING_EDGES] = 0;
+        m_windowsStates[REFINING_FEATURES] = 0;
+        m_windowsStates[REFINING_PROJECTED] = 0;
+
+        m_baseBg = cv::Mat::zeros( 800, 800, CV_8UC3 );
     }
 
     void SPatternDetectorPanel::init()
     {
         cv::namedWindow( WINDOW_MAP[ BASE ] );
+
         // cv::namedWindow( WINDOW_MAP[ MASK ] );
         // cv::namedWindow( WINDOW_MAP[ EDGES ] );
         // cv::namedWindow( WINDOW_MAP[ BLOBS ] );
         // cv::namedWindow( WINDOW_MAP[ TRACKING ] );
 
-        cv::createTrackbar( "hide-preprocessing", WINDOW_MAP[ BASE ],
-                            &m_windowsStates[ PREPROCESSING ],
-                            1,
-                            SPatternDetectorPanel::onHideWindowCallback );
+        // cv::namedWindow( WINDOW_MAP[ REFINING_FRONTO ] );
+        // cv::namedWindow( WINDOW_MAP[ REFINING_MASK ] );
+        // cv::namedWindow( WINDOW_MAP[ REFINING_EDGES ] );
+        // cv::namedWindow( WINDOW_MAP[ REFINING_FEATURES ] );
+        // cv::namedWindow( WINDOW_MAP[ REFINING_PROJECTED ] );
 
         cv::createTrackbar( "hide-mask", WINDOW_MAP[ BASE ],
                             &m_windowsStates[ MASK ],
@@ -50,6 +57,32 @@ namespace calibcv
 
         cv::createTrackbar( "hide-tracking", WINDOW_MAP[ BASE ],
                             &m_windowsStates[ TRACKING ],
+                            1,
+                            SPatternDetectorPanel::onHideWindowCallback );
+
+        // REFINING
+        cv::createTrackbar( "hide-ref.fronto", WINDOW_MAP[ BASE ],
+                            &m_windowsStates[ REFINING_FRONTO ],
+                            1,
+                            SPatternDetectorPanel::onHideWindowCallback );
+
+        cv::createTrackbar( "hide-ref.mask", WINDOW_MAP[ BASE ],
+                            &m_windowsStates[ REFINING_MASK ],
+                            1,
+                            SPatternDetectorPanel::onHideWindowCallback );
+
+        cv::createTrackbar( "hide-ref.edges", WINDOW_MAP[ BASE ],
+                            &m_windowsStates[ REFINING_EDGES ],
+                            1,
+                            SPatternDetectorPanel::onHideWindowCallback );
+
+        cv::createTrackbar( "hide-ref.features", WINDOW_MAP[ BASE ],
+                            &m_windowsStates[ REFINING_FEATURES ],
+                            1,
+                            SPatternDetectorPanel::onHideWindowCallback );
+
+        cv::createTrackbar( "hide-ref.projected", WINDOW_MAP[ BASE ],
+                            &m_windowsStates[ REFINING_PROJECTED ],
                             1,
                             SPatternDetectorPanel::onHideWindowCallback );
 
@@ -85,6 +118,12 @@ namespace calibcv
         cv::destroyWindow( WINDOW_MAP[ EDGES ] );
         cv::destroyWindow( WINDOW_MAP[ BLOBS ] );
         cv::destroyWindow( WINDOW_MAP[ TRACKING ] );
+
+        cv::destroyWindow( WINDOW_MAP[ REFINING_FRONTO ] );
+        cv::destroyWindow( WINDOW_MAP[ REFINING_MASK ] );
+        cv::destroyWindow( WINDOW_MAP[ REFINING_EDGES ] );
+        cv::destroyWindow( WINDOW_MAP[ REFINING_FEATURES ] );
+        cv::destroyWindow( WINDOW_MAP[ REFINING_PROJECTED ] );
     }
 
     void SPatternDetectorPanel::showBase( const cv::Mat& mat )
@@ -124,13 +163,47 @@ namespace calibcv
         }
     }
 
-    void SPatternDetectorPanel::showPreprocessing( const cv::Mat& mat )
+    // Refining process windows
+    void SPatternDetectorPanel::showRefFronto( const cv::Mat& mat )
     {
-        if ( m_windowsStates[ PREPROCESSING ] == 1 )
+        if ( m_windowsStates[ REFINING_FRONTO ] == 1 )
         {
-            cv::imshow( WINDOW_MAP[ PREPROCESSING ], mat );
+            cv::imshow( WINDOW_MAP[ REFINING_FRONTO ], mat );
         }
     }
+
+    void SPatternDetectorPanel::showRefMask( const cv::Mat& mat )
+    {
+        if ( m_windowsStates[ REFINING_MASK ] == 1 )
+        {
+            cv::imshow( WINDOW_MAP[ REFINING_MASK ], mat );
+        }
+    }
+
+    void SPatternDetectorPanel::showRefEdges( const cv::Mat& mat )
+    {
+        if ( m_windowsStates[ REFINING_MASK ] == 1 )
+        {
+            cv::imshow( WINDOW_MAP[ REFINING_MASK ], mat );
+        }
+    }
+
+    void SPatternDetectorPanel::showRefFeatures( const cv::Mat& mat )
+    {
+        if ( m_windowsStates[ REFINING_FEATURES ] == 1 )
+        {
+            cv::imshow( WINDOW_MAP[ REFINING_FEATURES ], mat );
+        }
+    }
+
+    void SPatternDetectorPanel::showRefProjected( const cv::Mat& mat )
+    {
+        if ( m_windowsStates[ REFINING_PROJECTED ] == 1 )
+        {
+            cv::imshow( WINDOW_MAP[ REFINING_PROJECTED ], mat );
+        }
+    }
+
 
     void SPatternDetectorPanel::_updateWindowMode( _pdWindowID windowId )
     {

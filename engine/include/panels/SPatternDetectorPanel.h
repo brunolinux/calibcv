@@ -3,8 +3,8 @@
 
 #include "../../Common.h"
 
-#define TEXT_INIT 50
-#define TEXT_COSTS_START_OFFSET TEXT_INIT + 100
+#define TEXT_INIT 40
+#define TEXT_COSTS_START_OFFSET TEXT_INIT + 60
 #define TEXT_MARGIN_LEFT 50
 #define TEXT_FONT_SCALE 0.5
 #define TEXT_FONT_COLOR_FPS cv::Scalar( 0, 0, 255 )
@@ -20,32 +20,48 @@ namespace calibcv
     enum _pdWindowID
     {
         BASE,
-        PREPROCESSING,
         MASK,
         EDGES,
         BLOBS,
-        TRACKING
+        TRACKING,
+        REFINING_FRONTO,
+        REFINING_MASK,
+        REFINING_EDGES,
+        REFINING_FEATURES,
+        REFINING_PROJECTED
     };
 
-    static map< _pdWindowID, int > TEXT_COSTS_OFFSETS( { { PREPROCESSING, 80 },
-                                                                   { MASK, 160 },
-                                                                   { EDGES, 240 },
-                                                                   { BLOBS, 320 },
-                                                                   { TRACKING, 400 } } );
+    static map< _pdWindowID, int > TEXT_COSTS_OFFSETS( { { MASK, 100 },
+                                                         { EDGES, 160 },
+                                                         { BLOBS, 220 },
+                                                         { TRACKING, 280 },
+                                                         { REFINING_FRONTO, 340 },
+                                                         { REFINING_MASK, 400 },
+                                                         { REFINING_EDGES, 460 },
+                                                         { REFINING_FEATURES, 520 },
+                                                         { REFINING_PROJECTED, 580 } } );
 
     static map< _pdWindowID, string > WINDOW_MAP( { { BASE, "pd - base" },
-                                                              { PREPROCESSING, "pd - preprocessing" },
-                                                              { MASK, "pd - mask" },
-                                                              { EDGES, "pd - edges" },
-                                                              { BLOBS, "pd - blobs" },
-                                                              { TRACKING, "pd - tracking" } } );
+                                                    { MASK, "pd - mask" },
+                                                    { EDGES, "pd - edges" },
+                                                    { BLOBS, "pd - blobs" },
+                                                    { TRACKING, "pd - tracking" },
+                                                    { REFINING_FRONTO, "pd - ref.fronto" },
+                                                    { REFINING_MASK, "pd - ref.mask" },
+                                                    { REFINING_EDGES, "pd - ref.edges" },
+                                                    { REFINING_FEATURES, "pd - ref.features" },
+                                                    { REFINING_PROJECTED, "pd - ref.projected" } } );
 
     static map< _pdWindowID, int > ACTIVE_WINDOWS( { { BASE, 1 },
-                                                               { PREPROCESSING, 0 },
-                                                               { MASK, 0 },
-                                                               { EDGES, 0 },
-                                                               { BLOBS, 0 },
-                                                               { TRACKING, 0 } } );
+                                                     { MASK, 0 },
+                                                     { EDGES, 0 },
+                                                     { BLOBS, 0 },
+                                                     { TRACKING, 0 },
+                                                     { REFINING_FRONTO, 0 },
+                                                     { REFINING_MASK, 0 },
+                                                     { REFINING_EDGES, 0 },
+                                                     { REFINING_FEATURES, 0 },
+                                                     { REFINING_PROJECTED, 0 } } );
 
 
     class SPatternDetectorPanel
@@ -75,11 +91,18 @@ namespace calibcv
         void cleanInfo();
 
         void showBase( const cv::Mat& mat );
-        void showPreprocessing( const cv::Mat& mat );
         void showMask( const cv::Mat& mat );
         void showEdges( const cv::Mat& mat );
         void showBlobs( const cv::Mat& mat );
         void showTracking( const cv::Mat& mat );
+
+        // Refining stage
+
+        void showRefFronto( const cv::Mat& mat );
+        void showRefMask( const cv::Mat& mat );
+        void showRefEdges( const cv::Mat& mat );
+        void showRefFeatures( const cv::Mat& mat );
+        void showRefProjected( const cv::Mat& mat );
 
         void setFPS( float fps );
         void setStageCost( float msCost, _pdWindowID stageId );

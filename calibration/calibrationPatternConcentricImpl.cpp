@@ -42,7 +42,7 @@ namespace calibration { namespace concentric {
     }
 
     bool findConcentricGrid( const cv::Mat& image, const cv::Size pSize, 
-                             const vector< cv::Point2f >& roi,
+                             const DetectionInfo& detInfo,
                              vector< cv::Point2f >& iCorners )
     {
         detection::Detector* _detector = detection::Detector::create( pSize );
@@ -119,9 +119,9 @@ namespace calibration { namespace concentric {
             m_trackingPoints = vector< TrackingPoint >( m_numPoints );
         }
 
-        bool Detector::run( const cv::Mat& input, const vector< cv::Point2f >& roi )
+        bool Detector::run( const cv::Mat& input, const DetectionInfo& detInfo )
         {
-            setInitialROI( roi );
+            setInitialROI( detInfo.roi );
 
             bool _ret = false;
 
@@ -293,14 +293,9 @@ namespace calibration { namespace concentric {
             return _isFit;
         }
 
-        bool Detector::runTrackingMode( const cv::Mat& input )
+        bool Detector::runTrackingMode( const cv::Mat& input, const DetectionInfo& detInfo )
         {
             _pipeline( input );
-
-            // if ( refined )
-            // {
-            //     // TODO: Refining process
-            // }
 
             for ( int q = 0; q < m_trackingPoints.size(); q++ )
             {
@@ -309,6 +304,22 @@ namespace calibration { namespace concentric {
                     m_mode = MODE_RECOVERING;
 
                     return false;
+                }
+            }
+
+            // If found the points, refine them if requested
+            bool _useRefining = detInfo.useRefining;
+
+            if ( _useRefining )
+            {
+                bool _success = _refining( input, 
+                                           detInfo.cameraMatrix, detInfo.distortionCoefficients,
+                                           m_trackingPoints, m_refinedPoints );
+
+                if ( _success )
+                {
+                    // Update tracking points with refined points
+                    // TODO: Update
                 }
             }
 
@@ -341,19 +352,28 @@ namespace calibration { namespace concentric {
             return false;
         }
 
+        bool Detector::_refining( const cv::Mat& input, 
+                                  const cv::Mat& cameraMatrix, const cv::Mat& distortionCoefficients, 
+                                  const vector< cv::Point2f >& patternPoints,
+                                  vector< cv::Point2f >& refinedPoints )
+        {
+            bool _success = true;
+
+
+
+
+
+
+
+            return _success;
+        }
+
         void Detector::_pipeline( const cv::Mat& input )
         {
             m_stageFrameResults.clear();
             m_frame = input;
 
-            // if ( m_mode == MODE_TRACKING )
-            // {
-            //     m_workingInput = input( m_cropROI ).clone();
-            // }
-            // else
-            // {
-                m_workingInput = input;
-            // }
+            m_workingInput = input;
 
             // thresholding step
             _runMaskGenerator( m_workingInput, 

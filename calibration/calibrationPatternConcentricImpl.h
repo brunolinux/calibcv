@@ -24,7 +24,7 @@ namespace calibration { namespace concentric {
 									   cv::Mat& image, const PatternInfo& pInfo );
 
 	bool findConcentricGrid( const cv::Mat& image, const cv::Size pSize, 
-                             const vector< cv::Point2f >& roi,
+                             const DetectionInfo& detInfo,
                              vector< cv::Point2f >& iCorners );
 
 
@@ -73,6 +73,7 @@ namespace calibration { namespace concentric {
 			vector< cv::Point2f > m_candidatePoints;
 			vector< cv::Point2f > m_matchedPoints;
 			vector< TrackingPoint > m_trackingPoints;
+			vector< TrackingPoint > m_refinedPoints;
 			cv::Point2f m_patternCenter;
 			cv::Point2f m_patternOrientation;
 
@@ -93,6 +94,10 @@ namespace calibration { namespace concentric {
 			bool _computeInitialPattern( const vector< cv::Point2f >& candidatePatternPoints,
                                          vector< cv::Point2f >& matchedPoints );
 			void _pipeline( const cv::Mat& input );
+			void _refining( const cv::Mat& input, 
+							const cv::Mat& cameraMatrix, const cv::Mat& distortionCoefficients, 
+							const vector< TrackingPoint >& patternPoints,
+							vector< TrackingPoint >& refinedPoints );
 
 			bool runInitialDetectionMode( const cv::Mat& input );
 			bool runTrackingMode( const cv::Mat& input );
@@ -110,7 +115,7 @@ namespace calibration { namespace concentric {
 
 			void setPatternSize( const cv::Size& size );
 
-			bool run( const cv::Mat& input, const vector< cv::Point2f >& roi );
+			bool run( const cv::Mat& input, const DetectionInfo& detInfo );
 
 			void setInitialROI( const vector< cv::Point2f >& roi ) { m_initialROI = roi; }
 

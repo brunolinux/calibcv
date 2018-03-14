@@ -13,7 +13,7 @@ namespace calibration { namespace concentric {
                      const PatternInfo& pInfo,
                      const DetectionInfo& dInfo )
 	{
-		return findConcentricGrid( image, pInfo.size, dInfo.roi, iCorners );
+		return findConcentricGrid( image, pInfo.size, dInfo, iCorners );
 	}
 
     void getKnownPlanePositions( vector< cv::Point3f >& kCorners, const PatternInfo& pInfo )
