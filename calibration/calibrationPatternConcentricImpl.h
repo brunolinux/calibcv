@@ -15,10 +15,10 @@ using namespace std;
 #define PIPELINE_EDGES_STAGE_SCALE 1
 #define PIPELINE_EDGES_STAGE_DELTA 0
 
-#define ELLIPSE_MIN_SIZE 60
-#define ELLIPSE_MAX_SIZE 95
-#define ELLIPSE_MIN_RATIO 0.8
-#define ELLIPSE_MAX_RATIO 1.2
+#define ELLIPSE_MIN_SIZE 50
+#define ELLIPSE_MAX_SIZE 120
+#define ELLIPSE_MIN_RATIO 0.85
+#define ELLIPSE_MAX_RATIO 1.15
 
 #define ROI_MARGIN 80
 
@@ -33,9 +33,11 @@ namespace calibration { namespace concentric {
                              vector< cv::Point2f >& iCorners );
 
 	bool findConcentricGrid( const cv::Mat& image, const cv::Size pSize,
-	                      	 const vector< cv::Point2f >& roi,
-	                      	 vector< cv::Point2f >& iCorners,
-						  	 bool isFirstIteration );
+                             const vector< cv::Point2f >& roi,
+                             vector< cv::Point2f >& iCorners,
+                             const bool& isCalibrated,
+                             const cv::Mat& cameraMatrix,
+                             const cv::Mat& distortionCoefficients );
 
 
 	namespace detection
@@ -78,7 +80,6 @@ namespace calibration { namespace concentric {
 
 			vector< cv::Point2f > m_initialROI;
 
-
 			cv::Point2f m_cropOrigin;
 			cv::Rect2f m_cropROI;
 
@@ -86,6 +87,7 @@ namespace calibration { namespace concentric {
 			vector< cv::Point2f > m_perspectivePoints;
 			vector< cv::Point2f > m_matchedPoints;
 			vector< TrackingPoint > m_trackingPoints;
+			vector< cv::Point2f > m_undistortedPoints;
 			cv::Point2f m_patternCenter;
 			cv::Point2f m_patternOrientation;
 
@@ -101,6 +103,7 @@ namespace calibration { namespace concentric {
 			void _runTracking( const cv::Mat& input, cv::Mat& output );
 			void _runFeaturesExtractor( const cv::Mat& input, cv::Mat& output );
 			void _runEdgesGenerator( const cv::Mat& input, cv::Mat& output );
+			void _runEdgesGeneratorCanny( const cv::Mat& input, cv::Mat& output );
 			void _runMaskGenerator( const cv::Mat& input, cv::Mat& output );
 
 			void _runFeaturesExtractor( const cv::Mat& input, vector< cv::Point2f >& m_candidatePoints );
@@ -117,7 +120,10 @@ namespace calibration { namespace concentric {
 
 			public :
 
-			bool m_isFirstIteration;
+			bool m_isCalibrated;
+			cv::Mat m_cameraMatrix;
+			cv::Mat m_distortionCoefficients;
+
 			static Detector* INSTANCE;
 			static Detector* create( const cv::Size& size );
 			static void release();
@@ -130,14 +136,6 @@ namespace calibration { namespace concentric {
 			bool run( const cv::Mat& input, const vector< cv::Point2f >& roi );
 
 			void setInitialROI( const vector< cv::Point2f >& roi ) { m_initialROI = roi; }
-			void setInitialROI( )
-			{
-				m_initialROI.clear();
-				m_initialROI.push_back( cv::Point2f(0, 480) );
-				m_initialROI.push_back( cv::Point2f(640, 480) );
-				m_initialROI.push_back( cv::Point2f(640, 0) );
-				m_initialROI.push_back( cv::Point2f(0,0) );
-			}
 
 			void getDetectedPoints( vector< cv::Point2f >& iPoints );
 			void getTimeCosts( vector< float >& timeCosts );

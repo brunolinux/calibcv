@@ -11,18 +11,20 @@ namespace calibration { namespace concentric {
 	bool getCorners( vector< cv::Point2f >& iCorners,
                      const cv::Mat& image,
                      const PatternInfo& pInfo,
-                     const DetectionInfo& dInfo,
-				  	 bool isFirstIteration )
+                     const DetectionInfo& dInfo )
 	{
-		return findConcentricGrid( image, pInfo.cb_size, dInfo.roi, iCorners, isFirstIteration );
+        return findConcentricGrid( image, pInfo.cb_size, dInfo.roi, iCorners );
 	}
 
 	bool getCorners( vector< cv::Point2f >& iCorners,
                      const cv::Mat& image,
                      const PatternInfo& pInfo,
-                     const DetectionInfo& dInfo )
+                     const DetectionInfo& dInfo,
+                     const bool& isCalibrated,
+                     const cv::Mat& cameraMatrix,
+                     const cv::Mat& distortionCoefficients )
 	{
-		return findConcentricGrid( image, pInfo.cb_size, dInfo.roi, iCorners );
+        return findConcentricGrid( image, pInfo.cb_size, dInfo.roi, iCorners, isCalibrated, cameraMatrix, distortionCoefficients );
 	}
 
     void getKnownPlanePositions( vector< cv::Point3f >& kCorners, const PatternInfo& pInfo )

@@ -125,7 +125,13 @@ namespace calibration
         return success;
     }
 
-    bool getPatternCorners( vector< cv::Point2f >& iCorners, const cv::Mat& image, const PatternInfo& pInfo, const DetectionInfo& dInfo, bool isFirstIteration )
+	bool getPatternCorners( vector< cv::Point2f >& iCorners,
+                            const cv::Mat& image,
+                            const PatternInfo& pInfo,
+                            const DetectionInfo& dInfo,
+                            const bool& isCalibrated,
+                            const cv::Mat& cameraMatrix,
+                            const cv::Mat& distortionCoefficients )
     {
 
         cv::Mat _imgGray;
@@ -163,7 +169,7 @@ namespace calibration
 
             case PATTERN_TYPE_CONCENTRIC_CIRCLES :
 
-                success = concentric::getCorners( iCorners, image, pInfo, dInfo, isFirstIteration );
+                success = concentric::getCorners( iCorners, image, pInfo, dInfo, isCalibrated, cameraMatrix, distortionCoefficients );
 
                 break;
 
@@ -456,8 +462,6 @@ namespace calibration
         vector< vector< cv::Point2f > > m_pointsInImage;
         vector< vector< cv::Point3f > > m_pointsInWorld;
 
-        bool m_isFirstIteration;
-
         cv::Mat m_cameraMatrix;
         cv::Mat m_distortionCoefficients;
 
@@ -489,8 +493,6 @@ namespace calibration
             m_visualizer = new DistributionVisualizer( "CalibrationViz",
                                                        m_patternInfo.cb_size,
                                                        m_frameSize.width, m_frameSize.height );
-
-            m_isFirstIteration = true;
         }
 
         ~Calibrator()
@@ -512,7 +514,6 @@ namespace calibration
             m_pointsInWorld.clear();
 
             m_isCalibrated = false;
-            m_isFirstIteration = true;
         }
 
         void addCalibrationBucket( const cv::Mat& image,
@@ -731,11 +732,13 @@ namespace calibration
 
         int getCalibrationSize() { return m_calibrationImages.size(); }
 
-        vector< cv::Mat > getCalibrationImages() { return m_calibrationImages; }
-
         float getCalibrationRMSerror() { return m_calibrationRMSerror; }
 
         float getCalibrationColinearityError() { return m_calibrationNewColinearityError; }
+
+		cv::Mat getCameraMatrix() { return m_cameraMatrix; }
+
+		cv::Mat getDistortionCoefficients() { return m_distortionCoefficients; }
     };
 
 

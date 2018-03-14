@@ -7,9 +7,9 @@
 namespace calibration { namespace chessboard {
 
 
-    bool getCorners( vector< cv::Point2f >& iCorners, 
-                     const cv::Mat& image, 
-                     const PatternInfo& pInfo, 
+    bool getCorners( vector< cv::Point2f >& iCorners,
+                     const cv::Mat& image,
+                     const PatternInfo& pInfo,
                      const DetectionInfo& dInfo )
     {
         return cv::findChessboardCorners( image, pInfo.cb_size, iCorners,
@@ -22,8 +22,8 @@ namespace calibration { namespace chessboard {
         {
             for ( int x = 0; x < pInfo.cb_size.width; x++ )
             {
-                kCorners.push_back( cv::Point3f( y * pInfo.cb_squareLength, 
-                                                 x * pInfo.cb_squareLength, 
+                kCorners.push_back( cv::Point3f( y * pInfo.cb_squareLength,
+                                                 x * pInfo.cb_squareLength,
                                                  0.0f ) );
             }
         }

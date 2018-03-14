@@ -7,8 +7,8 @@
 namespace calibration { namespace circleGridSymmetric {
 
 
-    bool getCorners( vector< cv::Point2f >& iCorners, 
-                     const cv::Mat& image, 
+    bool getCorners( vector< cv::Point2f >& iCorners,
+                     const cv::Mat& image,
                      const PatternInfo& pInfo,
                      const DetectionInfo& dInfo )
     {
@@ -21,8 +21,8 @@ namespace calibration { namespace circleGridSymmetric {
         {
             for ( int x = 0; x < pInfo.cb_size.width; x++ )
             {
-                kCorners.push_back( cv::Point3f( y * pInfo.cb_squareLength, 
-                                                 x * pInfo.cb_squareLength, 
+                kCorners.push_back( cv::Point3f( y * pInfo.cb_squareLength,
+                                                 x * pInfo.cb_squareLength,
                                                  0.0f ) );
             }
         }

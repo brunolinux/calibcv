@@ -46,7 +46,6 @@ namespace calibration { namespace concentric {
                              vector< cv::Point2f >& iCorners )
     {
         detection::Detector* _detector = detection::Detector::create( pSize );
-        _detector->m_isFirstIteration = true;
 
         bool _found = _detector->run( image, roi );
         if ( _found )
@@ -60,10 +59,17 @@ namespace calibration { namespace concentric {
     bool findConcentricGrid( const cv::Mat& image, const cv::Size pSize,
                              const vector< cv::Point2f >& roi,
                              vector< cv::Point2f >& iCorners,
-                             bool isFirstIteration )
+                             const bool& isCalibrated,
+                             const cv::Mat& cameraMatrix,
+                             const cv::Mat& distortionCoefficients )
     {
         detection::Detector* _detector = detection::Detector::create( pSize );
-        _detector->m_isFirstIteration = isFirstIteration;
+        _detector->m_isCalibrated = isCalibrated;
+        if( isCalibrated )
+        {
+            _detector->m_cameraMatrix = cameraMatrix.clone();
+            _detector->m_distortionCoefficients = distortionCoefficients.clone();
+        }
 
         bool _found = _detector->run( image, roi );
         if ( _found )
@@ -139,10 +145,7 @@ namespace calibration { namespace concentric {
 
         bool Detector::run( const cv::Mat& input, const vector< cv::Point2f >& roi )
         {
-            if( !m_isFirstIteration )
-                setInitialROI();
-            else
-                setInitialROI( roi );
+            setInitialROI( roi );
 
             bool _ret = false;
 
@@ -165,11 +168,6 @@ namespace calibration { namespace concentric {
                 _ret = runRecoveringMode( input );
 
                 break;
-            }
-            if( !m_isFirstIteration )
-            {
-                //_ret = runRecoveringMode( input );
-                _pipeline2( input, m_stageFrameResults[ STAGE_KEYPOINTS_TRANSFORMATION ] );
             }
 
             //m_pipelinePanel->showBase( input );
@@ -244,7 +242,6 @@ namespace calibration { namespace concentric {
                     }
                 }
             }
-
 
             return false;
         }
@@ -334,7 +331,19 @@ namespace calibration { namespace concentric {
                     return false;
                 }
             }
-
+            if( m_isCalibrated )
+            {
+                cv::Mat undistorted;
+                cv::undistort( input, undistorted, m_cameraMatrix, m_distortionCoefficients );
+                m_undistortedPoints.clear();
+                cv::Mat_< cv::Point2f > tPoints;
+                for( auto& trackPoint : m_trackingPoints )
+                {
+                    tPoints.push_back( trackPoint.pos );
+                }
+                cv::undistortPoints( tPoints, m_undistortedPoints, m_cameraMatrix, m_distortionCoefficients );
+                _pipeline2( undistorted, m_stageFrameResults[ STAGE_KEYPOINTS_TRANSFORMATION ] );
+            }
             return true;
         }
 
@@ -381,10 +390,13 @@ namespace calibration { namespace concentric {
 
             vector<cv::Point2f> src = { topLeft, topRight, botLeft, botRight };
             vector<cv::Point2f> dst = { cv::Point2f(0, 0), cv::Point2f(400, 0), cv::Point2f(0, 320), cv::Point2f(400, 320) };
-            cv::Mat perspectiveTransform = cv::getPerspectiveTransform(src, dst);
-            cv::Mat invPerspectiveTransform = cv::getPerspectiveTransform(dst, src);
+            //cv::Mat perspectiveTransform = cv::getPerspectiveTransform(src, dst);
+            cv::Mat perspectiveTransform = cv::findHomography( src, dst, cv::RANSAC);
 
             cv::warpPerspective( input, fronto_parallel, perspectiveTransform, cv::Size( 400, 320 ) );
+
+            cv::Mat invPerspectiveTransform = perspectiveTransform.inv();
+            invPerspectiveTransform.convertTo(invPerspectiveTransform, CV_32FC2);
 
             cv::Mat newMask, newEdges, newFeatures;
             vector< cv::Point2f > candidatePoints;
@@ -392,14 +404,28 @@ namespace calibration { namespace concentric {
             _runMaskGenerator( fronto_parallel,
                                newMask );
             // edge detection step
-            _runEdgesGenerator( newMask,
-                                newEdges );
+            _runEdgesGeneratorCanny( newMask,
+                                     newEdges );
             // features extractor step
             _runFeaturesExtractor( newEdges,
                                    candidatePoints );
 
-            m_perspectivePoints.resize( candidatePoints.size() );
-            cv::perspectiveTransform( candidatePoints, m_perspectivePoints, perspectiveTransform.inv() );
+            for ( cv::Point2f& point : candidatePoints )
+            {
+                cv::circle( fronto_parallel, point, 1, cv::Scalar( 255, 255, 0 ), 2 );
+            }
+
+            if ( !perspectiveTransform.empty() )
+            {
+                m_perspectivePoints.clear();
+                //m_perspectivePoints.reserve( candidatePoints.size() );
+                for ( cv::Point2f& point : candidatePoints )
+                {
+                    cv::Mat2f dstPoint;
+                    cv::perspectiveTransform( cv::Mat2f(point), dstPoint, perspectiveTransform.inv() );
+                    m_perspectivePoints.push_back( cv::Point2f( dstPoint(0) ) );
+                }
+            }
 
             //m_stageFrameResults[ STAGE_FEATURES_EXTRACTION ] = input.clone();
 
@@ -471,6 +497,18 @@ namespace calibration { namespace concentric {
             // m_stageFrameResults[ STAGE_EDGE_DETECTION ] = output;
         }
 
+        void Detector::_runEdgesGeneratorCanny( const cv::Mat& input, cv::Mat& output )
+        {
+            cv::blur( input, output, cv::Size( 3, 3 ) );
+
+            cv::Canny( output, output,
+                       50,
+                       150,
+                       3 );
+
+            // m_stageFrameResults[ STAGE_EDGE_DETECTION ] = output;
+        }
+
         void Detector::_runFeaturesExtractor( const cv::Mat& input, cv::Mat& output )
         {
             vector< cv::KeyPoint > _keypoints;
@@ -496,7 +534,7 @@ namespace calibration { namespace concentric {
 
         void Detector::_runFeaturesExtractor( const cv::Mat& input, vector< cv::Point2f >& candidatePoints )
         {
-            /*vector< vector< cv::Point > > _contours;
+            vector< vector< cv::Point > > _contours;
             vector< cv::Vec4i > _hierarchy;
             vector< cv::RotatedRect > _ellipsesBB;
 
@@ -531,14 +569,6 @@ namespace calibration { namespace concentric {
             for ( cv::RotatedRect _rect : _filteredEllipses )
             {
                 candidatePoints.push_back( _rect.center );
-            }*/
-            vector< cv::KeyPoint > _keypoints;
-            m_blobsDetector->detect( input, _keypoints );
-
-            m_candidatePoints.clear();
-            for ( cv::KeyPoint& _keypoint : _keypoints )
-            {
-                candidatePoints.push_back( _keypoint.pt );
             }
         }
 
@@ -566,21 +596,20 @@ namespace calibration { namespace concentric {
                             break;
                         }
                     }
-                    if( m_isFirstIteration )
-                        continue;
-                    for ( int q = 0; q < m_perspectivePoints.size(); q++ )
+
+                    /*for ( int q = 0; q < m_perspectivePoints.size(); q++ )
                     {
                         cv::Point2f _candidate = m_perspectivePoints[q];
 
-                        if ( !_assignedPerspective[q] && utils::dist( m_trackingPoints[t].pos, _candidate/* + m_cropOrigin*/ ) < 20 )
-                        {
-                            m_trackingPoints[t].vel = _candidate/* + m_cropOrigin*/ - m_trackingPoints[t].pos;
-                            m_trackingPoints[t].pos = ( m_trackingPoints[t].pos + _candidate ) / 2 /* + m_cropOrigin*/;
-                            m_trackingPoints[t].found = true;
-                            _assignedPerspective[q] = true;
-                            break;
-                        }
-                    }
+                        if ( !_assignedPerspective[q] && utils::dist( m_trackingPoints[t].pos, _candidate/* + m_cropOrigin*/ //) < 20 )
+                        //{
+                        //    m_trackingPoints[t].vel = _candidate/* + m_cropOrigin*/ - m_trackingPoints[t].pos;
+                        //    m_trackingPoints[t].pos = m_trackingPoints[t].pos + _candidate / 2 /* + m_cropOrigin*/;
+                        //    m_trackingPoints[t].found = true;
+                        //    _assignedPerspective[q] = true;
+                        //    break;
+                        //}
+                    //}
                 }
 
                 vector<cv::Point2f> corners = { m_trackingPoints[0].pos,

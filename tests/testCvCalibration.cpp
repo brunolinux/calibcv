@@ -87,8 +87,9 @@ int main( int argc, char** argv )
 
     // _videoHandler->setPlaybackAtFrameIndex( 565 );
     // _videoHandler->togglePause();
-    cv::Mat imageCorrected;
-    vector< cv::Mat > images;
+
+	cv::Mat cameraMatrix, distortionCoefficients;
+	bool isCalibrated = false;
 
     while( 1 )
     {
@@ -126,7 +127,7 @@ int main( int argc, char** argv )
         calibration::DetectionInfo _detInfo;
         _detInfo.roi = _videoHandler->roi();
 
-        if ( calibration::getPatternCorners( _corners, _frame, _patternInfo, _detInfo ) )
+        if ( calibration::getPatternCorners( _corners, _frame, _patternInfo, _detInfo, isCalibrated, cameraMatrix, distortionCoefficients ) )
         {
             calibration::drawPatternCorners( _corners, _frame, _patternInfo );
 
@@ -134,7 +135,6 @@ int main( int argc, char** argv )
             {
                 cout << "current buckets in calibrator: " << _calibrator.getCalibrationSize() << endl;
                 _calibrator.addCalibrationBucket( _frame, _corners );
-
             }
         }
 
@@ -144,17 +144,6 @@ int main( int argc, char** argv )
             cout << "Calibrating ......" << endl;
             _calibrator.calibrate();
             cout << "DONE calibrating" << endl;
-            images = _calibrator.getCalibrationImages();
-
-            for(int i = 0; i < 10; i++)
-            {
-                for( auto image : images )
-                {
-                    _calibrator.applyCalibrationCorrection( image, imageCorrected );
-                    calibration::getPatternCorners( _corners, imageCorrected, _patternInfo, _detInfo, false );
-                    cout<<i<<endl;
-                }
-            }
 
             _calibrator.saveToFile( _calibrationFile );
 
@@ -167,6 +156,9 @@ int main( int argc, char** argv )
         {
             _calibrator.applyCalibrationCorrection( _frame, _frameCorrected );
             cv::imshow( WINDOW_CORRECTED_FRAME, _frameCorrected );
+            isCalibrated = true;
+            cameraMatrix = _calibrator.getCameraMatrix().clone();
+            distortionCoefficients = _calibrator.getDistortionCoefficients().clone();
         }
 
         _calibrator.update();
