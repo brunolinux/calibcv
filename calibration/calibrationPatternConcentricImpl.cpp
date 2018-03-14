@@ -67,7 +67,7 @@ namespace calibration { namespace concentric {
             m_size           = size;
             m_trackingPoints = vector< TrackingPoint >( m_numPoints );
 
-            m_stageFrameResults = vector< cv::Mat >( 4 );
+            m_stageFrameResults = vector< cv::Mat >( PIPELINE_MAX_STAGES );
 
             cv::SimpleBlobDetector::Params _detectorCreationParams;
             _detectorCreationParams.filterByArea = true;
@@ -82,6 +82,7 @@ namespace calibration { namespace concentric {
             m_blobsDetector = cv::SimpleBlobDetector::create( _detectorCreationParams );
 
             m_mode = MODE_FINDING_PATTERN;
+            m_hasRefinedPoints = false;
 
             m_pipelinePanel = calibcv::SPatternDetectorPanel::create();
         }
@@ -124,6 +125,7 @@ namespace calibration { namespace concentric {
             setInitialROI( detInfo.roi );
 
             bool _ret = false;
+            m_hasRefinedPoints = false;
 
             switch ( m_mode )
             {
@@ -319,7 +321,7 @@ namespace calibration { namespace concentric {
                 if ( _success )
                 {
                     // Update tracking points with refined points
-                    // TODO: Update
+                    m_hasRefinedPoints = true;
                 }
             }
 
@@ -359,13 +361,50 @@ namespace calibration { namespace concentric {
         {
             bool _success = true;
 
+            vector< cv::Point2f > _patternPointsUndistorted;
+            vector< cv::Point2f > _patternPointsFronto;
+            vector< cv::Point2f > _patternPointsProjected;
 
+            // Undistort the image
+            _refiningUndistortion( input,
+                                   m_stageFrameResults[ STAGE_REFINING_UNDISTORTED ], 
+                                   patternPoints, _patternPointsUndistorted );
 
+            // Convert to fronto parallel
+            _refiningFronto( m_stageFrameResults[ STAGE_REFINING_UNDISTORTED ],
+                             m_stageFrameResults[ STAGE_REFINING_FRONTO ],
+                             _patternPointsUndistorted );
 
+            // Refine in this view
 
-
+            // Adaptive thresholding
+            _refiningMask( m_stageFrameResults[ STAGE_REFINING_FRONTO ],
+                           m_stageFrameResults[ STAGE_REFINING_MASK ] );
+            // Canny edges
+            _refiningMask( m_stageFrameResults[ STAGE_REFINING_MASK ],
+                           m_stageFrameResults[ STAGE_REFINING_EDGES ] );
+            // Ellipse finding
+            _refiningMask( m_stageFrameResults[ STAGE_REFINING_EDGES ],
+                           m_stageFrameResults[ STAGE_REFINING_FEATURES ],
+                           _patternPointsFronto );
+            // Project back points to original view
+            _refiningProjected( m_stageFrameResults[ STAGE_REFINING_UNDISTORTED ],// draw onto copy of undistorted
+                                m_stageFrameResults[ STAGE_REFINING_PROJECTED ],
+                                _patternPointsFronto, 
+                                _patternPointsProjected, 
+                                _patternPointsUndistorted );// last points just for comparison
+            // Distort back to original type of view
+            _refiningDistortion( input,
+                                 _patternPointsProjected,
+                                 refinedPoints,
+                                 patternPoints );// last points just for comparison
 
             return _success;
+        }
+
+        void Detector::_refiningUndistortion()
+        {
+
         }
 
         void Detector::_pipeline( const cv::Mat& input )
@@ -501,6 +540,14 @@ namespace calibration { namespace concentric {
             for ( int q = 0; q < m_trackingPoints.size(); q++ )
             {
                 iPoints.push_back( m_trackingPoints[q].pos );
+            }
+        }
+
+        void Detector::getRefinedPoints( vector< cv::Point2f >& iPoints )
+        {
+            for ( int q = 0; q < m_trackingPoints.size(); q++ )
+            {
+                iPoints.push_back( m_refinedPoints[q].pos );
             }
         }
 

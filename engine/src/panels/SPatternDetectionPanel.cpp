@@ -16,13 +16,15 @@ namespace calibcv
         m_windowsStates[BLOBS] = 0;
         m_windowsStates[TRACKING] = 0;
 
+        m_windowsStates[REFINING_UNDISTORTED] = 0;
         m_windowsStates[REFINING_FRONTO] = 0;
         m_windowsStates[REFINING_MASK] = 0;
         m_windowsStates[REFINING_EDGES] = 0;
         m_windowsStates[REFINING_FEATURES] = 0;
         m_windowsStates[REFINING_PROJECTED] = 0;
+        m_windowsStates[REFINING_DISTORTED] = 0;
 
-        m_baseBg = cv::Mat::zeros( 800, 800, CV_8UC3 );
+        m_baseBg = cv::Mat::zeros( 800, 600, CV_8UC3 );
     }
 
     void SPatternDetectorPanel::init()
@@ -34,11 +36,13 @@ namespace calibcv
         // cv::namedWindow( WINDOW_MAP[ BLOBS ] );
         // cv::namedWindow( WINDOW_MAP[ TRACKING ] );
 
+        // cv::namedWindow( WINDOW_MAP[ REFINING_UNDISTORTED ] );
         // cv::namedWindow( WINDOW_MAP[ REFINING_FRONTO ] );
         // cv::namedWindow( WINDOW_MAP[ REFINING_MASK ] );
         // cv::namedWindow( WINDOW_MAP[ REFINING_EDGES ] );
         // cv::namedWindow( WINDOW_MAP[ REFINING_FEATURES ] );
         // cv::namedWindow( WINDOW_MAP[ REFINING_PROJECTED ] );
+        // cv::namedWindow( WINDOW_MAP[ REFINING_DISTORTED ] );
 
         cv::createTrackbar( "hide-mask", WINDOW_MAP[ BASE ],
                             &m_windowsStates[ MASK ],
@@ -61,6 +65,11 @@ namespace calibcv
                             SPatternDetectorPanel::onHideWindowCallback );
 
         // REFINING
+        cv::createTrackbar( "hide-ref.undistorted", WINDOW_MAP[ BASE ],
+                            &m_windowsStates[ REFINING_UNDISTORTED ],
+                            1,
+                            SPatternDetectorPanel::onHideWindowCallback );
+
         cv::createTrackbar( "hide-ref.fronto", WINDOW_MAP[ BASE ],
                             &m_windowsStates[ REFINING_FRONTO ],
                             1,
@@ -83,6 +92,11 @@ namespace calibcv
 
         cv::createTrackbar( "hide-ref.projected", WINDOW_MAP[ BASE ],
                             &m_windowsStates[ REFINING_PROJECTED ],
+                            1,
+                            SPatternDetectorPanel::onHideWindowCallback );
+
+        cv::createTrackbar( "hide-ref.distorted", WINDOW_MAP[ BASE ],
+                            &m_windowsStates[ REFINING_DISTORTED ],
                             1,
                             SPatternDetectorPanel::onHideWindowCallback );
 
@@ -163,7 +177,16 @@ namespace calibcv
         }
     }
 
-    // Refining process windows
+    // Refining process windows ********************************************
+
+    void SPatternDetectorPanel::showRefUndistorted( const cv::Mat& mat )
+    {
+        if ( m_windowsStates[ REFINING_UNDISTORTED ] == 1 )
+        {
+            cv::imshow( WINDOW_MAP[ REFINING_UNDISTORTED ], mat );
+        }
+    }
+
     void SPatternDetectorPanel::showRefFronto( const cv::Mat& mat )
     {
         if ( m_windowsStates[ REFINING_FRONTO ] == 1 )
@@ -201,6 +224,14 @@ namespace calibcv
         if ( m_windowsStates[ REFINING_PROJECTED ] == 1 )
         {
             cv::imshow( WINDOW_MAP[ REFINING_PROJECTED ], mat );
+        }
+    }
+
+    void SPatternDetectorPanel::showRefDistorted( const cv::Mat& mat )
+    {
+        if ( m_windowsStates[ REFINING_DISTORTED ] == 1 )
+        {
+            cv::imshow( WINDOW_MAP[ REFINING_DISTORTED ], mat );
         }
     }
 

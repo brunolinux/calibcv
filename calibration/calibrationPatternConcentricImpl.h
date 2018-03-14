@@ -44,6 +44,16 @@ namespace calibration { namespace concentric {
 	    	STAGE_EDGE_DETECTION = 1,
 	    	STAGE_FEATURES_EXTRACTION = 2,
 	    	STAGE_KEYPOINTS_TRACKING = 3
+
+			STAGE_REFINING_UNDISTORTED = 4
+			STAGE_REFINING_FRONTO = 5
+			STAGE_REFINING_MASK = 6
+			STAGE_REFINING_EDGES = 7
+			STAGE_REFINING_FEATURES = 8
+			STAGE_REFINING_PROJECTED = 9
+			STAGE_REFINING_DISTORTED = 10
+			
+			PIPELINE_MAX_STAGES = 11
 	    };
 
 	    enum
@@ -84,6 +94,8 @@ namespace calibration { namespace concentric {
 			CpuTimer m_timer;
 			float m_stagesTimeCosts[4];
 
+			bool m_hasRefinedPoints;
+
 			cv::Ptr< cv::SimpleBlobDetector > m_blobsDetector;
 
 			void _runTracking( const cv::Mat& input, cv::Mat& output );
@@ -120,6 +132,8 @@ namespace calibration { namespace concentric {
 			void setInitialROI( const vector< cv::Point2f >& roi ) { m_initialROI = roi; }
 
 			void getDetectedPoints( vector< cv::Point2f >& iPoints );
+			void getRefinedPoints( vector< cv::Point2f >& iPoints );
+			bool hasRefinedPoints() { return m_hasRefinedPoints; }
 			void getTimeCosts( vector< float >& timeCosts );
 			void getStageFrameResults( vector< cv::Mat >& vStageResults );
 
