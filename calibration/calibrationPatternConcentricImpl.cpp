@@ -67,8 +67,7 @@ namespace calibration { namespace concentric {
         _detector->m_isCalibrated = isCalibrated;
         if( isCalibrated )
         {
-            _detector->m_cameraMatrix = cameraMatrix.clone();
-            _detector->m_distortionCoefficients = distortionCoefficients.clone();
+            _detector->setUndistortionParams( cameraMatrix, distortionCoefficients );
         }
 
         bool _found = _detector->run( image, roi );
@@ -334,14 +333,19 @@ namespace calibration { namespace concentric {
             if( m_isCalibrated )
             {
                 cv::Mat undistorted;
-                cv::undistort( input, undistorted, m_cameraMatrix, m_distortionCoefficients );
+                //cv::undistort( input, undistorted, m_cameraMatrix, m_distortionCoefficients );
+                cv::remap( input, undistorted, m_transformationMap1, m_transformationMap2, cv::INTER_LINEAR );
                 m_undistortedPoints.clear();
-                cv::Mat_< cv::Point2f > tPoints;
+                vector< cv::Point2f > tPoints;
+                cv::Point2f undistortedP;
                 for( auto& trackPoint : m_trackingPoints )
                 {
+                    /*undistortedP.x = m_transformationMap1.at<float>( trackPoint.pos );
+                    undistortedP.y = m_transformationMap2.at<float>( trackPoint.pos );
+                    m_undistortedPoints.push_back(undistortedP);*/
                     tPoints.push_back( trackPoint.pos );
                 }
-                cv::undistortPoints( tPoints, m_undistortedPoints, m_cameraMatrix, m_distortionCoefficients );
+                cv::undistortPoints(tPoints, m_undistortedPoints, m_cameraMatrix, m_distortionCoefficients, cv::noArray(), m_cameraMatrix);
                 _pipeline2( undistorted, m_stageFrameResults[ STAGE_KEYPOINTS_TRANSFORMATION ] );
             }
             return true;
@@ -376,7 +380,19 @@ namespace calibration { namespace concentric {
         void Detector::_pipeline2( const cv::Mat& input, cv::Mat& fronto_parallel )
         {
 
-            cv::Point2f topLeft = 2 * m_trackingPoints[0].pos -
+            cv::Point2f topLeft = 2 * m_undistortedPoints[0] -
+                                  m_undistortedPoints[ m_size.width + 1 ];
+
+            cv::Point2f topRight = 2 * m_undistortedPoints[ m_size.width - 1 ] -
+                                   m_undistortedPoints[ m_size.width * 2 - 2 ];
+
+            cv::Point2f botLeft = 2 * m_undistortedPoints[ m_size.width * ( m_size.height - 1 ) ] -
+                                  m_undistortedPoints[ m_size.width * ( m_size.height - 2 ) + 1 ];
+
+            cv::Point2f botRight = 2 * m_undistortedPoints[ m_size.width * m_size.height - 1 ] -
+                                   m_undistortedPoints[ m_size.width * ( m_size.height - 1 )  - 2 ];
+
+            /*cv::Point2f topLeft = 2 * m_trackingPoints[0].pos -
                                   m_trackingPoints[ m_size.width + 1 ].pos;
 
             cv::Point2f topRight = 2 * m_trackingPoints[ m_size.width - 1 ].pos -
@@ -386,7 +402,7 @@ namespace calibration { namespace concentric {
                                   m_trackingPoints[ m_size.width * ( m_size.height - 2 ) + 1 ].pos;
 
             cv::Point2f botRight = 2 * m_trackingPoints[ m_size.width * m_size.height - 1 ].pos -
-                                   m_trackingPoints[ m_size.width * ( m_size.height - 1 )  - 2 ].pos;
+                                   m_trackingPoints[ m_size.width * ( m_size.height - 1 )  - 2 ].pos;*/
 
             vector<cv::Point2f> src = { topLeft, topRight, botLeft, botRight };
             vector<cv::Point2f> dst = { cv::Point2f(0, 0), cv::Point2f(400, 0), cv::Point2f(0, 320), cv::Point2f(400, 320) };
@@ -400,6 +416,7 @@ namespace calibration { namespace concentric {
 
             cv::Mat newMask, newEdges, newFeatures;
             vector< cv::Point2f > candidatePoints;
+            vector< cv::Point2f > distortedPoints;
 
             _runMaskGenerator( fronto_parallel,
                                newMask );
@@ -415,6 +432,7 @@ namespace calibration { namespace concentric {
                 cv::circle( fronto_parallel, point, 1, cv::Scalar( 255, 255, 0 ), 2 );
             }
 
+
             if ( !perspectiveTransform.empty() )
             {
                 m_perspectivePoints.clear();
@@ -427,9 +445,10 @@ namespace calibration { namespace concentric {
                 }
             }
 
+            distortedPoints = distortPoints( m_perspectivePoints );
             //m_stageFrameResults[ STAGE_FEATURES_EXTRACTION ] = input.clone();
 
-            for ( auto& point : m_perspectivePoints )
+            for ( auto& point : distortedPoints )
             {
                 cv::circle( m_stageFrameResults[ STAGE_FEATURES_EXTRACTION ], point, 1, cv::Scalar( 255, 255, 0 ), 2 );
             }
@@ -641,7 +660,46 @@ namespace calibration { namespace concentric {
             }
         }
 
+        vector< cv::Point2f > Detector::distortPoints( vector< cv::Point2f >& undistortedPoints )
+        {
+            double fx = m_cameraMatrix.at<double>(0);
+            double fy = m_cameraMatrix.at<double>(4);
+            double cx = m_cameraMatrix.at<double>(2);
+            double cy = m_cameraMatrix.at<double>(5);
 
+            double k1 = m_distortionCoefficients.at<double>(0);
+            double k2 = m_distortionCoefficients.at<double>(1);
+            double p1 = m_distortionCoefficients.at<double>(2);
+            double p2 = m_distortionCoefficients.at<double>(3);
+            double k3 = m_distortionCoefficients.at<double>(4);
+
+            vector< cv::Point2f > distortedPoints;
+
+            for( cv::Point2f& point : m_perspectivePoints )
+            {
+                double x = ( point.x - cx ) / fx;
+                double y = ( point.y - cy ) / fy;
+
+                double r2 = x*x + y*y;
+
+                double xDistort = x * ( 1 + k1 * r2 + k2 * r2 * r2  + k3 * r2 * r2 * r2 );
+                double yDistort = y * ( 1 + k1 * r2 + k2 * r2 * r2  + k3 * r2 * r2 * r2 );
+
+                xDistort += ( 2 * p1 * x * y + p2 * ( r2 + 2 * x * x ) );
+                yDistort += ( p1 * ( r2 + 2 * y * y ) + 2 * p2 * x * y );
+
+                xDistort = xDistort * fx + cx;
+                yDistort = yDistort * fy + cy;
+
+                distortedPoints.push_back( cv::Point2f( (float)xDistort, (float)yDistort ) );
+                //cout<<(float)xDistort<<" "<<(float)yDistort<<" | ";
+                //cout<<"afsmsgpoifgmn ";
+            }
+            //cout<<fx    <<endl;
+            //cout<<m_perspectivePoints.size()<<endl;
+
+            return distortedPoints;
+        }
 
         void Detector::getDetectedPoints( vector< cv::Point2f >& iPoints )
         {

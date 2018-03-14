@@ -123,6 +123,9 @@ namespace calibration { namespace concentric {
 			bool m_isCalibrated;
 			cv::Mat m_cameraMatrix;
 			cv::Mat m_distortionCoefficients;
+            cv::Mat m_transformationMap1;
+            cv::Mat m_transformationMap2;
+
 
 			static Detector* INSTANCE;
 			static Detector* create( const cv::Size& size );
@@ -140,6 +143,18 @@ namespace calibration { namespace concentric {
 			void getDetectedPoints( vector< cv::Point2f >& iPoints );
 			void getTimeCosts( vector< float >& timeCosts );
 			void getStageFrameResults( vector< cv::Mat >& vStageResults );
+
+            void setUndistortionParams( cv::Mat cameraMatrix, cv::Mat distortionCoefficients )
+            {
+                m_cameraMatrix = cameraMatrix;
+                m_distortionCoefficients = distortionCoefficients;
+                cv::initUndistortRectifyMap( m_cameraMatrix, m_distortionCoefficients,
+                                             cv::Mat(), cv::Mat(),
+                                             m_frame.size(),
+                                             CV_32FC1, m_transformationMap1, m_transformationMap2 );
+            }
+
+            vector< cv::Point2f > distortPoints( vector< cv::Point2f >& undistortedPoints );
 
 			string getCurrentDetectionMode();
 		};
