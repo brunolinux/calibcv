@@ -333,8 +333,8 @@ namespace calibration { namespace concentric {
             if( m_isCalibrated )
             {
                 cv::Mat undistorted;
-                //cv::undistort( input, undistorted, m_cameraMatrix, m_distortionCoefficients );
-                cv::remap( input, undistorted, m_transformationMap1, m_transformationMap2, cv::INTER_LINEAR );
+                cv::undistort( input, undistorted, m_cameraMatrix, m_distortionCoefficients );
+                //cv::remap( input, undistorted, m_transformationMap1, m_transformationMap2, cv::INTER_LINEAR );
                 m_undistortedPoints.clear();
                 vector< cv::Point2f > tPoints;
                 cv::Point2f undistortedP;
@@ -406,8 +406,8 @@ namespace calibration { namespace concentric {
 
             vector<cv::Point2f> src = { topLeft, topRight, botLeft, botRight };
             vector<cv::Point2f> dst = { cv::Point2f(0, 0), cv::Point2f(400, 0), cv::Point2f(0, 320), cv::Point2f(400, 320) };
-            //cv::Mat perspectiveTransform = cv::getPerspectiveTransform(src, dst);
-            cv::Mat perspectiveTransform = cv::findHomography( src, dst, cv::RANSAC);
+            cv::Mat perspectiveTransform = cv::getPerspectiveTransform(src, dst);
+            //cv::Mat perspectiveTransform = cv::findHomography( src, dst, cv::RANSAC);
 
             cv::warpPerspective( input, fronto_parallel, perspectiveTransform, cv::Size( 400, 320 ) );
 
@@ -675,7 +675,7 @@ namespace calibration { namespace concentric {
 
             vector< cv::Point2f > distortedPoints;
 
-            for( cv::Point2f& point : m_perspectivePoints )
+            for( cv::Point2f& point : undistortedPoints )
             {
                 double x = ( point.x - cx ) / fx;
                 double y = ( point.y - cy ) / fy;
@@ -692,11 +692,7 @@ namespace calibration { namespace concentric {
                 yDistort = yDistort * fy + cy;
 
                 distortedPoints.push_back( cv::Point2f( (float)xDistort, (float)yDistort ) );
-                //cout<<(float)xDistort<<" "<<(float)yDistort<<" | ";
-                //cout<<"afsmsgpoifgmn ";
             }
-            //cout<<fx    <<endl;
-            //cout<<m_perspectivePoints.size()<<endl;
 
             return distortedPoints;
         }
