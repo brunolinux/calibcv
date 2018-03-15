@@ -1,3 +1,9 @@
 [submodule "ext/felixcam"]
 	path = ext/felixcam
 	url = https://github.com/wpumacay/felixcam.git
+[submodule "ext/glfw"]
+	path = ext/glfw
+	url = https://github.com/glfw/glfw.git
+[submodule "ext/glad"]
+	path = ext/glad
+	url = https://github.com/Dav1dde/glad.git

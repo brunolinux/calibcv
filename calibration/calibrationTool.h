@@ -558,6 +558,11 @@ namespace calibration
                 distortionCoefficients = m_distortionCoefficientsRefined.clone();
             }
         }
+
+        bool canUseRefining()
+        {
+            return ( m_calibState == CALIB_STATE_CALIBRATED_REFINED || m_calibStateOld == CALIB_STATE_CALIBRATED_REFINED );
+        }
     };
 
 }

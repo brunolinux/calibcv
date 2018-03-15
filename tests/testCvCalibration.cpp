@@ -129,6 +129,7 @@ int main( int argc, char** argv )
 
         calibration::DetectionInfo _detInfo;
         _detInfo.roi = _videoHandler->roi();
+        _detInfo.useRefining = false;
 
         if ( calibration::getPatternCorners( _corners, _frame, _patternInfo, _detInfo ) )
         {

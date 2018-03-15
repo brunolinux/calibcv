@@ -47,7 +47,7 @@ namespace calibration { namespace concentric {
     {
         detection::Detector* _detector = detection::Detector::create( pSize );
 
-        bool _found = _detector->run( image, roi );
+        bool _found = _detector->run( image, detInfo );
         if ( _found )
         {
             _detector->getDetectedPoints( iCorners );
@@ -124,6 +124,8 @@ namespace calibration { namespace concentric {
         {
             setInitialROI( detInfo.roi );
 
+            m_frameSize = cv::Size( input.cols, input.rows );
+
             bool _ret = false;
             m_hasRefinedPoints = false;
 
@@ -137,7 +139,7 @@ namespace calibration { namespace concentric {
 
                 case MODE_TRACKING :
 
-                _ret = runTrackingMode( input );
+                _ret = runTrackingMode( input, detInfo );
 
                 break;
 
@@ -311,6 +313,7 @@ namespace calibration { namespace concentric {
 
             // If found the points, refine them if requested
             bool _useRefining = detInfo.useRefining;
+            m_refinedPoints.clear();
 
             if ( _useRefining )
             {
@@ -356,55 +359,281 @@ namespace calibration { namespace concentric {
 
         bool Detector::_refining( const cv::Mat& input, 
                                   const cv::Mat& cameraMatrix, const cv::Mat& distortionCoefficients, 
-                                  const vector< cv::Point2f >& patternPoints,
+                                  const vector< TrackingPoint >& trackingPatternPoints,
                                   vector< cv::Point2f >& refinedPoints )
         {
             bool _success = true;
 
+            vector< cv::Point2f > _patternPoints;
+            for ( int q = 0; q < trackingPatternPoints.size(); q++ )
+            {
+                _patternPoints.push_back( trackingPatternPoints[q].pos );
+            }
+
             vector< cv::Point2f > _patternPointsUndistorted;
             vector< cv::Point2f > _patternPointsFronto;
             vector< cv::Point2f > _patternPointsProjected;
+            cv::Mat _frontoTransform;
 
             // Undistort the image
             _refiningUndistortion( input,
                                    m_stageFrameResults[ STAGE_REFINING_UNDISTORTED ], 
-                                   patternPoints, _patternPointsUndistorted );
+                                   cameraMatrix, distortionCoefficients,
+                                   _patternPoints, _patternPointsUndistorted );
 
             // Convert to fronto parallel
             _refiningFronto( m_stageFrameResults[ STAGE_REFINING_UNDISTORTED ],
                              m_stageFrameResults[ STAGE_REFINING_FRONTO ],
-                             _patternPointsUndistorted );
+                             _patternPointsUndistorted,
+                             _frontoTransform );
+
+            if ( _frontoTransform.empty() )
+            {
+                return false;
+            }
 
             // Refine in this view
 
             // Adaptive thresholding
             _refiningMask( m_stageFrameResults[ STAGE_REFINING_FRONTO ],
                            m_stageFrameResults[ STAGE_REFINING_MASK ] );
+
             // Canny edges
-            _refiningMask( m_stageFrameResults[ STAGE_REFINING_MASK ],
-                           m_stageFrameResults[ STAGE_REFINING_EDGES ] );
+            _refiningEdges( m_stageFrameResults[ STAGE_REFINING_MASK ],
+                            m_stageFrameResults[ STAGE_REFINING_EDGES ] );
+
             // Ellipse finding
-            _refiningMask( m_stageFrameResults[ STAGE_REFINING_EDGES ],
-                           m_stageFrameResults[ STAGE_REFINING_FEATURES ],
-                           _patternPointsFronto );
+            bool _foundRefined = _refiningFeatures( m_stageFrameResults[ STAGE_REFINING_EDGES ],
+                                                    m_stageFrameResults[ STAGE_REFINING_FRONTO ],
+                                                    m_stageFrameResults[ STAGE_REFINING_FEATURES ],
+                                                    _patternPointsFronto );
+
+            if ( !_foundRefined )
+            {
+                return false;
+            }
+
             // Project back points to original view
-            _refiningProjected( m_stageFrameResults[ STAGE_REFINING_UNDISTORTED ],// draw onto copy of undistorted
+            _refiningProjected( m_stageFrameResults[ STAGE_REFINING_UNDISTORTED ],// work on copy of undistorted
                                 m_stageFrameResults[ STAGE_REFINING_PROJECTED ],
+                                _frontoTransform.inv(),
                                 _patternPointsFronto, 
                                 _patternPointsProjected, 
                                 _patternPointsUndistorted );// last points just for comparison
+
             // Distort back to original type of view
             _refiningDistortion( input,
+                                 m_stageFrameResults[ STAGE_REFINING_DISTORTED ],
+                                 cameraMatrix, distortionCoefficients,
                                  _patternPointsProjected,
                                  refinedPoints,
-                                 patternPoints );// last points just for comparison
+                                 _patternPoints );// last points just for comparison
 
             return _success;
         }
 
-        void Detector::_refiningUndistortion()
+        void Detector::_refiningUndistortion( const cv::Mat& input, cv::Mat& output,
+                                              const cv::Mat& cameraMatrix, const cv::Mat& distortionCoefficients,
+                                              const vector< cv::Point2f >& patternPoints,
+                                              vector< cv::Point2f >& undistortedPatternPoints )
         {
+            // transform the iamge to undistorted view
+            cv::undistort( input, output, cameraMatrix, distortionCoefficients );
 
+            // transform also the points into undistorted view
+            cv::undistortPoints( patternPoints, undistortedPatternPoints, 
+                                 cameraMatrix, distortionCoefficients,
+                                 cv::noArray(), cameraMatrix );
+        }
+
+        void Detector::_refiningFronto( const cv::Mat& input,// undistorted image
+                                        cv::Mat& output,// result after transforming to fronto view
+                                        const vector< cv::Point2f >& undistortedPatternPoints,
+                                        cv::Mat& frontoTransform )
+        {
+            // Create the points for the perspective mapping
+            // Borders points with radial padding
+            cv::Point2f _topLeft     = 2 * undistortedPatternPoints[0] - 
+                                       undistortedPatternPoints[ m_size.width + 1 ];
+
+            cv::Point2f _topRight    = 2 * undistortedPatternPoints[ m_size.width - 1 ] - 
+                                       undistortedPatternPoints[ 2 * m_size.width - 2 ];
+
+            cv::Point2f _bottomRight = 2 * undistortedPatternPoints[ m_size.width * m_size.height - 1 ] - 
+                                       undistortedPatternPoints[ m_size.width * ( m_size.height - 1 ) - 2 ];
+
+            cv::Point2f _bottomLeft  = 2 * undistortedPatternPoints[ m_size.width * ( m_size.height - 1 ) ] - 
+                                       undistortedPatternPoints[ m_size.width * ( m_size.height - 2 ) + 1 ];
+
+            vector< cv::Point2f > _src = { _topLeft, _topRight, _bottomRight, _bottomLeft };
+
+            vector< cv::Point2f > _dst = { cv::Point2f( 0, 0 ), 
+                                           cv::Point2f( m_frameSize.width / 2, 0 ), 
+                                           cv::Point2f( m_frameSize.width / 2, m_frameSize.height / 2 ), 
+                                           cv::Point2f( 0, m_frameSize.height / 2 ) };
+
+            // Generate transformation matrix
+            frontoTransform = cv::getPerspectiveTransform( _src, _dst );
+
+            // Transform into fronto parallel view
+            cv::warpPerspective( input, output, frontoTransform, cv::Size( m_frameSize.width / 2, m_frameSize.height / 2 ) );
+        }
+
+        void Detector::_refiningMask( const cv::Mat& input,
+                                      const cv::Mat& output )
+        {
+            cv::Mat _grayScale;
+
+            cv::cvtColor( input, _grayScale, CV_RGB2GRAY );
+            cv::adaptiveThreshold( _grayScale, output, PIPELINE_MASKING_STAGE_MAX_VALUE,
+                                   cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV,
+                                   PIPELINE_MASKING_STAGE_BLOCKSIZE, PIPELINE_MASKING_STAGE_C );
+        }
+
+        void Detector::_refiningEdges( const cv::Mat& input,
+                                       cv::Mat& output )
+        {
+            cv::blur( input, output, cv::Size( 3, 3 ) );
+
+            cv::Canny( output, output, 50, 150, 3 );
+        }
+
+        bool Detector::_refiningFeatures( const cv::Mat& input,
+                                          const cv::Mat& frontoView, // to copy ( output ) from for comparison
+                                          cv::Mat& output,
+                                          vector< cv::Point2f >& patternPointsFronto )
+        {
+            output = frontoView.clone();
+
+            vector< vector< cv::Point > > _contours;
+            vector< cv::Vec4i > _hierarchy;
+            vector< cv::RotatedRect > _ellipsesBB;
+
+            cv::findContours( input, _contours, _hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE );
+
+            for ( auto _contour : _contours )
+            {
+                if ( _contour.size() > 5 )
+                {
+                    _ellipsesBB.push_back( cv::fitEllipse( cv::Mat( _contour ) ) );
+                }
+            }
+
+            vector< cv::RotatedRect > _filteredEllipses;
+
+            for ( int q = 0; q < _ellipsesBB.size(); q++ )
+            {
+                float _a = _ellipsesBB[q].size.width;
+                float _b = _ellipsesBB[q].size.height;
+                float _size = sqrt( _a * _a + _b * _b );
+                float _ratio = _a / _b;
+
+                if ( ( PIPELINE_ELLIPSE_MIN_SIZE < _size && _size < PIPELINE_ELLIPSE_MAX_SIZE ) &&
+                     ( PIPELINE_ELLIPSE_MIN_RATIO < _ratio && _ratio < PIPELINE_ELLIPSE_MAX_RATIO ) )
+                {
+                    _filteredEllipses.push_back( _ellipsesBB[q] );
+                }
+
+            }
+
+            vector< cv::Point2f > _candidatePoints;
+            for ( cv::RotatedRect _rect : _filteredEllipses )
+            {
+                _candidatePoints.push_back( _rect.center );
+                cv::ellipse( output, _rect, cv::Scalar( 255, 0, 0 ), 2 );
+            }
+
+            vector< bool > _paired( _candidatePoints.size(), false );
+
+            vector< cv::Point2f > _candidatesFilteredPoints;
+
+            // Detect only the ones that have two almost concentric ellipses
+            for ( int q = 0; q < _candidatePoints.size(); q++ )
+            {
+                for ( int p = 0; p < _candidatePoints.size(); p++ )
+                {
+                    if ( p == q )
+                    {
+                        continue;
+                    }
+
+                    if ( _paired[p] || _paired[q] )
+                    {
+                        continue;
+                    }
+
+                    float _dx = _candidatePoints[q].x - _candidatePoints[p].x;
+                    float _dy = _candidatePoints[q].y - _candidatePoints[p].y;
+                    float _dist = sqrt( _dx * _dx + _dy * _dy );
+
+                    if ( _dist < 10 )
+                    {
+                        _paired[p] = true;
+                        _paired[q] = true;
+
+                        cv::Point2f _fpoint;
+                        _fpoint.x = ( _candidatePoints[p].x + _candidatePoints[q].x ) / 2.0f;
+                        _fpoint.y = ( _candidatePoints[p].y + _candidatePoints[q].y ) / 2.0f;
+
+                        _candidatesFilteredPoints.push_back( _fpoint );
+                    }
+                }
+            }
+
+            return _computeInitialPattern( _candidatesFilteredPoints, patternPointsFronto );
+        }
+
+        void Detector::_refiningProjected( const cv::Mat& undistortedView,
+                                           cv::Mat& output,
+                                           const cv::Mat& inverseFrontoTransform,
+                                           const vector< cv::Point2f >& patternPointsFronto,
+                                           vector< cv::Point2f >& patternPointsProjected,
+                                           const vector< cv::Point2f >& patternPointsUndistorted )
+        {
+            output = undistortedView.clone();
+
+            // convert points in fronto view to projected undistorted view
+
+            for ( cv::Point2f _frontoPoint : patternPointsFronto )
+            {
+                cv::Mat2f _dstPoint;
+                cv::Mat2f _srcPoint( _frontoPoint );
+
+                cv::perspectiveTransform( _srcPoint, _dstPoint, inverseFrontoTransform );
+                patternPointsProjected.push_back( cv::Point2f( _dstPoint( 0 ) ) );
+            }
+
+            // draw results in this undistorted space for comparison : initial vs refined
+
+            for ( int q = 0; q < patternPointsProjected.size(); q++ )
+            {
+                cv::circle( output, patternPointsUndistorted[q], 2, cv::Scalar( 255, 0, 255 ), -1 );
+                cv::circle( output, patternPointsProjected[q], 2, cv::Scalar( 255, 255, 0 ), -1 );
+            }
+        }
+
+        void Detector::_refiningDistortion( const cv::Mat& originalView,
+                                            cv::Mat& output,
+                                            const cv::Mat& cameraMatrix, const cv::Mat& distortionCoefficients,
+                                            const vector< cv::Point2f >& refinedUndistortedProjectedPoints,
+                                            vector< cv::Point2f >& refinedDistortedProjectedPoints,
+                                            const vector< cv::Point2f >& originalPatternPoints )
+        {
+            output = originalView.clone();
+
+            utils::distortPoints( refinedUndistortedProjectedPoints,
+                                  refinedDistortedProjectedPoints,
+                                  cameraMatrix, distortionCoefficients );
+
+            for ( int q = 0; q < refinedDistortedProjectedPoints.size(); q++ )
+            {
+                cv::circle( output, refinedDistortedProjectedPoints[q], 2, cv::Scalar( 255, 0, 255 ), -1 );
+            }
+
+            for ( int q = 0; q < originalPatternPoints.size(); q++ )
+            {
+                cv::circle( output, originalPatternPoints[q], 2, cv::Scalar( 255, 255, 0 ), -1 );
+            }
         }
 
         void Detector::_pipeline( const cv::Mat& input )
@@ -438,8 +667,6 @@ namespace calibration { namespace concentric {
             cv::adaptiveThreshold( _grayScale, output, PIPELINE_MASKING_STAGE_MAX_VALUE,
                                    cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV,
                                    PIPELINE_MASKING_STAGE_BLOCKSIZE, PIPELINE_MASKING_STAGE_C );
-
-            // m_stageFrameResults[ STAGE_THRESHOLDING ] = output;
         }
 
         void Detector::_runEdgesGenerator( const cv::Mat& input, cv::Mat& output )
@@ -545,9 +772,9 @@ namespace calibration { namespace concentric {
 
         void Detector::getRefinedPoints( vector< cv::Point2f >& iPoints )
         {
-            for ( int q = 0; q < m_trackingPoints.size(); q++ )
+            for ( int q = 0; q < m_refinedPoints.size(); q++ )
             {
-                iPoints.push_back( m_refinedPoints[q].pos );
+                iPoints.push_back( m_refinedPoints[q] );
             }
         }
 
