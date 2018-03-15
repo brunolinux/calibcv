@@ -561,7 +561,8 @@ namespace calibration
 
         bool canUseRefining()
         {
-            return ( m_calibState == CALIB_STATE_CALIBRATED_REFINED || m_calibStateOld == CALIB_STATE_CALIBRATED_REFINED );
+            return ( m_calibState == CALIB_STATE_CALIBRATED_SIMPLE || m_calibStateOld == CALIB_STATE_CALIBRATED_SIMPLE ) ||
+                   ( m_calibState == CALIB_STATE_CALIBRATED_REFINED || m_calibStateOld == CALIB_STATE_CALIBRATED_REFINED );
         }
     };
 

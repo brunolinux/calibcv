@@ -110,7 +110,7 @@ namespace calibration { namespace concentric {
 			void _runMaskGenerator( const cv::Mat& input, cv::Mat& output );
 
 			bool _computeInitialPattern( const vector< cv::Point2f >& candidatePatternPoints,
-                                         vector< cv::Point2f >& matchedPoints );
+                                         vector< cv::Point2f >& matchedPoints, bool isFronto = false );
 			void _pipeline( const cv::Mat& input );
 
 			// Refining steps **********************************************************************
@@ -131,7 +131,7 @@ namespace calibration { namespace concentric {
                                   cv::Mat& frontoTransform );
 
         	void _refiningMask( const cv::Mat& input,
-                                const cv::Mat& output );
+                                cv::Mat& output );
 
         	void _refiningEdges( const cv::Mat& input,
                                  cv::Mat& output );

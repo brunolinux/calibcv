@@ -5,7 +5,7 @@
 
 using namespace std;
 
-#define RANGE_CLOSE 5
+#define RANGE_CLOSE 10
 
 namespace utils {
 

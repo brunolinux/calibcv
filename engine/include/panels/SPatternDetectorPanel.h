@@ -51,13 +51,13 @@ namespace calibcv
                                                     { EDGES, "pd - edges" },
                                                     { BLOBS, "pd - blobs" },
                                                     { TRACKING, "pd - tracking" },
-                                                    { REFINING_UNDISTORTED, "pd - ref.fronto" },
-                                                    { REFINING_FRONTO, "pd - ref.fronto" },
-                                                    { REFINING_MASK, "pd - ref.mask" },
-                                                    { REFINING_EDGES, "pd - ref.edges" },
-                                                    { REFINING_FEATURES, "pd - ref.features" },
-                                                    { REFINING_PROJECTED, "pd - ref.projected" },
-                                                    { REFINING_DISTORTED, "pd - ref.distorted" } } );
+                                                    { REFINING_UNDISTORTED, "pd - refundistorted" },
+                                                    { REFINING_FRONTO, "pd - reffronto" },
+                                                    { REFINING_MASK, "pd - refmask" },
+                                                    { REFINING_EDGES, "pd - refedges" },
+                                                    { REFINING_FEATURES, "pd - reffeatures" },
+                                                    { REFINING_PROJECTED, "pd - refprojected" },
+                                                    { REFINING_DISTORTED, "pd - refdistorted" } } );
 
     static map< _pdWindowID, int > ACTIVE_WINDOWS( { { BASE, 1 },
                                                      { MASK, 0 },
@@ -118,7 +118,7 @@ namespace calibcv
         void setFPS( float fps );
         void setStageCost( float msCost, _pdWindowID stageId );
 
-        void setLogInfo( string txtInfo );
+        void setLogInfo( const string& txtInfo );
 
         static void onHideWindowCallback( int dummyInt, void* dummyPtr );
     };

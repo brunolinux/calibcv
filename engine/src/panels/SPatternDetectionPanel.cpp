@@ -24,7 +24,7 @@ namespace calibcv
         m_windowsStates[REFINING_PROJECTED] = 0;
         m_windowsStates[REFINING_DISTORTED] = 0;
 
-        m_baseBg = cv::Mat::zeros( 800, 600, CV_8UC3 );
+        m_baseBg = cv::Mat::zeros( 800, 800, CV_8UC3 );
     }
 
     void SPatternDetectorPanel::init()
@@ -65,37 +65,37 @@ namespace calibcv
                             SPatternDetectorPanel::onHideWindowCallback );
 
         // REFINING
-        cv::createTrackbar( "hide-ref.undistorted", WINDOW_MAP[ BASE ],
+        cv::createTrackbar( "hide-refundistorted", WINDOW_MAP[ BASE ],
                             &m_windowsStates[ REFINING_UNDISTORTED ],
                             1,
                             SPatternDetectorPanel::onHideWindowCallback );
 
-        cv::createTrackbar( "hide-ref.fronto", WINDOW_MAP[ BASE ],
+        cv::createTrackbar( "hide-reffronto", WINDOW_MAP[ BASE ],
                             &m_windowsStates[ REFINING_FRONTO ],
                             1,
                             SPatternDetectorPanel::onHideWindowCallback );
 
-        cv::createTrackbar( "hide-ref.mask", WINDOW_MAP[ BASE ],
+        cv::createTrackbar( "hide-refmask", WINDOW_MAP[ BASE ],
                             &m_windowsStates[ REFINING_MASK ],
                             1,
                             SPatternDetectorPanel::onHideWindowCallback );
 
-        cv::createTrackbar( "hide-ref.edges", WINDOW_MAP[ BASE ],
+        cv::createTrackbar( "hide-refedges", WINDOW_MAP[ BASE ],
                             &m_windowsStates[ REFINING_EDGES ],
                             1,
                             SPatternDetectorPanel::onHideWindowCallback );
 
-        cv::createTrackbar( "hide-ref.features", WINDOW_MAP[ BASE ],
+        cv::createTrackbar( "hide-reffeatures", WINDOW_MAP[ BASE ],
                             &m_windowsStates[ REFINING_FEATURES ],
                             1,
                             SPatternDetectorPanel::onHideWindowCallback );
 
-        cv::createTrackbar( "hide-ref.projected", WINDOW_MAP[ BASE ],
+        cv::createTrackbar( "hide-refprojected", WINDOW_MAP[ BASE ],
                             &m_windowsStates[ REFINING_PROJECTED ],
                             1,
                             SPatternDetectorPanel::onHideWindowCallback );
 
-        cv::createTrackbar( "hide-ref.distorted", WINDOW_MAP[ BASE ],
+        cv::createTrackbar( "hide-refdistorted", WINDOW_MAP[ BASE ],
                             &m_windowsStates[ REFINING_DISTORTED ],
                             1,
                             SPatternDetectorPanel::onHideWindowCallback );
@@ -133,16 +133,21 @@ namespace calibcv
         cv::destroyWindow( WINDOW_MAP[ BLOBS ] );
         cv::destroyWindow( WINDOW_MAP[ TRACKING ] );
 
+        cv::destroyWindow( WINDOW_MAP[ REFINING_UNDISTORTED ] );
         cv::destroyWindow( WINDOW_MAP[ REFINING_FRONTO ] );
         cv::destroyWindow( WINDOW_MAP[ REFINING_MASK ] );
         cv::destroyWindow( WINDOW_MAP[ REFINING_EDGES ] );
         cv::destroyWindow( WINDOW_MAP[ REFINING_FEATURES ] );
         cv::destroyWindow( WINDOW_MAP[ REFINING_PROJECTED ] );
+        cv::destroyWindow( WINDOW_MAP[ REFINING_DISTORTED ] );
     }
 
     void SPatternDetectorPanel::showBase( const cv::Mat& mat )
     {
-        cv::imshow( WINDOW_MAP[ BASE ], mat );
+        if ( m_windowsStates[ BASE ] == 1 )
+        {
+            cv::imshow( WINDOW_MAP[ BASE ], mat );
+        }
     }
 
     void SPatternDetectorPanel::showMask( const cv::Mat& mat )
@@ -205,9 +210,9 @@ namespace calibcv
 
     void SPatternDetectorPanel::showRefEdges( const cv::Mat& mat )
     {
-        if ( m_windowsStates[ REFINING_MASK ] == 1 )
+        if ( m_windowsStates[ REFINING_EDGES ] == 1 )
         {
-            cv::imshow( WINDOW_MAP[ REFINING_MASK ], mat );
+            cv::imshow( WINDOW_MAP[ REFINING_EDGES ], mat );
         }
     }
 
@@ -286,13 +291,13 @@ namespace calibcv
         showBase( m_baseBg );
     }
 
-    void SPatternDetectorPanel::setLogInfo( string txtInfo )
+    void SPatternDetectorPanel::setLogInfo( const string& txtInfo )
     {
-        m_logInfo = "log: ";
-        m_logInfo += txtInfo;
+        // m_logInfo = string( "log: " );
+        // m_logInfo += txtInfo;
 
-        cv::putText( m_baseBg, m_logInfo,
-                     cv::Point( 320, 240 ),
+        cv::putText( m_baseBg, txtInfo,
+                     cv::Point( 320, 40 ),
                      cv::FONT_HERSHEY_SIMPLEX, TEXT_FONT_SCALE, TEXT_FONT_COLOR_INFO,
                      TEXT_THICKNESS );
 
