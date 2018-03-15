@@ -58,6 +58,14 @@ namespace calibration
         cv::Mat distortionCoefficients;
     };
 
+    struct CalibrationBucket
+    {
+        int videoIndx;          // to grab from the video
+        cv::Mat rotation;       // rotation in rodriguez form
+        cv::Mat translation;    // translation in 3d
+        vector< cv::Point2f > points; // pattern control points
+    };
+
     class CpuTimer
     {
 

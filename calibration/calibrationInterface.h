@@ -131,5 +131,26 @@ namespace calibration
         }
     }
 
+    void requestBatchRefinment( const vector< cv::Mat >& batchImagesToRefine,
+                                const cv::Mat& cameraMatrix,
+                                const cv::Mat& distortionCoefficients )
+    {
 
+    }
+
+    bool isRefining()
+    {
+        return false;
+    }
+
+    bool hasRefinationToPick()
+    {
+        return false;
+    }
+
+    void grabRefinationBatch( vector< cv::Mat >& batchRefinedImages,
+                              vector< CalibrationBucket >& batchBuckets )
+    {
+        
+    }
 }

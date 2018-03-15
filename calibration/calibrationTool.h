@@ -193,16 +193,18 @@ namespace calibration
 
                 m_visualizer->processCalibrationBucket( corners2D );
 
-                if ( m_calibrationImagesRefining.size() >= m_calibRefiningThresholdCount )
-                {
-                    cout << "Refined calibration started ........." << endl;
+                // The refined calibration will be sent by the application, not threshold base
 
-                    m_calibStateOld = m_calibState;
-                    m_calibState = CALIB_STATE_CALIBRATING;
-                    m_isCalibrating = true;
+                // if ( m_calibrationImagesRefining.size() >= m_calibRefiningThresholdCount )
+                // {
+                //     cout << "Refined calibration started ........." << endl;
+
+                //     m_calibStateOld = m_calibState;
+                //     m_calibState = CALIB_STATE_CALIBRATING;
+                //     m_isCalibrating = true;
                     
-                    calibrateRefined();
-                }
+                //     calibrateRefined();
+                // }
             }
             else
             {
@@ -235,10 +237,13 @@ namespace calibration
 
                         m_visualizer->addCalibratedBucket( m_calibrationImagesInitial, m_perViewErrors, VIZ_CALIB_TYPE_SIMPLE );
 
-                        m_calibrationImagesInitial.clear();
-                        m_calibrationRotMatricesInitial.clear();
-                        m_calibrationTranMatricesInitial.clear();
-                        m_perViewErrors.clear();
+                        // Keep this data as initial, as we are going to need it after when ...
+                        // the application requests a batch to refine
+
+                        // m_calibrationImagesInitial.clear();
+                        // m_calibrationRotMatricesInitial.clear();
+                        // m_calibrationTranMatricesInitial.clear();
+                        // m_perViewErrors.clear();
                     }
                     else if ( m_calibStateOld == CALIB_STATE_CALIBRATED_SIMPLE ||
                               m_calibStateOld == CALIB_STATE_CALIBRATED_REFINED )
@@ -252,10 +257,17 @@ namespace calibration
 
                         m_visualizer->addCalibratedBucket( m_calibrationImagesRefining, m_perViewErrors, VIZ_CALIB_TYPE_REFINED );
 
+                        // Set new calib state, refined data is now initial data
+                        m_calibrationImagesInitial = m_calibrationImagesRefining;
+                        m_calibrationRotMatricesInitial = m_calibrationRotMatricesRefining;
+                        m_calibrationTranMatricesInitial = m_calibrationTranMatricesRefining;
+
+                        // Clear now, as we are awaiting for new refining data
                         m_calibrationImagesRefining.clear();
                         m_calibrationRotMatricesRefining.clear();
                         m_calibrationTranMatricesRefining.clear();
                         m_perViewErrors.clear();
+
                     }
 
         			// Get to the next state, accordingly
@@ -511,6 +523,49 @@ namespace calibration
 
         		cv::imwrite( _imgSavePath, images[q] );
         	}
+        }
+
+        void getCalibrationBatch( vector< cv::Mat >& batchImagesToRefine )
+        {
+            batchImagesToRefine.clear();
+
+            for ( int q = 0; q < m_calibrationImagesInitial.size(); q++ )
+            {
+                batchImagesToRefine.push_back( m_calibrationImagesInitial[q] );
+            }
+        }
+
+        void addBatchRefinment( vector< cv::Mat >& batchRefinedImages,
+                                vector< CalibrationBucket >& batchBuckets )
+        {
+            assert( batchRefinedImages.size() == batchBuckets.size() );
+
+            for ( int q = 0; q < batchRefinedImages.size(); q++ )
+            {
+                addCalibrationBucket( batchRefinedImages[q], batchBuckets[q].points );
+            }
+        }
+
+        void requestRefinedCalibration()
+        {
+            if ( m_isCalibrating ||
+                 m_calibState == CALIB_STATE_CALIBRATING ||
+                 m_calibStateOld == CALIB_STATE_CALIBRATING )
+            {
+                return;
+            }
+
+            if ( m_calibrationImagesRefining.size() < m_calibRefiningThresholdCount )
+            {
+                cout << "not enough images for refined calibration" << endl;
+                return;
+            }
+
+            m_calibStateOld = m_calibState;
+            m_calibState = CALIB_STATE_CALIBRATING;
+            m_isCalibrating = true;
+                    
+            calibrateRefined();            
         }
 
         int getCalibrationSize() 
