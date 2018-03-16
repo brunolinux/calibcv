@@ -131,26 +131,142 @@ namespace calibration
         }
     }
 
-    void requestBatchRefinment( const vector< cv::Mat >& batchImagesToRefine,
+    void requestBatchRefinment( const PatternInfo& pInfo,
+                                const vector< cv::Mat >& batchImagesToRefine,
                                 const cv::Mat& cameraMatrix,
                                 const cv::Mat& distortionCoefficients )
     {
-        
+        // TODO: Should be something like this
+
+        // switch ( pInfo.type )
+        // {
+        //     case PATTERN_TYPE_CHESSBOARD :
+                
+        //         chessboard::refineBatch( batchImagesToRefine, cameraMatrix, distortionCoefficients );
+                
+        //         break;
+                
+        //     case PATTERN_TYPE_SYMMETRIC_CIRCLES :
+
+        //         circleGridSymmetric::refineBatch( batchImagesToRefine, cameraMatrix, distortionCoefficients );
+
+        //         break;
+
+        //     case PATTERN_TYPE_ASYMMETRIC_CIRCLES :
+
+        //         circleGridAsymmetric::refineBatch( batchImagesToRefine, cameraMatrix, distortionCoefficients );
+
+        //         break;
+
+        //     case PATTERN_TYPE_CONCENTRIC_CIRCLES :
+
+        //         concentric::refineBatch( batchImagesToRefine, cameraMatrix, distortionCoefficients );
+
+        //         break;
+
+        //     default :
+                
+        //         cout << "pattern type: " << pInfo.type << " not found" << endl;
+                
+        //         break;
+        // }
+
+
     }
 
-    bool isRefining()
+    bool isRefining( const PatternInfo& pInfo )
     {
+        // TODO: Should be something like this
+
+        // switch ( pInfo.type )
+        // {
+        //     case PATTERN_TYPE_CHESSBOARD :
+                
+        //         return chessboard::isRefining();
+                
+        //     case PATTERN_TYPE_SYMMETRIC_CIRCLES :
+
+        //         return circleGridSymmetric::isRefining();
+
+        //     case PATTERN_TYPE_ASYMMETRIC_CIRCLES :
+
+        //         return circleGridAsymmetric::isRefining();
+
+        //     case PATTERN_TYPE_CONCENTRIC_CIRCLES :
+
+        //         return concentric::isRefining();
+
+        //     default :
+                
+        //         cout << "pattern type: " << pInfo.type << " not found" << endl;
+
+        //         break;
+        // }
+
         return false;
     }
 
-    bool hasRefinationToPick()
+    bool hasRefinationToPick( const PatternInfo& pInfo )
     {
+        // TODO: Should be something like this
+
+        // switch ( pInfo.type )
+        // {
+        //     case PATTERN_TYPE_CHESSBOARD :
+                
+        //         return chessboard::hasRefinationToPick();
+                
+        //     case PATTERN_TYPE_SYMMETRIC_CIRCLES :
+
+        //         return circleGridSymmetric::hasRefinationToPick();
+
+        //     case PATTERN_TYPE_ASYMMETRIC_CIRCLES :
+
+        //         return circleGridAsymmetric::hasRefinationToPick();
+
+        //     case PATTERN_TYPE_CONCENTRIC_CIRCLES :
+
+        //         return concentric::hasRefinationToPick();
+
+        //     default :
+                
+        //         cout << "pattern type: " << pInfo.type << " not found" << endl;
+
+        //         break;
+        // }
+
         return false;
     }
 
-    void grabRefinationBatch( vector< cv::Mat >& batchRefinedImages,
+    void grabRefinationBatch( const PatternInfo& pInfo, 
+                              vector< cv::Mat >& batchRefinedImages,
                               vector< CalibrationBucket >& batchBuckets )
     {
+        // TODO: Should be something like this
         
+        // switch ( pInfo.type )
+        // {
+        //     case PATTERN_TYPE_CHESSBOARD :
+                
+        //         return chessboard::grabRefinationBatch( batchRefinedImages, batchBuckets );
+                
+        //     case PATTERN_TYPE_SYMMETRIC_CIRCLES :
+
+        //         return circleGridSymmetric::grabRefinationBatch( batchRefinedImages, batchBuckets );
+
+        //     case PATTERN_TYPE_ASYMMETRIC_CIRCLES :
+
+        //         return circleGridAsymmetric::grabRefinationBatch( batchRefinedImages, batchBuckets );
+
+        //     case PATTERN_TYPE_CONCENTRIC_CIRCLES :
+
+        //         return concentric::grabRefinationBatch( batchRefinedImages, batchBuckets );
+
+        //     default :
+                
+        //         cout << "pattern type: " << pInfo.type << " not found" << endl;
+
+        //         break;
+        // }
     }
 }

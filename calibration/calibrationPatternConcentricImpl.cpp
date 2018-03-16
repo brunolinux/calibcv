@@ -129,13 +129,6 @@ namespace calibration { namespace concentric {
             }
         }
 
-        void Detector::setPatternSize( const cv::Size& size )
-        {
-            m_numPoints      = size.width * size.height;
-            m_size           = size;
-            m_trackingPoints = vector< TrackingPoint >( m_numPoints );
-        }
-
         bool Detector::run( const cv::Mat& input, const DetectionInfo& detInfo )
         {
             setInitialROI( detInfo.roi );

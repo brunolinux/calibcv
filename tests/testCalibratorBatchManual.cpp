@@ -152,7 +152,7 @@ int main( int argc, char** argv )
         // Make a refinment of the batch of images, only if ...
         // the calibrator has already initial calibration data ...
         // and the refiner is not working
-        if ( _requestRefinment && !calibration::isRefining() &&
+        if ( _requestRefinment && !calibration::isRefining( _patternInfo ) &&
              _calibrator.canUseRefining() )
         {
             // Grab necessary data from previous calibration
@@ -165,19 +165,20 @@ int main( int argc, char** argv )
             vector< cv::Mat > _batchImagesToRefine;
             _calibrator.getCalibrationBatch( _batchImagesToRefine );
 
-            calibration::requestBatchRefinment( _batchImagesToRefine,
+            calibration::requestBatchRefinment( _patternInfo,
+                                                _batchImagesToRefine,
                                                 _cameraMatrix,
                                                 _distortionCoefficients );
         }
 
         // If refiner worker has finished, grab the bounty
         // This should be self cleared in the method
-        if ( calibration::hasRefinationToPick() )
+        if ( calibration::hasRefinationToPick( _patternInfo ) )
         {
             vector< cv::Mat > _refinedImages;
             vector< calibration::CalibrationBucket > _vCalibBuckets;
 
-            calibration::grabRefinationBatch( _refinedImages, _vCalibBuckets );
+            calibration::grabRefinationBatch( _patternInfo, _refinedImages, _vCalibBuckets );
 
             // Send data back to calibrator to await next recalibration
             _calibrator.addBatchRefinment( _refinedImages, _vCalibBuckets );

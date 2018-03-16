@@ -179,8 +179,6 @@ namespace calibration { namespace concentric {
 
 			~Detector();
 
-			void setPatternSize( const cv::Size& size );
-
 			bool run( const cv::Mat& input, const DetectionInfo& detInfo );
 
 			void setInitialROI( const vector< cv::Point2f >& roi ) { m_initialROI = roi; }
