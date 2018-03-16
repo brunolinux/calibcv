@@ -135,7 +135,7 @@ namespace calibration
                                 const cv::Mat& cameraMatrix,
                                 const cv::Mat& distortionCoefficients )
     {
-
+        
     }
 
     bool isRefining()

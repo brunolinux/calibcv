@@ -96,7 +96,7 @@ int main( int argc, char** argv )
 
         int _key = cv::waitKey( SAMPLE_TIME ) & 0xff;
 
-        cout << "key: " << _key << endl;
+        // cout << "key: " << _key << endl;
 
         bool _pickCalibrationBucket = false;
         bool _requestRefinment = false;
@@ -206,7 +206,7 @@ int main( int argc, char** argv )
 
     calibcv::SVideoHandler::release();
     _videoHandler = NULL;
-
+    
     return 0;
 
 }
