@@ -141,6 +141,14 @@ int main( int argc, char** argv )
         _detInfo.roi = _videoHandler->roi();
         _detInfo.useRefining = false;
 
+        // for testings only
+        if ( _calibrator.canUseRefining() )
+        {
+            _detInfo.useRefining = true;
+            _calibrator.getCalibrationCameraMatrix( _detInfo.cameraMatrix );
+            _calibrator.getCalibrationDistortionCoefficients( _detInfo.distortionCoefficients );
+        }
+
         // Make a refinment of the batch of images, only if ...
         // the calibrator has already initial calibration data ...
         // and the refiner is not working

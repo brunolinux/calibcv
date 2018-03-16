@@ -94,6 +94,8 @@ int main( int argc, char** argv )
     // _videoHandler->setPlaybackAtFrameIndex( 565 );
     // _videoHandler->togglePause();
 
+    vector< cv::Mat > _batch;
+
     while( 1 )
     {
 
@@ -157,6 +159,7 @@ int main( int argc, char** argv )
 
         cv::imshow( WINDOW_ORIGINAL_FRAME, _frame );
 
+        _batch.push_back( _frame );
     }
 
     calibcv::SVideoHandler::release();

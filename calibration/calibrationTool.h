@@ -119,7 +119,7 @@ namespace calibration
             m_isCalibrating = false;
             m_useMode = USE_MODE_NONE;
 
-            m_visualizer = new DistributionVisualizer( "CalibrationViz",
+            m_visualizer = new DistributionVisualizer( "viz",
                                                        m_patternInfo.size,
                                                        m_frameSize.width, m_frameSize.height );
 
@@ -173,6 +173,7 @@ namespace calibration
                 m_pointsInImageInitial.push_back( corners2D );
 
                 m_visualizer->processCalibrationBucket( corners2D );
+                m_visualizer->addFrameInitial( image );
 
                 if ( m_calibrationImagesInitial.size() >= m_calibInitThresholdCount )
                 {
@@ -192,6 +193,7 @@ namespace calibration
                 m_pointsInImageRefining.push_back( corners2D );
 
                 m_visualizer->processCalibrationBucket( corners2D );
+                m_visualizer->addFrameRefined( image );
 
                 // The refined calibration will be sent by the application, not threshold base
 

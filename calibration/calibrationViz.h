@@ -44,6 +44,7 @@ namespace calibration
         int m_currentCalibrationFrameIndx;
         vector< cv::Mat > m_framesInitial;
         vector< cv::Mat > m_framesRefined;
+        vector< cv::Mat > m_calibrationFrames;
 
         vector< float > m_calibrationPerViewErrors;
         vector< int > m_calibrationTypes;
@@ -66,9 +67,9 @@ namespace calibration
                                 int xDiv = DIST_VIS_X_DIV, 
                                 int yDiv = DIST_VIS_Y_DIV )
         {
-            m_windowBaseName = windowBaseName;
             m_usesAverage = useAverage;
 
+            m_windowBaseName = windowBaseName;
 
             m_windowHistogram = m_windowBaseName;
             m_windowHeatmap = m_windowBaseName; 
@@ -155,6 +156,9 @@ namespace calibration
         {
             m_angles.clear();
             m_heatmap.clear();
+            m_framesInitial.clear();
+            m_framesRefined.clear();
+            m_calibrationFrames.clear();
         }
 
         void changeWindowState( string windowName, bool activate )
@@ -167,9 +171,9 @@ namespace calibration
                 if ( windowName == m_windowFrameInitial )
                 {
                     cv::createTrackbar( "calibrationIndex", m_windowFrameInitial.c_str(),
-                                        &m_currentCalibrationFrameIndx,
+                                        &m_currentInitialFrameIndx,
                                         1,
-                                        DistributionVisualizer::onSelectCalibrationImage, this );
+                                        DistributionVisualizer::onSelectImageInitial, this );
 
                     cv::setTrackbarMax( "calibrationIndex", 
                                         m_windowFrameInitial.c_str(), 
@@ -179,13 +183,25 @@ namespace calibration
                 if ( windowName == m_windowFrameRefined )
                 {
                     cv::createTrackbar( "calibrationIndex", m_windowFrameRefined.c_str(),
-                                        &m_currentCalibrationFrameRefinedIndx,
+                                        &m_currentRefinedFrameIndx,
                                         1,
-                                        DistributionVisualizer::onSelectCalibrationImageRefined, this );
+                                        DistributionVisualizer::onSelectImageRefined, this );
 
                     cv::setTrackbarMax( "calibrationIndex", 
                                         m_windowFrameRefined.c_str(), 
                                         m_framesRefined.size() - 1 );
+                }
+
+                if ( windowName == m_windowCalibrationFrames )
+                {
+                    cv::createTrackbar( "calibrationIndex", m_windowCalibrationFrames.c_str(),
+                                        &m_currentCalibrationFrameIndx,
+                                        1,
+                                        DistributionVisualizer::onSelectCalibrationFrame, this );
+
+                    cv::setTrackbarMax( "calibrationIndex", 
+                                        m_windowCalibrationFrames.c_str(),
+                                        m_calibrationFrames.size() - 1 );
                 }
             }
 
@@ -245,13 +261,47 @@ namespace calibration
             }
         }
 
+        void addFrameInitial( const cv::Mat& frame )
+        {
+            m_framesInitial.push_back( frame );
+
+            if ( m_currentInitialFrameIndx == -1 )
+            {
+                m_currentInitialFrameIndx = m_framesInitial.size() - 1;
+            }
+
+            if ( m_windowsActive[ m_windowFrameInitial ] )
+            {
+                cv::setTrackbarMax( "calibrationIndex",
+                                    m_windowFrameInitial.c_str(),
+                                    m_framesInitial.size() - 1 );
+            }
+        }
+
+        void addFrameRefined( const cv::Mat& frame )
+        {
+            m_framesRefined.push_back( frame );
+
+            if ( m_currentRefinedFrameIndx == -1 )
+            {
+                m_currentRefinedFrameIndx = m_framesRefined.size() - 1;
+            }
+
+            if ( m_windowsActive[ m_windowFrameRefined ] )
+            {
+                cv::setTrackbarMax( "calibrationIndex",
+                                    m_windowFrameRefined.c_str(),
+                                    m_framesRefined.size() - 1 );
+            }
+        }
+
         void addCalibratedBucket( const vector< cv::Mat >& frames4calibration, const vector< float >& perViewErrors, int calibrationType )
         {
             assert( frames4calibration.size() == perViewErrors.size() );
 
             for ( int q = 0; q < frames4calibration.size(); q++ )
             {
-                m_framesInitial.push_back( frames4calibration[q].clone() );
+                m_calibrationFrames.push_back( frames4calibration[q].clone() );
                 m_calibrationPerViewErrors.push_back( perViewErrors[q] );
                 m_calibrationTypes.push_back( calibrationType );
             }
@@ -259,16 +309,18 @@ namespace calibration
             if ( m_currentCalibrationFrameIndx == -1 )
             {
                 // Just at initialization
-                m_currentCalibrationFrameIndx = m_framesInitial.size() - 1;
+                m_currentCalibrationFrameIndx = m_calibrationFrames.size() - 1;
             }
 
-            if ( m_windowsActive[ m_windowFrameInitial ] )
+            if ( m_windowsActive[ m_windowCalibrationFrames ] )
             {
                 cv::setTrackbarMax( "calibrationIndex", 
-                                    m_windowFrameInitial.c_str(), 
-                                    m_framesInitial.size() - 1 );
+                                    m_windowCalibrationFrames.c_str(), 
+                                    m_calibrationFrames.size() - 1 );
             }
         }
+
+        // BEGIN DRAW METHODS ************************************************************
 
         void _drawHistogram()
         {
@@ -299,6 +351,11 @@ namespace calibration
                           cv::Point2f( _x, _y ),
                           cv::Point2f( _xNext, _yNext ),
                           cv::Scalar( 255, 0, 0 ), 4 );
+            }
+
+            if ( !m_windowsActive[ m_windowHistogram ] )
+            {
+                return;
             }
 
             cv::imshow( m_windowHistogram.c_str(), m_patternHistogram );
@@ -344,16 +401,26 @@ namespace calibration
                 }
             }
 
+            if ( !m_windowsActive[ m_windowHeatmap ] )
+            {
+                return;
+            }
+
             cv::imshow( m_windowHeatmap.c_str(), m_patternHeatmap );
 
         }
 
         void _drawDistribution()
         {
+            if ( !m_windowsActive[ m_windowDistribution ] )
+            {
+                return;
+            }
+
             cv::imshow( m_windowDistribution.c_str(), m_patternDistribution );
         }
 
-        void _drawCalibrationFrame()
+        void _drawFrameInitial()
         {
             if ( m_framesInitial.size() < 1 )
             {
@@ -361,14 +428,19 @@ namespace calibration
                 return;
             }
 
-            if ( 0 <= m_currentCalibrationFrameIndx && 
-                 m_currentCalibrationFrameIndx < m_framesInitial.size() )
+            if ( !m_windowsActive[ m_windowFrameInitial ] )
             {
-                cv::imshow( m_windowFrameInitial.c_str(), m_framesInitial[ m_currentCalibrationFrameIndx ] );
+                return;
+            }
+
+            if ( 0 <= m_currentInitialFrameIndx && 
+                 m_currentInitialFrameIndx < m_framesInitial.size() )
+            {
+                cv::imshow( m_windowFrameInitial.c_str(), m_framesInitial[ m_currentInitialFrameIndx ] );
             }
         }
 
-        void _drawCalibrationFrameRefined()
+        void _drawFrameRefined()
         {
             if ( m_framesRefined.size() < 1 )
             {
@@ -376,16 +448,41 @@ namespace calibration
                 return;
             }
 
-            if ( 0 <= m_currentCalibrationFrameIndx && 
-                 m_currentCalibrationFrameIndx < m_framesInitial.size() )
+            if ( !m_windowsActive[ m_windowFrameRefined ] )
             {
-                cv::imshow( m_windowFrameRefined.c_str(), m_framesRefined[ m_currentCalibrationFrameIndx ] );
+                return;
+            }
+
+            if ( 0 <= m_currentRefinedFrameIndx && 
+                 m_currentRefinedFrameIndx < m_framesRefined.size() )
+            {
+                cv::imshow( m_windowFrameRefined.c_str(), m_framesRefined[ m_currentRefinedFrameIndx ] );
+            }
+        }
+
+        void _drawCalibrationFrame()
+        {
+            if ( m_calibrationFrames.size() < 1 )
+            {
+                // no frames yet
+                return;
+            }
+
+            if ( !m_windowsActive[ m_windowCalibrationFrames ] )
+            {
+                return;
+            }
+
+            if ( 0 <= m_currentCalibrationFrameIndx && 
+                 m_currentCalibrationFrameIndx < m_calibrationFrames.size() )
+            {
+                cv::imshow( m_windowCalibrationFrames.c_str(), m_calibrationFrames[ m_currentCalibrationFrameIndx ] );
             }
         }
 
         void _drawCalibrationErrors()
         {
-            if ( m_framesInitial.size() < 1 )
+            if ( m_calibrationFrames.size() < 1 )
             {
                 return;
             }
@@ -441,6 +538,11 @@ namespace calibration
             cv::putText( m_patternErrors, _calibType, 
                          cv::Point2f( 20, 60 ), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar( 255, 255, 0 ), 2 );
 
+            if ( !m_windowsActive[ m_windowCalibrationErrors ] )
+            {
+                return;
+            }
+
             cv::imshow( m_windowCalibrationErrors.c_str(), m_patternErrors );
         }
 
@@ -449,10 +551,13 @@ namespace calibration
             _drawHistogram();
             _drawHeatmap();
             _drawDistribution();
+            _drawFrameInitial();
+            _drawFrameRefined();
             _drawCalibrationFrame();
             _drawCalibrationErrors();
         }
 
+        // END DRAW METHODS ************************************************************
 
         void saveToFile()
         {
@@ -481,32 +586,47 @@ namespace calibration
             return 180.0f * _sum / ( m_angles.size() * 3.1415926 );
         }
 
-        static void onSelectCalibrationImage( int v, void* pVisualizer )
+        static void onSelectImageInitial( int v, void* pVisualizer )
         {
             DistributionVisualizer* _visualizer = ( DistributionVisualizer* ) pVisualizer;
 
             if ( _visualizer->m_framesInitial.size() < 1 )
             {
-                _visualizer->m_currentCalibrationFrameIndx = -1;
+                _visualizer->m_currentInitialFrameIndx = -1;
             }
             else
             {
-                _visualizer->m_currentCalibrationFrameIndx = min( max( v, 0 ), (int)( _visualizer->m_framesInitial.size() - 1 ) );
+                _visualizer->m_currentInitialFrameIndx = min( max( v, 0 ), (int)( _visualizer->m_framesInitial.size() - 1 ) );
             }
                 
         }
 
-        static void onSelectCalibrationImageRefined( int v, void* pVisualizer )
+        static void onSelectImageRefined( int v, void* pVisualizer )
         {
             DistributionVisualizer* _visualizer = ( DistributionVisualizer* ) pVisualizer;
 
             if ( _visualizer->m_framesRefined.size() < 1 )
             {
-                _visualizer->m_currentCalibrationFrameRefinedIndx = -1;
+                _visualizer->m_currentRefinedFrameIndx = -1;
             }
             else
             {
-                _visualizer->m_currentCalibrationFrameRefinedIndx = min( max( v, 0 ), (int)( _visualizer->m_framesRefined.size() - 1 ) );
+                _visualizer->m_currentRefinedFrameIndx = min( max( v, 0 ), (int)( _visualizer->m_framesRefined.size() - 1 ) );
+            }
+                
+        }
+
+        static void onSelectCalibrationFrame( int v, void* pVisualizer )
+        {
+            DistributionVisualizer* _visualizer = ( DistributionVisualizer* ) pVisualizer;
+
+            if ( _visualizer->m_calibrationFrames.size() < 1 )
+            {
+                _visualizer->m_currentCalibrationFrameIndx = -1;
+            }
+            else
+            {
+                _visualizer->m_currentCalibrationFrameIndx = min( max( v, 0 ), (int)( _visualizer->m_calibrationFrames.size() - 1 ) );
             }
                 
         }

@@ -50,6 +50,22 @@ namespace calibration { namespace concentric {
         bool _found = _detector->run( image, detInfo );
         if ( _found )
         {
+            // if ( detInfo.useRefining )
+            // {
+            //     if ( _detector->hasRefinedPoints() )
+            //     {
+            //         _detector->getRefinedPoints( iCorners );
+            //     }
+            //     else
+            //     {
+            //         _found = false;
+            //     }
+            // }
+            // else
+            // {
+            //     _detector->getDetectedPoints( iCorners );
+            // }
+
             _detector->getDetectedPoints( iCorners );
         }
 
@@ -232,120 +248,35 @@ namespace calibration { namespace concentric {
 
             // Get bounding region to get the corners
 
-            vector< int > _cornerOptions;
+            int _leftIndx   = 0;
+            int _rightIndx  = 0;
+            int _topIndx    = 0;
+            int _bottomIndx = 0;
 
-            if ( !isFronto )
+            for ( int q = 1; q < candidatePatternPoints.size(); q++ )
             {
-                int _leftIndx   = 0;
-                int _rightIndx  = 0;
-                int _topIndx    = 0;
-                int _bottomIndx = 0;
-
-                for ( int q = 1; q < candidatePatternPoints.size(); q++ )
+                if ( candidatePatternPoints[q].x < candidatePatternPoints[_leftIndx].x )
                 {
-                    if ( candidatePatternPoints[q].x < candidatePatternPoints[_leftIndx].x )
-                    {
-                        _leftIndx = q;
-                    }
-                    if ( candidatePatternPoints[q].x > candidatePatternPoints[_rightIndx].x )
-                    {
-                        _rightIndx = q;
-                    }
-                    if ( candidatePatternPoints[q].y < candidatePatternPoints[_topIndx].y )
-                    {
-                        _topIndx = q;
-                    }
-                    if ( candidatePatternPoints[q].y > candidatePatternPoints[_bottomIndx].y )
-                    {
-                        _bottomIndx = q;
-                    }
+                    _leftIndx = q;
                 }
-
-                _cornerOptions = { _topIndx, _rightIndx, _bottomIndx, _leftIndx };
+                if ( candidatePatternPoints[q].x > candidatePatternPoints[_rightIndx].x )
+                {
+                    _rightIndx = q;
+                }
+                if ( candidatePatternPoints[q].y < candidatePatternPoints[_topIndx].y )
+                {
+                    _topIndx = q;
+                }
+                if ( candidatePatternPoints[q].y > candidatePatternPoints[_bottomIndx].y )
+                {
+                    _bottomIndx = q;
+                }
             }
-            else
-            {
-                cv::Point2f _preference;
 
-                int _p0 = -1;// p0 - top left
-                int _p1 = -1;// p1 - top right
-                int _p2 = -1;// p2 - bottom right
-                int _p3 = -1;// p3 - bottom left
-
-                float _bestDist = 0.0f;
-                _preference = cv::Point2f( 0, 0 );
-
-                for ( int q = 0; q < candidatePatternPoints.size(); q++ )
-                {
-                    float _dist = utils::dist( _preference, candidatePatternPoints[q] );
-
-                    if ( ( _p0 == -1 ) || ( _dist < _bestDist ) )
-                    {
-                        _p0 = q;
-                        _bestDist = _dist;
-                    }
-                }
-
-                _bestDist = 0.0f;
-                _preference = cv::Point2f( m_frameSize.width / 2, 0 );
-
-                for ( int q = 0; q < candidatePatternPoints.size(); q++ )
-                {
-                    float _dist = utils::dist( _preference, candidatePatternPoints[q] );
-
-                    if ( ( _p1 == -1 ) || ( _dist < _bestDist ) )
-                    {
-                        _p1 = q;
-                        _bestDist = _dist;
-                    }
-                }
-
-                _bestDist = 0.0f;
-                _preference = cv::Point2f( m_frameSize.width / 2, m_frameSize.height / 2 );
-
-                for ( int q = 0; q < candidatePatternPoints.size(); q++ )
-                {
-                    float _dist = utils::dist( _preference, candidatePatternPoints[q] );
-
-                    if ( ( _p2 == -1 ) || ( _dist < _bestDist ) )
-                    {
-                        _p2 = q;
-                        _bestDist = _dist;
-                    }
-                }
-
-                _bestDist = 0.0f;
-                _preference = cv::Point2f( 0, m_frameSize.height / 2 );
-
-                for ( int q = 0; q < candidatePatternPoints.size(); q++ )
-                {
-                    float _dist = utils::dist( _preference, candidatePatternPoints[q] );
-
-                    if ( ( _p3 == -1 ) || ( _dist < _bestDist ) )
-                    {
-                        _p3 = q;
-                        _bestDist = _dist;
-                    }
-                }
-
-                _cornerOptions = { _p0, _p1, _p2, _p3 };
-            }
+            vector< int > _cornerOptions = { _topIndx, _rightIndx, _bottomIndx, _leftIndx };
             
             
             bool _isFit = false;
-
-            if ( isFronto )
-            {
-                for ( int q = 0; q < _cornerOptions.size(); q++ )
-                {
-                    cout << "corner: " << candidatePatternPoints[_cornerOptions[q]] << endl;
-                }
-
-                for ( int q = 0; q < candidatePatternPoints.size(); q++ )
-                {
-                    cout << "point: " << candidatePatternPoints[q] << endl;
-                }
-            }
 
             for ( int q = 0; q < _cornerOptions.size(); q++ )
             {
@@ -362,23 +293,23 @@ namespace calibration { namespace concentric {
                                                   _cornerOptions[( 2 + q ) % 4], _cornerOptions[( 3 + q ) % 4] );
 
 
-                // if ( _isFit )
-                // {
-                //     float _xmin = candidatePatternPoints[ _leftIndx ].x;
-                //     float _xmax = candidatePatternPoints[ _rightIndx ].x;
-                //     float _ymin = candidatePatternPoints[ _topIndx ].y;
-                //     float _ymax = candidatePatternPoints[ _bottomIndx ].y;
+                if ( _isFit )
+                {
+                    float _xmin = candidatePatternPoints[ _leftIndx ].x;
+                    float _xmax = candidatePatternPoints[ _rightIndx ].x;
+                    float _ymin = candidatePatternPoints[ _topIndx ].y;
+                    float _ymax = candidatePatternPoints[ _bottomIndx ].y;
 
-                //     m_cropROI = cv::Rect2f( cv::Point2f( _xmin, _ymin ), cv::Point2f( _xmax, _ymax ) );
-                //     m_cropOrigin = cv::Point2f( _xmin, _ymin );
+                    m_cropROI = cv::Rect2f( cv::Point2f( _xmin, _ymin ), cv::Point2f( _xmax, _ymax ) );
+                    m_cropOrigin = cv::Point2f( _xmin, _ymin );
 
-                //     // cout << "_xmin = " << candidatePatternPoints[ _leftIndx ].x << endl;
-                //     // cout << "_xmax = " << candidatePatternPoints[ _rightIndx ].x << endl;
-                //     // cout << "_ymin = " << candidatePatternPoints[ _topIndx ].y << endl;
-                //     // cout << "_ymax = " << candidatePatternPoints[ _bottomIndx ].y << endl;
+                    // cout << "_xmin = " << candidatePatternPoints[ _leftIndx ].x << endl;
+                    // cout << "_xmax = " << candidatePatternPoints[ _rightIndx ].x << endl;
+                    // cout << "_ymin = " << candidatePatternPoints[ _topIndx ].y << endl;
+                    // cout << "_ymax = " << candidatePatternPoints[ _bottomIndx ].y << endl;
 
-                //     return true;
-                // }
+                    return true;
+                }
             }
 
             return _isFit;
@@ -502,6 +433,8 @@ namespace calibration { namespace concentric {
             m_pipelinePanel->showRefEdges( m_stageFrameResults[ STAGE_REFINING_EDGES ] );
             m_pipelinePanel->showRefFeatures( m_stageFrameResults[ STAGE_REFINING_FEATURES ] );
 
+            // Let all refined points pass for now, will discard them in normal view
+
             // if ( !_foundRefined )
             // {
             //     cout << "couldnt refine features" << endl;
@@ -527,7 +460,27 @@ namespace calibration { namespace concentric {
             m_pipelinePanel->showRefProjected( m_stageFrameResults[ STAGE_REFINING_PROJECTED ] );
             m_pipelinePanel->showRefDistorted( m_stageFrameResults[ STAGE_REFINING_DISTORTED ] );
 
-            return _success;
+            // Check if found enough refined points
+            int _numMatched = 0;
+
+            for ( int q = 0; q < _patternPoints.size(); q++ )
+            {
+                for ( int p = 0; p < refinedPoints.size(); p++ )
+                {
+                    float _dist = utils::dist( _patternPoints[q], refinedPoints[p] );
+
+                    if ( _dist < 10 )
+                    {
+                        _patternPoints[q] = refinedPoints[p];
+                        _numMatched++;
+                        break;
+                    }
+                }
+            }
+
+            refinedPoints = _patternPoints;
+
+            return _numMatched == 20;
         }
 
         void Detector::_refiningUndistortion( const cv::Mat& input, cv::Mat& output,
@@ -583,9 +536,11 @@ namespace calibration { namespace concentric {
             cv::Mat _grayScale;
 
             cv::cvtColor( input, _grayScale, CV_RGB2GRAY );
-            cv::adaptiveThreshold( _grayScale, output, PIPELINE_MASKING_STAGE_MAX_VALUE,
+            cv::adaptiveThreshold( _grayScale, output, 
+                                   PIPELINE_REFINING_MASKING_STAGE_MAX_VALUE,
                                    cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV,
-                                   PIPELINE_MASKING_STAGE_BLOCKSIZE, PIPELINE_MASKING_STAGE_C );
+                                   PIPELINE_REFINING_MASKING_STAGE_BLOCKSIZE, 
+                                   PIPELINE_REFINING_MASKING_STAGE_C );
         }
 
         void Detector::_refiningEdges( const cv::Mat& input,
@@ -593,7 +548,10 @@ namespace calibration { namespace concentric {
         {
             cv::blur( input, output, cv::Size( 3, 3 ) );
 
-            cv::Canny( output, output, 50, 150, 3 );
+            cv::Canny( output, output, 
+                       PIPELINE_REFINING_CANNY_MIN, 
+                       PIPELINE_REFINING_CANNY_MAX, 
+                       PIPELINE_REFINING_EDGES_BLOCK_SIZE );
         }
 
         bool Detector::_refiningFeatures( const cv::Mat& input,
@@ -626,8 +584,8 @@ namespace calibration { namespace concentric {
                 float _size = sqrt( _a * _a + _b * _b );
                 float _ratio = _a / _b;
 
-                if ( ( PIPELINE_ELLIPSE_MIN_SIZE < _size && _size < PIPELINE_ELLIPSE_MAX_SIZE ) &&
-                     ( PIPELINE_ELLIPSE_MIN_RATIO < _ratio && _ratio < PIPELINE_ELLIPSE_MAX_RATIO ) )
+                if ( ( PIPELINE_REFINING_ELLIPSE_MIN_SIZE < _size && _size < PIPELINE_REFINING_ELLIPSE_MAX_SIZE ) &&
+                     ( PIPELINE_REFINING_ELLIPSE_MIN_RATIO < _ratio && _ratio < PIPELINE_REFINING_ELLIPSE_MAX_RATIO ) )
                 {
                     _filteredEllipses.push_back( _ellipsesBB[q] );
                 }
@@ -641,71 +599,71 @@ namespace calibration { namespace concentric {
                 cv::ellipse( output, _rect, cv::Scalar( 255, 0, 0 ), 2 );
             }
 
-            cout << "size of _candidatePoints: " << _candidatePoints.size() << endl;
+            // cout << "size of _candidatePoints: " << _candidatePoints.size() << endl;
 
-            // Detect only the ones that have two almost concentric ellipses
+            // // Detect only the ones that have two almost concentric ellipses
             
-            while( true )
-            {
-                bool _hasPaired = false;
+            // while( true )
+            // {
+            //     bool _hasPaired = false;
 
-                vector< bool > _paired( _candidatePoints.size(), false );
-                vector< cv::Point2f > _candidatesFilteredPoints;
+            //     vector< bool > _paired( _candidatePoints.size(), false );
+            //     vector< cv::Point2f > _candidatesFilteredPoints;
 
-                for ( int q = 0; q < _candidatePoints.size(); q++ )
-                {
-                    for ( int p = 0; p < _candidatePoints.size(); p++ )
-                    {
-                        if ( p == q )
-                        {
-                            continue;
-                        }
+            //     for ( int q = 0; q < _candidatePoints.size(); q++ )
+            //     {
+            //         for ( int p = 0; p < _candidatePoints.size(); p++ )
+            //         {
+            //             if ( p == q )
+            //             {
+            //                 continue;
+            //             }
 
-                        if ( _paired[p] || _paired[q] )
-                        {
-                            continue;
-                        }
+            //             if ( _paired[p] || _paired[q] )
+            //             {
+            //                 continue;
+            //             }
 
-                        float _dx = _candidatePoints[q].x - _candidatePoints[p].x;
-                        float _dy = _candidatePoints[q].y - _candidatePoints[p].y;
-                        float _dist = sqrt( _dx * _dx + _dy * _dy );
+            //             float _dx = _candidatePoints[q].x - _candidatePoints[p].x;
+            //             float _dy = _candidatePoints[q].y - _candidatePoints[p].y;
+            //             float _dist = sqrt( _dx * _dx + _dy * _dy );
 
-                        if ( _dist < 10 )
-                        {
-                            _paired[p] = true;
-                            _paired[q] = true;
+            //             if ( _dist < 10 )
+            //             {
+            //                 _paired[p] = true;
+            //                 _paired[q] = true;
 
-                            _hasPaired = true;
+            //                 _hasPaired = true;
 
-                            cv::Point2f _fpoint;
-                            _fpoint.x = ( _candidatePoints[p].x + _candidatePoints[q].x ) / 2.0f;
-                            _fpoint.y = ( _candidatePoints[p].y + _candidatePoints[q].y ) / 2.0f;
+            //                 cv::Point2f _fpoint;
+            //                 _fpoint.x = ( _candidatePoints[p].x + _candidatePoints[q].x ) / 2.0f;
+            //                 _fpoint.y = ( _candidatePoints[p].y + _candidatePoints[q].y ) / 2.0f;
 
-                            _candidatesFilteredPoints.push_back( _fpoint );
-                        }
-                    }
-                }
+            //                 _candidatesFilteredPoints.push_back( _fpoint );
+            //             }
+            //         }
+            //     }
 
-                if ( !_hasPaired )
-                {
-                    break;
-                }
+            //     if ( !_hasPaired )
+            //     {
+            //         break;
+            //     }
 
-                _candidatePoints = _candidatesFilteredPoints;
-                _candidatesFilteredPoints.clear();
-            }
+            //     _candidatePoints = _candidatesFilteredPoints;
+            //     _candidatesFilteredPoints.clear();
+            // }
 
-            cout << "size of _candidatesFilteredPoints: " << _candidatePoints.size() << endl;
+            // cout << "size of _candidatesFilteredPoints: " << _candidatePoints.size() << endl;
 
-            for ( int q = 0; q < _candidatePoints.size(); q++ )
-            {
-                cv::circle( output, _candidatePoints[q], 2, cv::Scalar( 255, 255, 0 ), -1 );
-            }
+            // for ( int q = 0; q < _candidatePoints.size(); q++ )
+            // {
+            //     cv::circle( output, _candidatePoints[q], 2, cv::Scalar( 255, 255, 0 ), -1 );
+            // }
 
-            if ( _candidatePoints.size() < m_size.width * m_size.height )
-            {
-                return false;
-            }
+            // if ( _candidatePoints.size() < m_size.width * m_size.height )
+            // {
+            //     return false;
+            // }
 
             patternPointsFronto = _candidatePoints;
 
