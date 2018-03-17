@@ -52,10 +52,6 @@ namespace calibration
     struct DetectionInfo
     {
         vector< cv::Point2f > roi;
-        // To use in the refination step
-        bool useRefining;
-        cv::Mat cameraMatrix;
-        cv::Mat distortionCoefficients;
     };
 
     struct CalibrationBucket

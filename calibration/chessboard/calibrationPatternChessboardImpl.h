@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "calibrationCommon.h"
+#include "../calibrationCommon.h"
 #include "../calibrationBaseDetector.h"
 
 using namespace std;
@@ -10,23 +10,33 @@ using namespace std;
 namespace calibration { namespace chessboard {
 
 
-    void drawChessboardPatternCorners( const vector< cv::Point2f >& iCorners, cv::Mat& image );
+    void drawChessboardPatternCorners( const vector< cv::Point2f >& iCorners, cv::Mat& image, const PatternInfo& pInfo );
 
     bool findChessboardGrid( const cv::Mat& image, const cv::Size& pSize, 
                              const DetectionInfo& detInfo,
                              vector< cv::Point2f >& iCorners );
 
-    void refineBatchChessboard( const vector< cv::Mat >& batchImagesToRefine,
+    void refineBatchChessboard( const cv::Size& size,
+                                const vector< cv::Mat >& batchImagesToRefine,
                                 const vector< vector< cv::Point2f > >& batchPointsToRefine,
                                 const cv::Mat& cameraMatrix,
                                 const cv::Mat& distortionCoefficients );
 
-    bool isRefiningChessboard();
+    void refineSingleChessboard( const cv::Size& pSize, 
+                                 const cv::Mat& imageToRefine,
+                                 const vector< cv::Point2f >& pointsToRefine,
+                                 const cv::Mat& cameraMatrix,
+                                 const cv::Mat& distortionCoefficients,
+                                 cv::Mat& imageResult,
+                                 vector< cv::Point2f >& pointsRefined );
 
-    bool hasRefinationToPickChessboard();
+    bool isRefiningChessboard( const cv::Size& size );
 
-    void grabRefinationBatchChessboard( vector< cv::Mat >& batchRefinedImages,
-                                        vector< CalibrationBucket >& batchBuckets );
+    bool hasRefinationToPickChessboard( const cv::Size& size );
+
+    void grabRefinationBatchChessboard( const cv::Size& size,
+                                        vector< cv::Mat >& batchRefinedImages,
+                                        vector< vector< cv::Point2f > >& batchRefinedPoints );
 
 
 
@@ -39,8 +49,8 @@ namespace calibration { namespace chessboard {
 
             protected :
 
-            bool _refiningDetectionInternal( const cv::Mat& input, vector< cv::Point2f >& frontoRefinedPoints,
-                                             bool showIntermediateResults = false ) override;
+            bool _refiningDetectionInternal( const cv::Mat& input, 
+                                             vector< cv::Point2f >& frontoRefinedPoints ) override;
 
             DetectorChessboard( const cv::Size& size );
 

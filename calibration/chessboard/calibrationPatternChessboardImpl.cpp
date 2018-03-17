@@ -10,7 +10,7 @@ namespace calibration { namespace chessboard {
 
 
 
-    void drawChessboardPatternCorners( const vector< cv::Point2f >& iCorners, cv::Mat& image )
+    void drawChessboardPatternCorners( const vector< cv::Point2f >& iCorners, cv::Mat& image, const PatternInfo& pInfo )
     {
         cv::drawChessboardCorners( image, pInfo.size, iCorners, true );
     }
@@ -30,7 +30,8 @@ namespace calibration { namespace chessboard {
         return _found;
     }
 
-    void refineBatchChessboard( const vector< cv::Mat >& batchImagesToRefine,
+    void refineBatchChessboard( const cv::Size& pSize,
+                                const vector< cv::Mat >& batchImagesToRefine,
                                 const vector< vector< cv::Point2f > >& batchPointsToRefine,
                                 const cv::Mat& cameraMatrix,
                                 const cv::Mat& distortionCoefficients )
@@ -40,26 +41,45 @@ namespace calibration { namespace chessboard {
         _detector->refineBatch( batchImagesToRefine, batchPointsToRefine, cameraMatrix, distortionCoefficients );
     }
 
-    bool isRefining()
+    void refineSingleChessboard( const cv::Size& pSize, 
+                                 const cv::Mat& imageToRefine,
+                                 const vector< cv::Point2f >& pointsToRefine,
+                                 const cv::Mat& cameraMatrix,
+                                 const cv::Mat& distortionCoefficients,
+                                 cv::Mat& imageResult,
+                                 vector< cv::Point2f >& pointsRefined )
+    {
+        detection::DetectorChessboard* _detector = detection::DetectorChessboard::create( pSize );
+
+        _detector->refineSingle( imageToRefine, 
+                                 pointsToRefine, 
+                                 cameraMatrix, 
+                                 distortionCoefficients, 
+                                 imageResult, 
+                                 pointsRefined );
+    }
+
+    bool isRefiningChessboard( const cv::Size& pSize )
     {
         detection::DetectorChessboard* _detector = detection::DetectorChessboard::create( pSize );
 
         return _detector->isRefining();
     }
 
-    bool hasRefinationToPick()
+    bool hasRefinationToPickChessboard( const cv::Size& pSize )
     {
         detection::DetectorChessboard* _detector = detection::DetectorChessboard::create( pSize );
 
         return _detector->hasRefinationToPick();
     }
 
-    void grabRefinationBatch( vector< cv::Mat >& batchRefinedImages,
-                              vector< CalibrationBucket >& batchBuckets )
+    void grabRefinationBatchChessboard( const cv::Size& pSize,
+                                        vector< cv::Mat >& batchRefinedImages,
+                                        vector< vector< cv::Point2f > >& batchRefinedPoints )
     {
         detection::DetectorChessboard* _detector = detection::DetectorChessboard::create( pSize );
 
-        _detector->grabRefinationBatch( batchImagesToRefine, batchBuckets );
+        _detector->grabRefinationBatch( batchRefinedImages, batchRefinedPoints );
     }
 
 
@@ -104,12 +124,12 @@ namespace calibration { namespace chessboard {
         {
             m_patternPoints.clear();
 
-            return cv::findChessboardCorners( image, m_size, m_patternPoints,
+            return cv::findChessboardCorners( input, m_size, m_patternPoints,
                                               CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_NORMALIZE_IMAGE );
         }
 
-        bool DetectorChessboard::_refiningDetectionInternal( const cv::Mat& input, vector< cv::Point2f >& frontoRefinedPoints,
-                                                             bool showIntermediateResults )
+        bool DetectorChessboard::_refiningDetectionInternal( const cv::Mat& input, 
+                                                             vector< cv::Point2f >& frontoRefinedPoints )
         {
             frontoRefinedPoints.clear();
 

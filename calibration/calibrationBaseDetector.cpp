@@ -24,41 +24,42 @@ namespace calibration
         m_batchPointsRefined.clear();
         m_workingDataBatchImages.clear();
         m_workingDataBatchPoints.clear();
+
+        m_pipelinePanel = NULL;
+        calibcv::SPatternDetectorPanel::release();
     }
 
     void BaseDetector::_refiningConversionDirect( const cv::Mat& image2refine,
-                                                  cv::Mat& frontoView, cv::Mat& frontoTransform,
                                                   const vector< cv::Point2f >& patternPoints,
                                                   const cv::Mat& cameraMatrix,
                                                   const cv::Mat& distortionCoefficients,
-                                                  bool showIntermediateResults )
+                                                  cv::Mat& frontoView, 
+                                                  cv::Mat& frontoTransform,
+                                                  cv::Mat& undistortedView,
+                                                  vector< cv::Point2f >& undistortedPatternPoints )
     {
-        cv::Mat _undistortedView;
-
-        vector< cv::Point2f > _undistortedPatternPoints;
-
         cv::Size _frameSize = cv::Size( image2refine.cols, image2refine.rows );
 
         // transform the iamge to undistorted view
-        cv::undistort( image2refine, _undistortedView, cameraMatrix, distortionCoefficients );
+        cv::undistort( image2refine, undistortedView, cameraMatrix, distortionCoefficients );
         // transform also the points into undistorted view
-        cv::undistortPoints( patternPoints, _undistortedPatternPoints, 
+        cv::undistortPoints( patternPoints, undistortedPatternPoints, 
                              cameraMatrix, distortionCoefficients,
                              cv::noArray(), cameraMatrix );
 
         // Create the points for the perspective mapping
         // Borders points with radial padding
-        cv::Point2f _topLeft     = 2 * _undistortedPatternPoints[0] - 
-                                   _undistortedPatternPoints[ m_size.width + 1 ];
+        cv::Point2f _topLeft     = 2 * undistortedPatternPoints[0] - 
+                                   undistortedPatternPoints[ m_size.width + 1 ];
 
-        cv::Point2f _topRight    = 2 * _undistortedPatternPoints[ m_size.width - 1 ] - 
-                                   _undistortedPatternPoints[ 2 * m_size.width - 2 ];
+        cv::Point2f _topRight    = 2 * undistortedPatternPoints[ m_size.width - 1 ] - 
+                                   undistortedPatternPoints[ 2 * m_size.width - 2 ];
 
-        cv::Point2f _bottomRight = 2 * _undistortedPatternPoints[ m_size.width * m_size.height - 1 ] - 
-                                   _undistortedPatternPoints[ m_size.width * ( m_size.height - 1 ) - 2 ];
+        cv::Point2f _bottomRight = 2 * undistortedPatternPoints[ m_size.width * m_size.height - 1 ] - 
+                                   undistortedPatternPoints[ m_size.width * ( m_size.height - 1 ) - 2 ];
 
-        cv::Point2f _bottomLeft  = 2 * _undistortedPatternPoints[ m_size.width * ( m_size.height - 1 ) ] - 
-                                   _undistortedPatternPoints[ m_size.width * ( m_size.height - 2 ) + 1 ];
+        cv::Point2f _bottomLeft  = 2 * undistortedPatternPoints[ m_size.width * ( m_size.height - 1 ) ] - 
+                                   undistortedPatternPoints[ m_size.width * ( m_size.height - 2 ) + 1 ];
 
         vector< cv::Point2f > _src = { _topLeft, _topRight, _bottomRight, _bottomLeft };
 
@@ -71,62 +72,38 @@ namespace calibration
         frontoTransform = cv::getPerspectiveTransform( _src, _dst );
 
         // Transform into fronto parallel view
-        cv::warpPerspective( _undistortedView, 
+        cv::warpPerspective( undistortedView, 
                              frontoView, 
                              frontoTransform,
                              cv::Size( _frameSize.width / 2, _frameSize.height / 2 ) );
-
-        if ( showIntermediateResults )
-        {
-            m_stepImageResults[ STEP_REFINING_UNDISTORTED ] = _undistortedView;
-            m_stepImageResults[ STEP_REFINING_FRONTO ] = frontoView.clone();
-
-            for ( int q = 0; q < _undistortedPatternPoints.size(); q++ )
-            {
-                cv::circle( m_stepImageResults[ STEP_REFINING_UNDISTORTED ],
-                            _undistortedPatternPoints[q], 2, cv::Scalar( 255, 255, 0 ), -1 );
-            }
-        }
     }
 
 
-    bool BaseDetector::_refiningDetection( const cv::Mat& input, vector< cv::Point2f >& frontoRefinedPoints,
-                                           bool showIntermediateResults )
+    bool BaseDetector::_refiningDetection( const cv::Mat& input, vector< cv::Point2f >& frontoRefinedPoints )
     {
-        bool _found = _refiningDetectionInternal( input, refinedPoints );
-
-        if ( showIntermediateResults && _found )
-        {
-            m_stepImageResults[ STEP_REFINING_FEATURES ] = input.clone();
-
-            for ( int q = 0; q < refinedPoints.size(); q++ )
-            {
-                cv::circle( m_stepImageResults[ STEP_REFINING_FEATURES ],
-                            refinedPoints[q], 2, cv::Scalar( 255, 255, 0 ), -1 )
-            }
-        }
+        bool _found = _refiningDetectionInternal( input, frontoRefinedPoints );
 
         return _found;
     }
 
-    void BaseDetector::_refiningDetectionInternal( const cv::Mat& input, vector< cv::Point2f >& frontoRefinedPoints,
-                                                   bool showIntermediateResults )
+    bool BaseDetector::_refiningDetectionInternal( const cv::Mat& input, 
+                                                   vector< cv::Point2f >& frontoRefinedPoints )
     {
         // Override this for each type of detector
+
+        return false;
     }
 
     void BaseDetector::_refiningConversionInverse( const vector< cv::Point2f>& frontoRefinedPoints,
-                                                   vector< cv::Point2f >& refinedPoints,
-                                                   cv::Mat& refinedImageResult,
                                                    const cv::Mat& inverseFrontoTransform,
                                                    const cv::Mat& originalView,
                                                    const vector< cv::Point2f >& originalPoints,
                                                    const cv::Mat& cameraMatrix,
                                                    const cv::Mat& distortionCoefficients,
-                                                   bool showIntermediateResults )
+                                                   vector< cv::Point2f >& undistortedRefinedPoints,
+                                                   vector< cv::Point2f >& refinedPoints,
+                                                   cv::Mat& refinedImageResult )
     {
-        vector< cv::Point2f > _patternPointsRefinedUndistorted;
-
         // convert points in fronto view to projected undistorted view
 
         for ( cv::Point2f _frontoPoint : frontoRefinedPoints )
@@ -135,10 +112,10 @@ namespace calibration
             cv::Mat2f _srcPoint( _frontoPoint );
 
             cv::perspectiveTransform( _srcPoint, _dstPoint, inverseFrontoTransform );
-            _patternPointsRefinedUndistorted.push_back( cv::Point2f( _dstPoint( 0 ) ) );
+            undistortedRefinedPoints.push_back( cv::Point2f( _dstPoint( 0 ) ) );
         }
 
-        utils::distortPoints( _patternPointsRefinedUndistorted,
+        utils::distortPoints( undistortedRefinedPoints,
                               refinedPoints, cameraMatrix, distortionCoefficients );
 
         refinedImageResult = originalView.clone();
@@ -155,19 +132,115 @@ namespace calibration
                         2, cv::Scalar( 255, 255, 0 ), -1 );
         }
 
-        if ( showIntermediateResults )
+    }
+
+    bool BaseDetector::refineSingle( const cv::Mat& imageToRefine,
+                                     const vector< cv::Point2f >& pointsToRefine,
+                                     const cv::Mat& cameraMatrix,
+                                     const cv::Mat& distortionCoefficients,
+                                     cv::Mat& imageResult,
+                                     vector< cv::Point2f >& pointsRefined )
+    {
+        bool _found = _refineSingleInternal( imageToRefine,
+                                             pointsToRefine,
+                                             cameraMatrix,
+                                             distortionCoefficients,
+                                             imageResult,
+                                             pointsRefined );
+        if ( !_found )
         {
-            m_stepImageResults[ STEP_REFINING_DISTORTED ] = refinedImageResult.clone();
+            cout << "couldn't refine points for single request" << endl;
         }
 
+        return _found;
+    }
+
+    bool BaseDetector::_refineSingleInternal( const cv::Mat& imageToRefine,
+                                              const vector< cv::Point2f >& pointsToRefine,
+                                              const cv::Mat& cameraMatrix,
+                                              const cv::Mat& distortionCoefficients,
+                                              cv::Mat& imageResult,
+                                              vector< cv::Point2f >& pointsRefined )
+    {
+        cv::Mat _undistortedView, 
+                _frontoView, 
+                _frontoTransform;
+
+        vector< cv::Point2f > _undistortedPatternPoints,
+                              _refinedPointsFronto,
+                              _undistortedRefinedPoints;
+
+        _refiningConversionDirect( imageToRefine, 
+                                   pointsToRefine, 
+                                   cameraMatrix,
+                                   distortionCoefficients,
+                                   _frontoView, 
+                                   _frontoTransform,
+                                   _undistortedView,
+                                   _undistortedPatternPoints );
+
+        // Draw this step for debugging ***********************************
+
+        m_stepImageResults[ STEP_REFINING_UNDISTORTED ] = _undistortedView.clone();
+        m_stepImageResults[ STEP_REFINING_FRONTO ] = _frontoView.clone();
+
+        for ( int q = 0; q < _undistortedPatternPoints.size(); q++ )
+        {
+            cv::circle( m_stepImageResults[ STEP_REFINING_UNDISTORTED ],
+                        _undistortedPatternPoints[q], 2, cv::Scalar( 255, 255, 0 ), -1 );
+        }
+
+        // ****************************************************************
+
+        bool _found = _refiningDetection( _frontoView, _refinedPointsFronto );
+
+        if ( !_found )
+        {
+            cout << "Skipping frame, didn't find pattern in fronto view" << endl;
+            return false;
+        }
+
+        // Draw this step for debugging ***********************************
+
+        m_stepImageResults[ STEP_REFINING_FEATURES ] = _frontoView.clone();
+
+        for ( int q = 0; q < _refinedPointsFronto.size(); q++ )
+        {
+            cv::circle( m_stepImageResults[ STEP_REFINING_FEATURES ],
+                        _refinedPointsFronto[q], 2, cv::Scalar( 255, 255, 0 ), -1 );
+        }
+
+        // ****************************************************************
+
+        _refiningConversionInverse( _refinedPointsFronto, 
+                                    _frontoTransform.inv(),
+                                    imageToRefine,
+                                    pointsToRefine,
+                                    cameraMatrix,
+                                    distortionCoefficients,
+                                    _undistortedRefinedPoints,
+                                    pointsRefined,
+                                    imageResult );
+
+        m_stepImageResults[ STEP_REFINING_PROJECTED ] = _undistortedView.clone();
+
+        for ( int q = 0; q < _undistortedRefinedPoints.size(); q++ )
+        {
+            cv::circle( m_stepImageResults[ STEP_REFINING_PROJECTED ], 
+                        _undistortedRefinedPoints[q], 
+                        2, cv::Scalar( 0, 255, 0 ), -1 );
+        }
+
+        m_stepImageResults[ STEP_REFINING_DISTORTED ] = imageResult.clone();
+
+        return true;
     }
 
     void BaseDetector::refineBatch( const vector< cv::Mat >& batchImagesToRefine,
                                     const vector< vector< cv::Point2f > >& batchPointsToRefine,
                                     const cv::Mat& cameraMatrix,
                                     const cv::Mat& distortionCoefficients,
-                                    bool useThreads,
-                                    bool showIntermediateResults )
+                                    bool useThreads )
     {
         assert( batchImagesToRefine.size() == batchPointsToRefine.size() );
 
@@ -209,15 +282,26 @@ namespace calibration
         int _numFound = 0;
         for ( int q = 0; q < batchImagesToRefine.size(); q++ )
         {
-            cv::Mat _frontoView, _frontoTransform, _refinationResult;
-            vector< cv::Point2f > _refinedPoints, _refinedPointsFronto;
+            cv::Mat _undistortedView, 
+                    _frontoView, 
+                    _frontoTransform, 
+                    _refinationResult;
+
+            vector< cv::Point2f > _refinedPoints, 
+                                  _refinedPointsFronto, 
+                                  _undistortedPatternPoints,
+                                  _undistortedRefinedPoints;
 
             _refiningConversionDirect( batchImagesToRefine[q], 
-                                       _frontoView, _frontoTransform,
-                                       batchPointsToRefine[q], cameraMatrix,
-                                       distortionCoefficients, showIntermediateResults );
+                                       batchPointsToRefine[q],
+                                       cameraMatrix,
+                                       distortionCoefficients,
+                                       _frontoView, 
+                                       _frontoTransform,
+                                       _undistortedView,
+                                       _undistortedPatternPoints );
 
-            bool _found = _refiningDetection( _frontoView, _refinedPointsFronto, showIntermediateResults );
+            bool _found = _refiningDetection( _frontoView, _refinedPointsFronto );
 
             if ( !_found )
             {
@@ -228,14 +312,14 @@ namespace calibration
             _numFound++;
 
             _refiningConversionInverse( _refinedPointsFronto, 
-                                        _refinedPoints,
-                                        _refinationResult,
                                         _frontoTransform.inv(),
                                         batchImagesToRefine[q],
                                         batchPointsToRefine[q],
                                         cameraMatrix,
                                         distortionCoefficients,
-                                        showIntermediateResults );
+                                        _undistortedRefinedPoints,
+                                        _refinedPoints,
+                                        _refinationResult );
 
             m_batchImagesRefinationResult.push_back( _refinationResult );
             m_batchPointsRefined.push_back( _refinedPoints );
@@ -244,7 +328,7 @@ namespace calibration
         cout << "refined " << _numFound << " / " << batchImagesToRefine.size() << " in batch" << endl;
     }
 
-    static void* BaseDetector::refinerWorker( void* pDetector )
+    void* BaseDetector::refinerWorker( void* pDetector )
     {
         BaseDetector* _detector = ( BaseDetector* ) pDetector;
 
@@ -267,10 +351,10 @@ namespace calibration
             }
         }
 
-        m_pipelinePanel->showRefUndistorted( m_stepImageResults[ STAGE_REFINING_UNDISTORTED ] );
-        m_pipelinePanel->showRefFronto( m_stepImageResults[ STAGE_REFINING_FRONTO ] );
-        m_pipelinePanel->showRefProjected( m_stepImageResults[ STAGE_REFINING_PROJECTED ] );
-        m_pipelinePanel->showRefDistorted( m_stepImageResults[ STAGE_REFINING_DISTORTED ] );
+        m_pipelinePanel->showRefUndistorted( m_stepImageResults[ STEP_REFINING_UNDISTORTED ] );
+        m_pipelinePanel->showRefFronto( m_stepImageResults[ STEP_REFINING_FRONTO ] );
+        m_pipelinePanel->showRefProjected( m_stepImageResults[ STEP_REFINING_PROJECTED ] );
+        m_pipelinePanel->showRefDistorted( m_stepImageResults[ STEP_REFINING_DISTORTED ] );
     }
 
     void BaseDetector::grabRefinationBatch( vector< cv::Mat >& batchRefinedImages,

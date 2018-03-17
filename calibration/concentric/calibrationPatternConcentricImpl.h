@@ -3,7 +3,6 @@
 
 #include "../calibrationCommon.h"
 #include "../calibrationBaseDetector.h"
-#include "calibrationPatternUtils.h"
 
 using namespace std;
 
@@ -40,56 +39,49 @@ namespace calibration { namespace concentric {
                              vector< cv::Point2f >& iCorners );
 
 
-    void refineBatchConcentric( const vector< cv::Mat >& batchImagesToRefine,
-                      const cv::Mat& cameraMatrix,
-                      const cv::Mat& distortionCoefficients );
+    void refineBatchConcentric( const cv::Size& pSize, 
+                                const vector< cv::Mat >& batchImagesToRefine,
+                                const vector< vector< cv::Point2f > >& batchPointsToRefine,
+                                const cv::Mat& cameraMatrix,
+                                const cv::Mat& distortionCoefficients );
 
-    bool isRefiningConcentric();
+    void refineSingleConcentric( const cv::Size& pSize, 
+                                 const cv::Mat& imageToRefine,
+                                 const vector< cv::Point2f >& pointsToRefine,
+                                 const cv::Mat& cameraMatrix,
+                                 const cv::Mat& distortionCoefficients,
+                                 cv::Mat& imageResult,
+                                 vector< cv::Point2f >& pointsRefined );
 
-    bool hasRefinationToPickConcentric();
+    bool isRefiningConcentric( const cv::Size& pSize );
 
-    void grabRefinationBatchConcentric( vector< cv::Mat >& batchRefinedImages,
-                              			vector< CalibrationBucket >& batchBuckets );
+    bool hasRefinationToPickConcentric( const cv::Size& pSize );
+
+    void grabRefinationBatchConcentric( const cv::Size& pSize,
+                                        vector< cv::Mat >& batchRefinedImages,
+                                        vector< vector< cv::Point2f > >& batchRefinedPoints );
 
 	namespace detection
 	{
-
-	    struct TrackingPoint
-	    {
-	        cv::Point2f pos;
-	        cv::Point2f vel;
-	        bool found;
-	    };
-
-	    enum
-	    {
-	    	STAGE_THRESHOLDING = 0,
-	    	STAGE_EDGE_DETECTION = 1,
-	    	STAGE_FEATURES_EXTRACTION = 2,
-	    	STAGE_KEYPOINTS_TRACKING = 3,
-
-			STAGE_REFINING_UNDISTORTED = 4,
-			STAGE_REFINING_FRONTO = 5,
-			STAGE_REFINING_MASK = 6,
-			STAGE_REFINING_EDGES = 7,
-			STAGE_REFINING_FEATURES = 8,
-			STAGE_REFINING_PROJECTED = 9,
-			STAGE_REFINING_DISTORTED = 10,
-
-			PIPELINE_MAX_STAGES = 11
-	    };
-
-	    enum
-	    {
-	    	MODE_FINDING_PATTERN = 0,
-	    	MODE_TRACKING = 1,
-	    	MODE_RECOVERING = 2
-	    };
 
 		class DetectorConcentric : public BaseDetector
 		{
 
 			private :
+
+            struct TrackingPoint
+            {
+                cv::Point2f pos;
+                cv::Point2f vel;
+                bool found;
+            };
+
+            enum
+            {
+                MODE_FINDING_PATTERN = 0,
+                MODE_TRACKING = 1,
+                MODE_RECOVERING = 2
+            };
 
 			int m_mode;
 
@@ -100,7 +92,6 @@ namespace calibration { namespace concentric {
 			vector< TrackingPoint > m_trackingPoints;
 
 			cv::Mat m_workingInput;
-			vector< cv::Mat > m_stageFrameResults;
 
 			cv::Ptr< cv::SimpleBlobDetector > m_blobsDetector;
 
@@ -133,6 +124,9 @@ namespace calibration { namespace concentric {
 			bool runRecoveringMode( const cv::Mat& input );
 
             protected :
+
+            bool _refiningDetectionInternal( const cv::Mat& input, 
+                                             vector< cv::Point2f >& frontoRefinedPoints ) override;
 
 			DetectorConcentric( const cv::Size& size );
 

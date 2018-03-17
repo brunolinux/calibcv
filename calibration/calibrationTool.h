@@ -549,7 +549,7 @@ namespace calibration
         void addBatchRefinment( vector< cv::Mat >& batchRefinedImages,
                                 vector< vector< cv::Point2f > >& batchRefinedPoints )
         {
-            assert( batchRefinedImages.size() == batchBuckets.size() );
+            assert( batchRefinedImages.size() == batchRefinedPoints.size() );
 
             for ( int q = 0; q < batchRefinedImages.size(); q++ )
             {

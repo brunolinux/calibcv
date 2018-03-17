@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "calibrationCommon.h"
+#include "../calibrationCommon.h"
 #include "../calibrationBaseDetector.h"
 
 using namespace std;
@@ -10,23 +10,33 @@ using namespace std;
 namespace calibration { namespace circleGridSymmetric {
 
 
-    void drawCircleGridSymmetricPatternCorners( const vector< cv::Point2f >& iCorners, cv::Mat& image );
+    void drawCircleGridSymmetricPatternCorners( const vector< cv::Point2f >& iCorners, cv::Mat& image, const PatternInfo& pInfo );
 
     bool findCircleGridSymmetric( const cv::Mat& image, const cv::Size& pSize, 
                                   const DetectionInfo& detInfo,
                                   vector< cv::Point2f >& iCorners );
 
-    void refineBatchCircleGridSymmetric( const vector< cv::Mat >& batchImagesToRefine,
+    void refineBatchCircleGridSymmetric( const cv::Size& pSize,
+                                         const vector< cv::Mat >& batchImagesToRefine,
                                          const vector< vector< cv::Point2f > >& batchPointsToRefine,
                                          const cv::Mat& cameraMatrix,
                                          const cv::Mat& distortionCoefficients );
 
-    bool isRefiningCircleGridSymmetric();
+    void refineSingleCircleGridSymmetric( const cv::Size& pSize, 
+                                          const cv::Mat& imageToRefine,
+                                          const vector< cv::Point2f >& pointsToRefine,
+                                          const cv::Mat& cameraMatrix,
+                                          const cv::Mat& distortionCoefficients,
+                                          cv::Mat& imageResult,
+                                          vector< cv::Point2f >& pointsRefined );
 
-    bool hasRefinationToPickCircleGridSymmetric();
+    bool isRefiningCircleGridSymmetric( const cv::Size& pSize );
 
-    void grabRefinationBatchCircleGridSymmetric( vector< cv::Mat >& batchRefinedImages,
-                                                  vector< CalibrationBucket >& batchBuckets );
+    bool hasRefinationToPickCircleGridSymmetric( const cv::Size& pSize );
+
+    void grabRefinationBatchCircleGridSymmetric( const cv::Size& pSize,
+                                                 vector< cv::Mat >& batchRefinedImages,
+                                                 vector< vector< cv::Point2f > >& batchRefinedPoints );
 
 
 
@@ -39,8 +49,8 @@ namespace calibration { namespace circleGridSymmetric {
 
             protected :
             
-            bool _refiningDetectionInternal( const cv::Mat& input, vector< cv::Point2f >& frontoRefinedPoints,
-                                             bool showIntermediateResults = false ) override;
+            bool _refiningDetectionInternal( const cv::Mat& input, 
+                                             vector< cv::Point2f >& frontoRefinedPoints ) override;
 
             DetectorCircleGridSymmetric( const cv::Size& size );
 

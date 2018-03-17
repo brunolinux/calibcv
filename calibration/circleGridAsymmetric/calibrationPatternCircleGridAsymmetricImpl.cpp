@@ -10,7 +10,7 @@ namespace calibration { namespace circleGridAsymmetric {
 
 
 
-    void drawCircleGridAsymmetricPatternCorners( const vector< cv::Point2f >& iCorners, cv::Mat& image )
+    void drawCircleGridAsymmetricPatternCorners( const vector< cv::Point2f >& iCorners, cv::Mat& image, const PatternInfo& pInfo )
     {
         cv::drawChessboardCorners( image, pInfo.size, iCorners, true );
     }
@@ -30,7 +30,8 @@ namespace calibration { namespace circleGridAsymmetric {
         return _found;
     }
 
-    void refineBatchCircleGridAsymmetric( const vector< cv::Mat >& batchImagesToRefine,
+    void refineBatchCircleGridAsymmetric( const cv::Size& pSize,
+                                          const vector< cv::Mat >& batchImagesToRefine,
                                           const vector< vector< cv::Point2f > >& batchPointsToRefine,
                                           const cv::Mat& cameraMatrix,
                                           const cv::Mat& distortionCoefficients )
@@ -40,26 +41,45 @@ namespace calibration { namespace circleGridAsymmetric {
         _detector->refineBatch( batchImagesToRefine, batchPointsToRefine, cameraMatrix, distortionCoefficients );
     }
 
-    bool isRefining()
+    void refineSingleCircleGridAsymmetric( const cv::Size& pSize, 
+                                           const cv::Mat& imageToRefine,
+                                           const vector< cv::Point2f >& pointsToRefine,
+                                           const cv::Mat& cameraMatrix,
+                                           const cv::Mat& distortionCoefficients,
+                                           cv::Mat& imageResult,
+                                           vector< cv::Point2f >& pointsRefined )
+    {
+        detection::DetectorCircleGridAsymmetric* _detector = detection::DetectorCircleGridAsymmetric::create( pSize );
+
+        _detector->refineSingle( imageToRefine, 
+                                 pointsToRefine, 
+                                 cameraMatrix, 
+                                 distortionCoefficients, 
+                                 imageResult, 
+                                 pointsRefined );
+    }
+
+    bool isRefiningCircleGridAsymmetric( const cv::Size& pSize )
     {
         detection::DetectorCircleGridAsymmetric* _detector = detection::DetectorCircleGridAsymmetric::create( pSize );
 
         return _detector->isRefining();
     }
 
-    bool hasRefinationToPick()
+    bool hasRefinationToPickCircleGridAsymmetric( const cv::Size& pSize )
     {
         detection::DetectorCircleGridAsymmetric* _detector = detection::DetectorCircleGridAsymmetric::create( pSize );
 
         return _detector->hasRefinationToPick();
     }
 
-    void grabRefinationBatch( vector< cv::Mat >& batchRefinedImages,
-                              vector< CalibrationBucket >& batchBuckets )
+    void grabRefinationBatchCircleGridAsymmetric( const cv::Size& pSize,
+                                                  vector< cv::Mat >& batchRefinedImages,
+                                                  vector< vector< cv::Point2f > >& batchRefinedPoints )
     {
         detection::DetectorCircleGridAsymmetric* _detector = detection::DetectorCircleGridAsymmetric::create( pSize );
 
-        _detector->grabRefinationBatch( batchImagesToRefine, batchBuckets );
+        _detector->grabRefinationBatch( batchRefinedImages, batchRefinedPoints );
     }
 
 
@@ -104,11 +124,11 @@ namespace calibration { namespace circleGridAsymmetric {
         {
             m_patternPoints.clear();
             
-            return cv::findCirclesGrid( image, m_size, m_patternPoints, cv::CALIB_CB_ASYMMETRIC_GRID );
+            return cv::findCirclesGrid( input, m_size, m_patternPoints, cv::CALIB_CB_ASYMMETRIC_GRID );
         }
 
-        bool DetectorCircleGridAsymmetric::_refiningDetectionInternal( const cv::Mat& input, vector< cv::Point2f >& frontoRefinedPoints,
-                                                                       bool showIntermediateResults )
+        bool DetectorCircleGridAsymmetric::_refiningDetectionInternal( const cv::Mat& input, 
+                                                                       vector< cv::Point2f >& frontoRefinedPoints )
         {
             frontoRefinedPoints.clear();
 

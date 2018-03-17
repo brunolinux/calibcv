@@ -12,54 +12,34 @@ namespace calibration { namespace chessboard {
     bool getCorners( vector< cv::Point2f >& iCorners, 
                      const cv::Mat& image, 
                      const PatternInfo& pInfo, 
-                     const DetectionInfo& dInfo )
-    {
-        return findChessboardGrid( image, pInfo.size, dInfo, iCorners );
-    }
+                     const DetectionInfo& dInfo );
 
-    void getKnownPlanePositions( vector< cv::Point3f >& kCorners, const PatternInfo& pInfo )
-    {
-        for ( int y = 0; y < pInfo.size.height; y++ )
-        {
-            for ( int x = 0; x < pInfo.size.width; x++ )
-            {
-                kCorners.push_back( cv::Point3f( y * pInfo.cb_squareLength, 
-                                                 x * pInfo.cb_squareLength, 
-                                                 0.0f ) );
-            }
-        }
-    }
+    void getKnownPlanePositions( vector< cv::Point3f >& kCorners, const PatternInfo& pInfo );
 
 
-    void drawPatternCorners( const vector< cv::Point2f >& iCorners, cv::Mat& image, const PatternInfo& pInfo )
-    {
-        drawChessboardPatternCorners( iCorners, image, pInfo );
-    }
+    void drawPatternCorners( const vector< cv::Point2f >& iCorners, cv::Mat& image, const PatternInfo& pInfo );
 
-
-    void refineBatch( const vector< cv::Mat >& batchImagesToRefine,
+    void refineBatch( const cv::Size& size,
+                      const vector< cv::Mat >& batchImagesToRefine,
                       const vector< vector< cv::Point2f > >& batchPointsToRefine,
                       const cv::Mat& cameraMatrix,
-                      const cv::Mat& distortionCoefficients )
-    {
-        refineBatchChessboard( batchImagesToRefine, cameraMatrix, distortionCoefficients );
-    }
+                      const cv::Mat& distortionCoefficients );
 
-    bool isRefining()
-    {
-        return isRefiningChessboard();
-    }
+    void refineSingle( const cv::Size& size,
+                       const cv::Mat& imageToRefine,
+                       const vector< cv::Point2f >& pointsToRefine,
+                       const cv::Mat& cameraMatrix,
+                       const cv::Mat& distortionCoefficients,
+                       cv::Mat& imageResult,
+                       vector< cv::Point2f >& pointsRefined );
 
-    bool hasRefinationToPick()
-    {
-        return hasRefinationToPickChessboard();
-    }
+    bool isRefining( const cv::Size& size );
 
-    void grabRefinationBatch( vector< cv::Mat >& batchRefinedImages,
-                              vector< CalibrationBucket >& batchBuckets )
-    {
-        grabRefinationBatchChessboard( batchRefinedImages, batchBuckets );
-    }
+    bool hasRefinationToPick( const cv::Size& size );
+
+    void grabRefinationBatch( const cv::Size& size,
+                              vector< cv::Mat >& batchRefinedImages,
+                              vector< vector< cv::Point2f > >& batchRefinedPoints );
 
 
 }}

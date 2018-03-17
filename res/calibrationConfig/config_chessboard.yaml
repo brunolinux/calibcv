@@ -4,6 +4,6 @@ SquareSpacing: 0.0245
 PatternType: 0
 PatternSizeWidth: 9
 PatternSizeHeight: 6
-CalibrationVideo: "LifeCam_chess.avi"
-CalibrationFile: "LifeCam_chess_calibration.yaml"
-CalibrationFileRefined: "LifeCam_chess_calibration_refined.yaml"
+CalibrationVideo: "PS3_chess.avi"
+CalibrationFile: "PS3_chess_calibration.yaml"
+CalibrationFileRefined: "PS3_chess_calibration_refined.yaml"
