@@ -67,7 +67,7 @@ namespace calibration { namespace concentric {
         _detector->refineBatch( batchImagesToRefine, batchPointsToRefine, cameraMatrix, distortionCoefficients );
     }
 
-    void refineSingleConcentric( const cv::Size& pSize, 
+    bool refineSingleConcentric( const cv::Size& pSize, 
                                  const cv::Mat& imageToRefine,
                                  const vector< cv::Point2f >& pointsToRefine,
                                  const cv::Mat& cameraMatrix,
@@ -77,12 +77,12 @@ namespace calibration { namespace concentric {
     {
         detection::DetectorConcentric* _detector = detection::DetectorConcentric::create( pSize );
 
-        _detector->refineSingle( imageToRefine, 
-                                 pointsToRefine, 
-                                 cameraMatrix, 
-                                 distortionCoefficients, 
-                                 imageResult, 
-                                 pointsRefined );
+        return _detector->refineSingle( imageToRefine, 
+                                        pointsToRefine, 
+                                        cameraMatrix, 
+                                        distortionCoefficients, 
+                                        imageResult, 
+                                        pointsRefined );
     }
 
     bool isRefiningConcentric( const cv::Size& pSize )
@@ -107,6 +107,14 @@ namespace calibration { namespace concentric {
 
         _detector->grabRefinationBatch( batchRefinedImages, batchRefinedPoints );
     }
+
+    void updateConcentric( const cv::Size& pSize )
+    {
+        detection::DetectorConcentric* _detector = detection::DetectorConcentric::create( pSize );
+
+        _detector->update();
+    }
+
 
     namespace detection
     {

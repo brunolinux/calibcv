@@ -22,7 +22,7 @@ namespace calibration { namespace circleGridSymmetric {
                                          const cv::Mat& cameraMatrix,
                                          const cv::Mat& distortionCoefficients );
 
-    void refineSingleCircleGridSymmetric( const cv::Size& pSize, 
+    bool refineSingleCircleGridSymmetric( const cv::Size& pSize, 
                                           const cv::Mat& imageToRefine,
                                           const vector< cv::Point2f >& pointsToRefine,
                                           const cv::Mat& cameraMatrix,
@@ -39,6 +39,7 @@ namespace calibration { namespace circleGridSymmetric {
                                                  vector< vector< cv::Point2f > >& batchRefinedPoints );
 
 
+    void updateCircleGridSymmetric( const cv::Size& pSize );
 
     namespace detection
     {

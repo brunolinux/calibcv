@@ -90,7 +90,7 @@ namespace calibration
                                                    vector< cv::Point2f >& frontoRefinedPoints )
     {
         // Override this for each type of detector
-
+        cout << "should override this" << endl;
         return false;
     }
 
@@ -147,10 +147,10 @@ namespace calibration
                                              distortionCoefficients,
                                              imageResult,
                                              pointsRefined );
-        if ( !_found )
-        {
-            cout << "couldn't refine points for single request" << endl;
-        }
+        // if ( !_found )
+        // {
+        //     cout << "couldn't refine points for single request" << endl;
+        // }
 
         return _found;
     }
@@ -196,7 +196,7 @@ namespace calibration
 
         if ( !_found )
         {
-            cout << "Skipping frame, didn't find pattern in fronto view" << endl;
+            // cout << "Skipping frame, didn't find pattern in fronto view" << endl;
             return false;
         }
 
@@ -305,7 +305,7 @@ namespace calibration
 
             if ( !_found )
             {
-                cout << "Skipping frame, didn't find pattern in fronto view" << endl;
+                // cout << "Skipping frame, didn't find pattern in fronto view" << endl;
                 break;
             }
 
@@ -353,6 +353,7 @@ namespace calibration
 
         m_pipelinePanel->showRefUndistorted( m_stepImageResults[ STEP_REFINING_UNDISTORTED ] );
         m_pipelinePanel->showRefFronto( m_stepImageResults[ STEP_REFINING_FRONTO ] );
+        m_pipelinePanel->showRefFeatures( m_stepImageResults[ STEP_REFINING_FEATURES ] );
         m_pipelinePanel->showRefProjected( m_stepImageResults[ STEP_REFINING_PROJECTED ] );
         m_pipelinePanel->showRefDistorted( m_stepImageResults[ STEP_REFINING_DISTORTED ] );
     }

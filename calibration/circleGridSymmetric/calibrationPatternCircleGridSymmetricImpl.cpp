@@ -41,7 +41,7 @@ namespace calibration { namespace circleGridSymmetric {
         _detector->refineBatch( batchImagesToRefine, batchPointsToRefine, cameraMatrix, distortionCoefficients );
     }
 
-    void refineSingleCircleGridSymmetric( const cv::Size& pSize, 
+    bool refineSingleCircleGridSymmetric( const cv::Size& pSize, 
                                           const cv::Mat& imageToRefine,
                                           const vector< cv::Point2f >& pointsToRefine,
                                           const cv::Mat& cameraMatrix,
@@ -51,12 +51,12 @@ namespace calibration { namespace circleGridSymmetric {
     {
         detection::DetectorCircleGridSymmetric* _detector = detection::DetectorCircleGridSymmetric::create( pSize );
 
-        _detector->refineSingle( imageToRefine, 
-                                 pointsToRefine, 
-                                 cameraMatrix, 
-                                 distortionCoefficients, 
-                                 imageResult, 
-                                 pointsRefined );
+        return _detector->refineSingle( imageToRefine, 
+                                        pointsToRefine, 
+                                        cameraMatrix, 
+                                        distortionCoefficients, 
+                                        imageResult, 
+                                        pointsRefined );
     }
 
     bool isRefiningCircleGridSymmetric( const cv::Size& pSize )
@@ -82,6 +82,12 @@ namespace calibration { namespace circleGridSymmetric {
         _detector->grabRefinationBatch( batchRefinedImages, batchRefinedPoints );
     }
 
+    void updateCircleGridSymmetric( const cv::Size& pSize )
+    {
+        detection::DetectorCircleGridSymmetric* _detector = detection::DetectorCircleGridSymmetric::create( pSize );
+
+        _detector->update();
+    }
 
     namespace detection
     {

@@ -91,11 +91,6 @@ int main( int argc, char** argv )
         cout << "calibration file " << _calibrationFile << " not found, using new" << endl;
     }
 
-    // _videoHandler->setPlaybackAtFrameIndex( 565 );
-    // _videoHandler->togglePause();
-
-    vector< cv::Mat > _batch;
-
     while( 1 )
     {
 
@@ -109,8 +104,9 @@ int main( int argc, char** argv )
         {
             _videoHandler->togglePause();
         }
-        else if ( _key == KEY_R )
+        else if ( _key == KEY_P )
         {
+            cout << "toggle roi picking" << endl;
             _videoHandler->togglePickingROI();
         }
         else if ( _key == KEY_ENTER )
@@ -131,13 +127,6 @@ int main( int argc, char** argv )
 
         calibration::DetectionInfo _detInfo;
         _detInfo.roi = _videoHandler->roi();
-        _detInfo.useRefining = false;
-        if ( _calibrator.canUseRefining() )
-        {
-            _detInfo.useRefining = true;
-            _calibrator.getCalibrationCameraMatrix( _detInfo.cameraMatrix );
-            _calibrator.getCalibrationDistortionCoefficients( _detInfo.distortionCoefficients );
-        }
 
         if ( calibration::getPatternCorners( _corners, _frame, _patternInfo, _detInfo ) )
         {
@@ -145,11 +134,12 @@ int main( int argc, char** argv )
 
             if ( _pickCalibrationBucket )
             {
-                cout << "current buckets in calibrator: " << _calibrator.getCalibrationSize() << endl;
                 _calibrator.addCalibrationBucket( _frame, _corners );
+                cout << "currently there are: " << _calibrator.getCalibrationSize() << " calibration frames in batch" << endl;
             }
         }
 
+        // Apply correction ********************************************************
         cv::Mat _frameCorrected;
 
         _calibrator.applyCalibrationCorrection( _frame, _frameCorrected );
@@ -158,13 +148,12 @@ int main( int argc, char** argv )
         _calibrator.update();
 
         cv::imshow( WINDOW_ORIGINAL_FRAME, _frame );
-
-        _batch.push_back( _frame );
+        // *************************************************************************
     }
 
     calibcv::SVideoHandler::release();
     _videoHandler = NULL;
-
+    
     return 0;
 
 }

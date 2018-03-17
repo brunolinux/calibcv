@@ -41,7 +41,7 @@ namespace calibration { namespace chessboard {
         _detector->refineBatch( batchImagesToRefine, batchPointsToRefine, cameraMatrix, distortionCoefficients );
     }
 
-    void refineSingleChessboard( const cv::Size& pSize, 
+    bool refineSingleChessboard( const cv::Size& pSize, 
                                  const cv::Mat& imageToRefine,
                                  const vector< cv::Point2f >& pointsToRefine,
                                  const cv::Mat& cameraMatrix,
@@ -51,12 +51,12 @@ namespace calibration { namespace chessboard {
     {
         detection::DetectorChessboard* _detector = detection::DetectorChessboard::create( pSize );
 
-        _detector->refineSingle( imageToRefine, 
-                                 pointsToRefine, 
-                                 cameraMatrix, 
-                                 distortionCoefficients, 
-                                 imageResult, 
-                                 pointsRefined );
+        return _detector->refineSingle( imageToRefine, 
+                                        pointsToRefine, 
+                                        cameraMatrix, 
+                                        distortionCoefficients, 
+                                        imageResult, 
+                                        pointsRefined );
     }
 
     bool isRefiningChessboard( const cv::Size& pSize )
@@ -82,6 +82,12 @@ namespace calibration { namespace chessboard {
         _detector->grabRefinationBatch( batchRefinedImages, batchRefinedPoints );
     }
 
+    void updateChessboard( const cv::Size& pSize )
+    {
+        detection::DetectorChessboard* _detector = detection::DetectorChessboard::create( pSize );
+
+        _detector->update();
+    }
 
     namespace detection
     {

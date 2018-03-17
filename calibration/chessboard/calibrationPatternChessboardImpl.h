@@ -22,7 +22,7 @@ namespace calibration { namespace chessboard {
                                 const cv::Mat& cameraMatrix,
                                 const cv::Mat& distortionCoefficients );
 
-    void refineSingleChessboard( const cv::Size& pSize, 
+    bool refineSingleChessboard( const cv::Size& pSize, 
                                  const cv::Mat& imageToRefine,
                                  const vector< cv::Point2f >& pointsToRefine,
                                  const cv::Mat& cameraMatrix,
@@ -38,7 +38,7 @@ namespace calibration { namespace chessboard {
                                         vector< cv::Mat >& batchRefinedImages,
                                         vector< vector< cv::Point2f > >& batchRefinedPoints );
 
-
+    void updateChessboard( const cv::Size& size );
 
     namespace detection
     {

@@ -45,7 +45,7 @@ namespace calibration { namespace concentric {
                                 const cv::Mat& cameraMatrix,
                                 const cv::Mat& distortionCoefficients );
 
-    void refineSingleConcentric( const cv::Size& pSize, 
+    bool refineSingleConcentric( const cv::Size& pSize, 
                                  const cv::Mat& imageToRefine,
                                  const vector< cv::Point2f >& pointsToRefine,
                                  const cv::Mat& cameraMatrix,
@@ -60,6 +60,8 @@ namespace calibration { namespace concentric {
     void grabRefinationBatchConcentric( const cv::Size& pSize,
                                         vector< cv::Mat >& batchRefinedImages,
                                         vector< vector< cv::Point2f > >& batchRefinedPoints );
+
+    void updateConcentric( const cv::Size& pSize );
 
 	namespace detection
 	{

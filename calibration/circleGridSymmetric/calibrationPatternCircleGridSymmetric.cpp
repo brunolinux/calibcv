@@ -42,7 +42,7 @@ namespace calibration { namespace circleGridSymmetric {
         refineBatchCircleGridSymmetric( size, batchImagesToRefine, batchPointsToRefine, cameraMatrix, distortionCoefficients );
     }
 
-    void refineSingle( const cv::Size& size,
+    bool refineSingle( const cv::Size& size,
                        const cv::Mat& imageToRefine,
                        const vector< cv::Point2f >& pointsToRefine,
                        const cv::Mat& cameraMatrix,
@@ -50,13 +50,13 @@ namespace calibration { namespace circleGridSymmetric {
                        cv::Mat& imageResult,
                        vector< cv::Point2f >& pointsRefined )
     {
-        refineSingleCircleGridSymmetric( size, 
-                                         imageToRefine, 
-                                         pointsToRefine, 
-                                         cameraMatrix, 
-                                         distortionCoefficients,
-                                         imageResult,
-                                         pointsRefined );
+        return refineSingleCircleGridSymmetric( size, 
+                                                imageToRefine, 
+                                                pointsToRefine, 
+                                                cameraMatrix, 
+                                                distortionCoefficients,
+                                                imageResult,
+                                                pointsRefined );
     }
 
     bool isRefining( const cv::Size& size )
@@ -74,6 +74,11 @@ namespace calibration { namespace circleGridSymmetric {
                               vector< vector< cv::Point2f > >& batchRefinedPoints )
     {
         grabRefinationBatchCircleGridSymmetric( size, batchRefinedImages, batchRefinedPoints );
+    }
+
+    void update( const cv::Size& size )
+    {
+        updateCircleGridSymmetric( size );
     }
 
 }}

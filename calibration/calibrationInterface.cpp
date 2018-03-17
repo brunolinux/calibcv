@@ -179,7 +179,7 @@ namespace calibration
 
     }
 
-    void requestSingleRefinment( const PatternInfo& pInfo,
+    bool requestSingleRefinment( const PatternInfo& pInfo,
                                  const cv::Mat& imageToRefine,
                                  const vector< cv::Point2f >& pointsToRefine,
                                  const cv::Mat& cameraMatrix,
@@ -187,12 +187,13 @@ namespace calibration
                                  cv::Mat& imageResult,
                                  vector< cv::Point2f >& pointsRefined )
     {
+        bool _couldRefine = false;
 
         switch ( pInfo.type )
         {
             case PATTERN_TYPE_CHESSBOARD :
                 
-                chessboard::refineSingle( pInfo.size,
+                _couldRefine = chessboard::refineSingle( pInfo.size,
                                           imageToRefine, 
                                           pointsToRefine, 
                                           cameraMatrix, 
@@ -204,37 +205,37 @@ namespace calibration
                 
             case PATTERN_TYPE_SYMMETRIC_CIRCLES :
 
-                circleGridSymmetric::refineSingle( pInfo.size,
-                                                   imageToRefine, 
-                                                   pointsToRefine, 
-                                                   cameraMatrix, 
-                                                   distortionCoefficients,
-                                                   imageResult,
-                                                   pointsRefined );
+                _couldRefine = circleGridSymmetric::refineSingle( pInfo.size,
+                                                                  imageToRefine, 
+                                                                  pointsToRefine, 
+                                                                  cameraMatrix, 
+                                                                  distortionCoefficients,
+                                                                  imageResult,
+                                                                  pointsRefined );
 
                 break;
 
             case PATTERN_TYPE_ASYMMETRIC_CIRCLES :
 
-                circleGridAsymmetric::refineSingle( pInfo.size,
-                                                    imageToRefine, 
-                                                    pointsToRefine, 
-                                                    cameraMatrix, 
-                                                    distortionCoefficients,
-                                                    imageResult,
-                                                    pointsRefined );
+                _couldRefine = circleGridAsymmetric::refineSingle( pInfo.size,
+                                                                   imageToRefine, 
+                                                                   pointsToRefine, 
+                                                                   cameraMatrix, 
+                                                                   distortionCoefficients,
+                                                                   imageResult,
+                                                                   pointsRefined );
 
                 break;
 
             case PATTERN_TYPE_CONCENTRIC_CIRCLES :
 
-                concentric::refineSingle( pInfo.size,
-                                          imageToRefine, 
-                                          pointsToRefine, 
-                                          cameraMatrix, 
-                                          distortionCoefficients,
-                                          imageResult,
-                                          pointsRefined );
+                _couldRefine = concentric::refineSingle( pInfo.size,
+                                                         imageToRefine, 
+                                                         pointsToRefine, 
+                                                         cameraMatrix, 
+                                                         distortionCoefficients,
+                                                         imageResult,
+                                                         pointsRefined );
 
                 break;
 
@@ -245,7 +246,7 @@ namespace calibration
                 break;
         }
 
-
+        return _couldRefine;
     }
 
     bool isRefining( const PatternInfo& pInfo )
@@ -331,6 +332,34 @@ namespace calibration
             case PATTERN_TYPE_CONCENTRIC_CIRCLES :
 
                 return concentric::grabRefinationBatch( pInfo.size, batchRefinedImages, batchRefinedPoints );
+
+            default :
+                
+                cout << "pattern type: " << pInfo.type << " not found" << endl;
+
+                break;
+        }
+    }
+
+    void update( const PatternInfo& pInfo )
+    {
+        switch ( pInfo.type )
+        {
+            case PATTERN_TYPE_CHESSBOARD :
+                
+                return chessboard::update( pInfo.size );
+                
+            case PATTERN_TYPE_SYMMETRIC_CIRCLES :
+
+                return circleGridSymmetric::update( pInfo.size );
+
+            case PATTERN_TYPE_ASYMMETRIC_CIRCLES :
+
+                return circleGridAsymmetric::update( pInfo.size );
+
+            case PATTERN_TYPE_CONCENTRIC_CIRCLES :
+
+                return concentric::update( pInfo.size );
 
             default :
                 

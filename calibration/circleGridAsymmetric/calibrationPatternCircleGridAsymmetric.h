@@ -16,6 +16,7 @@ namespace calibration { namespace circleGridAsymmetric {
 
     void getKnownPlanePositions( vector< cv::Point3f >& kCorners, const PatternInfo& pInfo );
 
+
     void drawPatternCorners( const vector< cv::Point2f >& iCorners, cv::Mat& image, const PatternInfo& pInfo );
 
     void refineBatch( const cv::Size& size,
@@ -24,7 +25,7 @@ namespace calibration { namespace circleGridAsymmetric {
                       const cv::Mat& cameraMatrix,
                       const cv::Mat& distortionCoefficients );
 
-    void refineSingle( const cv::Size& size,
+    bool refineSingle( const cv::Size& size,
                        const cv::Mat& imageToRefine,
                        const vector< cv::Point2f >& pointsToRefine,
                        const cv::Mat& cameraMatrix,
@@ -39,5 +40,7 @@ namespace calibration { namespace circleGridAsymmetric {
     void grabRefinationBatch( const cv::Size& size,
                               vector< cv::Mat >& batchRefinedImages,
                               vector< vector< cv::Point2f > >& batchRefinedPoints );
+
+    void update( const cv::Size& size );
 
 }}
