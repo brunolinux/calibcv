@@ -527,24 +527,33 @@ namespace calibration
         	}
         }
 
-        void getCalibrationBatch( vector< cv::Mat >& batchImagesToRefine )
+        void getCalibrationBatch( vector< cv::Mat >& batchImagesToRefine,
+                                  vector< vector< cv::Point2f > >& batchPointsToRefine )
         {
             batchImagesToRefine.clear();
+            batchPointsToRefine.clear();
 
             for ( int q = 0; q < m_calibrationImagesInitial.size(); q++ )
             {
                 batchImagesToRefine.push_back( m_calibrationImagesInitial[q] );
             }
+
+            for ( int q = 0; q < m_pointsInImageInitial.size(); q++ )
+            {
+                batchPointsToRefine.push_back( m_pointsInImageInitial[q] );
+            }
+
+            assert( batchImagesToRefine.size() == batchPointsToRefine.size() );
         }
 
         void addBatchRefinment( vector< cv::Mat >& batchRefinedImages,
-                                vector< CalibrationBucket >& batchBuckets )
+                                vector< vector< cv::Point2f > >& batchRefinedPoints )
         {
             assert( batchRefinedImages.size() == batchBuckets.size() );
 
             for ( int q = 0; q < batchRefinedImages.size(); q++ )
             {
-                addCalibrationBucket( batchRefinedImages[q], batchBuckets[q].points );
+                addCalibrationBucket( batchRefinedImages[q], batchRefinedPoints[q] );
             }
         }
 

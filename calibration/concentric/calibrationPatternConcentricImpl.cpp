@@ -1,6 +1,6 @@
 
+#include "../calibrationPatternUtils.h"
 #include "calibrationPatternConcentricImpl.h"
-#include "calibrationPatternConcentricUtils.h"
 
 using namespace std;
 
@@ -41,51 +41,66 @@ namespace calibration { namespace concentric {
                      iCorners[ _w * ( _h - 1 ) ], cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar( 255, 255, 0 ), 2 );
     }
 
-    bool findConcentricGrid( const cv::Mat& image, const cv::Size pSize, 
+    bool findConcentricGrid( const cv::Mat& image, const cv::Size& pSize, 
                              const DetectionInfo& detInfo,
                              vector< cv::Point2f >& iCorners )
     {
-        detection::Detector* _detector = detection::Detector::create( pSize );
+        detection::DetectorConcentric* _detector = detection::DetectorConcentric::create( pSize );
 
         bool _found = _detector->run( image, detInfo );
         if ( _found )
         {
-            // if ( detInfo.useRefining )
-            // {
-            //     if ( _detector->hasRefinedPoints() )
-            //     {
-            //         _detector->getRefinedPoints( iCorners );
-            //     }
-            //     else
-            //     {
-            //         _found = false;
-            //     }
-            // }
-            // else
-            // {
-            //     _detector->getDetectedPoints( iCorners );
-            // }
-
             _detector->getDetectedPoints( iCorners );
         }
 
         return _found;
     }
 
+    void refineBatchConcentric( const vector< cv::Mat >& batchImagesToRefine,
+                                const vector< vector< cv::Point2f > >& batchPointsToRefine,
+                                const cv::Mat& cameraMatrix,
+                                const cv::Mat& distortionCoefficients )
+    {
+        detection::DetectorConcentric* _detector = detection::DetectorConcentric::create( pSize );
+
+        _detector->refineBatch( batchImagesToRefine, batchPointsToRefine, cameraMatrix, distortionCoefficients );
+    }
+
+    bool isRefining()
+    {
+        detection::DetectorConcentric* _detector = detection::DetectorConcentric::create( pSize );
+
+        return _detector->isRefining();
+    }
+
+    bool hasRefinationToPick()
+    {
+        detection::DetectorConcentric* _detector = detection::DetectorConcentric::create( pSize );
+
+        return _detector->hasRefinationToPick();
+    }
+
+    void grabRefinationBatch( vector< cv::Mat >& batchRefinedImages,
+                              vector< CalibrationBucket >& batchBuckets )
+    {
+        detection::DetectorConcentric* _detector = detection::DetectorConcentric::create( pSize );
+
+        _detector->grabRefinationBatch( batchImagesToRefine, batchBuckets );
+    }
+
     namespace detection
     {
 
-        Detector* Detector::INSTANCE = NULL;
+        DetectorConcentric* DetectorConcentric::INSTANCE = NULL;
 
-        Detector::Detector( const cv::Size& size )
+        DetectorConcentric::DetectorConcentric( const cv::Size& size )
+            : BaseDetector( size )
         {
-            m_numPoints      = size.width * size.height;
-            m_size           = size;
             m_trackingPoints = vector< TrackingPoint >( m_numPoints );
 
             m_stageFrameResults = vector< cv::Mat >( PIPELINE_MAX_STAGES );
 
-            cv::SimpleBlobDetector::Params _detectorCreationParams;
+            cv::SimpleBlobDetectorConcentric::Params _detectorCreationParams;
             _detectorCreationParams.filterByArea = true;
             _detectorCreationParams.minArea = 100;
             _detectorCreationParams.maxArea = 1500;
@@ -95,43 +110,40 @@ namespace calibration { namespace concentric {
             _detectorCreationParams.minConvexity = 0.9;
             _detectorCreationParams.maxConvexity = 1;
 
-            m_blobsDetector = cv::SimpleBlobDetector::create( _detectorCreationParams );
+            m_blobsDetector = cv::SimpleBlobDetectorConcentric::create( _detectorCreationParams );
 
             m_mode = MODE_FINDING_PATTERN;
-            m_hasRefinedPoints = false;
-
-            m_pipelinePanel = calibcv::SPatternDetectorPanel::create();
         }
 
-        Detector::~Detector()
+        DetectorConcentric::~DetectorConcentric()
         {
             m_pipelinePanel = NULL;
             calibcv::SPatternDetectorPanel::release();
         }
 
-        Detector* Detector::create( const cv::Size& size )
+        DetectorConcentric* DetectorConcentric::create( const cv::Size& size )
         {
-            if ( Detector::INSTANCE == NULL )
+            if ( DetectorConcentric::INSTANCE == NULL )
             {
                 std::cout << "created new detector instance" << std::endl;
-                Detector::INSTANCE = new Detector( size );
+                DetectorConcentric::INSTANCE = new DetectorConcentric( size );
             }
                 
-            return Detector::INSTANCE;
+            return DetectorConcentric::INSTANCE;
         }
 
-        void Detector::release()
+        void DetectorConcentric::release()
         {
-            if ( Detector::INSTANCE != NULL )
+            if ( DetectorConcentric::INSTANCE != NULL )
             {
-                delete Detector::INSTANCE;
-                Detector::INSTANCE = NULL;
+                delete DetectorConcentric::INSTANCE;
+                DetectorConcentric::INSTANCE = NULL;
             }
         }
 
-        bool Detector::run( const cv::Mat& input, const DetectionInfo& detInfo )
+        bool DetectorConcentric::run( const cv::Mat& input, const DetectionInfo& detInfo )
         {
-            setInitialROI( detInfo.roi );
+            m_initialROI = roi;
 
             m_frameSize = cv::Size( input.cols, input.rows );
 
@@ -183,7 +195,7 @@ namespace calibration { namespace concentric {
             return _ret;
         }
 
-        bool Detector::runInitialDetectionMode( const cv::Mat& input )
+        bool DetectorConcentric::runInitialDetectionMode( const cv::Mat& input )
         {
             _pipeline( input );
 
@@ -234,7 +246,7 @@ namespace calibration { namespace concentric {
             return false;
         }
 
-        bool Detector::_computeInitialPattern( const vector< cv::Point2f >& candidatePatternPoints,
+        bool DetectorConcentric::_computeInitialPattern( const vector< cv::Point2f >& candidatePatternPoints,
                                                vector< cv::Point2f >& matchedPoints, bool isFronto )
         {
             vector< cv::Point2f > _orderedKeypoints( m_numPoints );
@@ -288,19 +300,6 @@ namespace calibration { namespace concentric {
 
                 if ( _isFit )
                 {
-                    float _xmin = candidatePatternPoints[ _leftIndx ].x;
-                    float _xmax = candidatePatternPoints[ _rightIndx ].x;
-                    float _ymin = candidatePatternPoints[ _topIndx ].y;
-                    float _ymax = candidatePatternPoints[ _bottomIndx ].y;
-
-                    m_cropROI = cv::Rect2f( cv::Point2f( _xmin, _ymin ), cv::Point2f( _xmax, _ymax ) );
-                    m_cropOrigin = cv::Point2f( _xmin, _ymin );
-
-                    // cout << "_xmin = " << candidatePatternPoints[ _leftIndx ].x << endl;
-                    // cout << "_xmax = " << candidatePatternPoints[ _rightIndx ].x << endl;
-                    // cout << "_ymin = " << candidatePatternPoints[ _topIndx ].y << endl;
-                    // cout << "_ymax = " << candidatePatternPoints[ _bottomIndx ].y << endl;
-
                     return true;
                 }
             }
@@ -308,7 +307,7 @@ namespace calibration { namespace concentric {
             return _isFit;
         }
 
-        bool Detector::runTrackingMode( const cv::Mat& input, const DetectionInfo& detInfo )
+        bool DetectorConcentric::runTrackingMode( const cv::Mat& input, const DetectionInfo& detInfo )
         {
             _pipeline( input );
 
@@ -342,7 +341,7 @@ namespace calibration { namespace concentric {
             return true;
         }
 
-        bool Detector::runRecoveringMode( const cv::Mat& input )
+        bool DetectorConcentric::runRecoveringMode( const cv::Mat& input )
         {
             _pipeline( input );
 
@@ -368,7 +367,7 @@ namespace calibration { namespace concentric {
             return false;
         }
 
-        bool Detector::_refining( const cv::Mat& input, 
+        bool DetectorConcentric::_refining( const cv::Mat& input, 
                                   const cv::Mat& cameraMatrix, const cv::Mat& distortionCoefficients, 
                                   const vector< TrackingPoint >& trackingPatternPoints,
                                   vector< cv::Point2f >& refinedPoints )
@@ -476,7 +475,7 @@ namespace calibration { namespace concentric {
             return _numMatched == 20;
         }
 
-        void Detector::_refiningUndistortion( const cv::Mat& input, cv::Mat& output,
+        void DetectorConcentric::_refiningUndistortion( const cv::Mat& input, cv::Mat& output,
                                               const cv::Mat& cameraMatrix, const cv::Mat& distortionCoefficients,
                                               const vector< cv::Point2f >& patternPoints,
                                               vector< cv::Point2f >& undistortedPatternPoints )
@@ -490,7 +489,7 @@ namespace calibration { namespace concentric {
                                  cv::noArray(), cameraMatrix );
         }
 
-        void Detector::_refiningFronto( const cv::Mat& input,// undistorted image
+        void DetectorConcentric::_refiningFronto( const cv::Mat& input,// undistorted image
                                         cv::Mat& output,// result after transforming to fronto view
                                         const vector< cv::Point2f >& undistortedPatternPoints,
                                         cv::Mat& frontoTransform )
@@ -523,7 +522,7 @@ namespace calibration { namespace concentric {
             cv::warpPerspective( input, output, frontoTransform, cv::Size( m_frameSize.width / 2, m_frameSize.height / 2 ) );
         }
 
-        void Detector::_refiningMask( const cv::Mat& input,
+        void DetectorConcentric::_refiningMask( const cv::Mat& input,
                                       cv::Mat& output )
         {
             cv::Mat _grayScale;
@@ -536,7 +535,7 @@ namespace calibration { namespace concentric {
                                    PIPELINE_REFINING_MASKING_STAGE_C );
         }
 
-        void Detector::_refiningEdges( const cv::Mat& input,
+        void DetectorConcentric::_refiningEdges( const cv::Mat& input,
                                        cv::Mat& output )
         {
             cv::blur( input, output, cv::Size( 3, 3 ) );
@@ -547,7 +546,7 @@ namespace calibration { namespace concentric {
                        PIPELINE_REFINING_EDGES_BLOCK_SIZE );
         }
 
-        bool Detector::_refiningFeatures( const cv::Mat& input,
+        bool DetectorConcentric::_refiningFeatures( const cv::Mat& input,
                                           const cv::Mat& frontoView, // to copy ( output ) from for comparison
                                           cv::Mat& output,
                                           vector< cv::Point2f >& patternPointsFronto )
@@ -663,7 +662,7 @@ namespace calibration { namespace concentric {
             return true/*_computeInitialPattern( _candidatePoints, patternPointsFronto, true )*/;
         }
 
-        void Detector::_refiningProjected( const cv::Mat& undistortedView,
+        void DetectorConcentric::_refiningProjected( const cv::Mat& undistortedView,
                                            cv::Mat& output,
                                            const cv::Mat& inverseFrontoTransform,
                                            const vector< cv::Point2f >& patternPointsFronto,
@@ -697,7 +696,7 @@ namespace calibration { namespace concentric {
             
         }
 
-        void Detector::_refiningDistortion( const cv::Mat& originalView,
+        void DetectorConcentric::_refiningDistortion( const cv::Mat& originalView,
                                             cv::Mat& output,
                                             const cv::Mat& cameraMatrix, const cv::Mat& distortionCoefficients,
                                             const vector< cv::Point2f >& refinedUndistortedProjectedPoints,
@@ -721,7 +720,7 @@ namespace calibration { namespace concentric {
             }
         }
 
-        void Detector::_pipeline( const cv::Mat& input )
+        void DetectorConcentric::_pipeline( const cv::Mat& input )
         {
             m_stageFrameResults.clear();
             m_frame = input;
@@ -744,7 +743,7 @@ namespace calibration { namespace concentric {
 
         }
 
-        void Detector::_runMaskGenerator( const cv::Mat& input, cv::Mat& output )
+        void DetectorConcentric::_runMaskGenerator( const cv::Mat& input, cv::Mat& output )
         {
             cv::Mat _grayScale;
 
@@ -754,7 +753,7 @@ namespace calibration { namespace concentric {
                                    PIPELINE_MASKING_STAGE_BLOCKSIZE, PIPELINE_MASKING_STAGE_C );
         }
 
-        void Detector::_runEdgesGenerator( const cv::Mat& input, cv::Mat& output )
+        void DetectorConcentric::_runEdgesGenerator( const cv::Mat& input, cv::Mat& output )
         {
             cv::Mat _gradX, _gradY, _gradAbsX, _gradAbsY;
 
@@ -771,7 +770,7 @@ namespace calibration { namespace concentric {
             // m_stageFrameResults[ STAGE_EDGE_DETECTION ] = output;
         }
 
-        void Detector::_runFeaturesExtractor( const cv::Mat& input, cv::Mat& output )
+        void DetectorConcentric::_runFeaturesExtractor( const cv::Mat& input, cv::Mat& output )
         {
             vector< cv::KeyPoint > _keypoints;
             m_blobsDetector->detect( input, _keypoints );
@@ -792,7 +791,7 @@ namespace calibration { namespace concentric {
             // m_stageFrameResults[ STAGE_FEATURES_EXTRACTION ] = output;
         }
 
-        void Detector::_runTracking( const cv::Mat& input, cv::Mat& output )
+        void DetectorConcentric::_runTracking( const cv::Mat& input, cv::Mat& output )
         {
             if ( m_mode == MODE_TRACKING )
             {
@@ -806,39 +805,16 @@ namespace calibration { namespace concentric {
                     {
                         cv::Point2f _candidate = m_candidatePoints[q];
 
-                        if ( !_assigned[q] && utils::dist( m_trackingPoints[t].pos, _candidate/* + m_cropOrigin*/ ) < 20 )
+                        if ( !_assigned[q] && utils::dist( m_trackingPoints[t].pos, _candidate ) < 20 )
                         {
-                            m_trackingPoints[t].vel = _candidate/* + m_cropOrigin*/ - m_trackingPoints[t].pos;
-                            m_trackingPoints[t].pos = _candidate/* + m_cropOrigin*/;
+                            m_trackingPoints[t].vel = _candidate - m_trackingPoints[t].pos;
+                            m_trackingPoints[t].pos = _candidate;
                             m_trackingPoints[t].found = true;
                             _assigned[q] = true;
                             break;
                         }
                     }
                 }
-
-                vector<cv::Point2f> corners = { m_trackingPoints[0].pos,
-                                                m_trackingPoints[ m_size.width - 1 ].pos,
-                                                m_trackingPoints[ m_size.width * ( m_size.height - 1 ) ].pos,
-                                                m_trackingPoints[ m_size.width * m_size.height - 1 ].pos };
-                float minX = 1000, maxX = -1000, minY = 1000, maxY = -1000;
-
-                for( cv::Point2f& tPoint : corners )
-                {
-                    minX = min( tPoint.x, minX );
-                    maxX = max( tPoint.x, maxX );
-                    minY = min( tPoint.y, minY );
-                    maxY = max( tPoint.y, maxY );
-                }
-                minX = max( minX - ROI_MARGIN, 0.0f );
-                minY = max( minY - ROI_MARGIN, 0.0f );
-                maxX = min( maxX + ROI_MARGIN, (float) m_frame.cols );
-                maxY = min( maxY + ROI_MARGIN, (float) m_frame.rows );
-
-                m_cropOrigin.x = minX;
-                m_cropOrigin.y = minY;
-
-                m_cropROI = cv::Rect2f( cv::Point2f( minX , minY ), cv::Point2f( maxX, maxY ) );
             }
             else
             {
@@ -847,7 +823,7 @@ namespace calibration { namespace concentric {
         }
 
 
-        void Detector::getDetectedPoints( vector< cv::Point2f >& iPoints )
+        void DetectorConcentric::getDetectedPoints( vector< cv::Point2f >& iPoints )
         {
             for ( int q = 0; q < m_trackingPoints.size(); q++ )
             {
@@ -855,7 +831,7 @@ namespace calibration { namespace concentric {
             }
         }
 
-        void Detector::getRefinedPoints( vector< cv::Point2f >& iPoints )
+        void DetectorConcentric::getRefinedPoints( vector< cv::Point2f >& iPoints )
         {
             for ( int q = 0; q < m_refinedPoints.size(); q++ )
             {
@@ -863,12 +839,7 @@ namespace calibration { namespace concentric {
             }
         }
 
-        void Detector::getTimeCosts( vector< float >& timeCosts )
-        {
-
-        }
-
-        void Detector::getStageFrameResults( vector< cv::Mat >& vStageResults )
+        void DetectorConcentric::getStageFrameResults( vector< cv::Mat >& vStageResults )
         {
             for ( int q = 0; q < m_stageFrameResults.size(); q++ )
             {
@@ -876,7 +847,7 @@ namespace calibration { namespace concentric {
             }
         }
 
-        string Detector::getCurrentDetectionMode()
+        string DetectorConcentric::getCurrentDetectionMode()
         {
             string _modeStr = "None";
 

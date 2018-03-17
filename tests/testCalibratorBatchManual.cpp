@@ -141,13 +141,13 @@ int main( int argc, char** argv )
         _detInfo.roi = _videoHandler->roi();
         _detInfo.useRefining = false;
 
-        // for testings only
-        if ( _calibrator.canUseRefining() )
-        {
-            _detInfo.useRefining = true;
-            _calibrator.getCalibrationCameraMatrix( _detInfo.cameraMatrix );
-            _calibrator.getCalibrationDistortionCoefficients( _detInfo.distortionCoefficients );
-        }
+        // // for testings only
+        // if ( _calibrator.canUseRefining() )
+        // {
+        //     _detInfo.useRefining = true;
+        //     _calibrator.getCalibrationCameraMatrix( _detInfo.cameraMatrix );
+        //     _calibrator.getCalibrationDistortionCoefficients( _detInfo.distortionCoefficients );
+        // }
 
         // Make a refinment of the batch of images, only if ...
         // the calibrator has already initial calibration data ...
@@ -163,10 +163,14 @@ int main( int argc, char** argv )
 
             // Request refinment to the detection interface
             vector< cv::Mat > _batchImagesToRefine;
-            _calibrator.getCalibrationBatch( _batchImagesToRefine );
+            vector< vector< cv::Point2f > > _batchPointsToRefine;
+
+            _calibrator.getCalibrationBatch( _batchImagesToRefine,
+                                             _batchPointsToRefine );
 
             calibration::requestBatchRefinment( _patternInfo,
                                                 _batchImagesToRefine,
+                                                _batchPointsToRefine,
                                                 _cameraMatrix,
                                                 _distortionCoefficients );
         }
@@ -176,12 +180,12 @@ int main( int argc, char** argv )
         if ( calibration::hasRefinationToPick( _patternInfo ) )
         {
             vector< cv::Mat > _refinedImages;
-            vector< calibration::CalibrationBucket > _vCalibBuckets;
+            vector< vector< cv::Point2f > _refinedPoints;
 
-            calibration::grabRefinationBatch( _patternInfo, _refinedImages, _vCalibBuckets );
+            calibration::grabRefinationBatch( _patternInfo, _refinedImages, _refinedPoints );
 
             // Send data back to calibrator to await next recalibration
-            _calibrator.addBatchRefinment( _refinedImages, _vCalibBuckets );
+            _calibrator.addBatchRefinment( _refinedImages, _refinedPoints );
         }
 
         if ( _requestRecalibration )

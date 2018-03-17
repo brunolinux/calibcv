@@ -1,10 +1,9 @@
 
 #pragma once
 
-#include "calibrationCommon.h"
-#include "calibrationPatternConcentricUtils.h"
-
-#include <panels/SPatternDetectorPanel.h>
+#include "../calibrationCommon.h"
+#include "../calibrationBaseDetector.h"
+#include "calibrationPatternUtils.h"
 
 using namespace std;
 
@@ -36,10 +35,21 @@ namespace calibration { namespace concentric {
 	void drawConcentricPatternCorners( const vector< cv::Point2f >& iCorners, 
 									   cv::Mat& image, const PatternInfo& pInfo );
 
-	bool findConcentricGrid( const cv::Mat& image, const cv::Size pSize, 
+	bool findConcentricGrid( const cv::Mat& image, const cv::Size& pSize, 
                              const DetectionInfo& detInfo,
                              vector< cv::Point2f >& iCorners );
 
+
+    void refineBatchConcentric( const vector< cv::Mat >& batchImagesToRefine,
+                      const cv::Mat& cameraMatrix,
+                      const cv::Mat& distortionCoefficients );
+
+    bool isRefiningConcentric();
+
+    bool hasRefinationToPickConcentric();
+
+    void grabRefinationBatchConcentric( vector< cv::Mat >& batchRefinedImages,
+                              			vector< CalibrationBucket >& batchBuckets );
 
 	namespace detection
 	{
@@ -76,39 +86,21 @@ namespace calibration { namespace concentric {
 	    	MODE_RECOVERING = 2
 	    };
 
-		class Detector
+		class DetectorConcentric : public BaseDetector
 		{
 
 			private :
 
-			calibcv::SPatternDetectorPanel* m_pipelinePanel;
-
 			int m_mode;
 
-			cv::Size m_size;
-			int m_numPoints;
-
 			vector< cv::Point2f > m_initialROI;
-
-			cv::Point2f m_cropOrigin;
-			cv::Rect2f m_cropROI;
 
 			vector< cv::Point2f > m_candidatePoints;
 			vector< cv::Point2f > m_matchedPoints;
 			vector< TrackingPoint > m_trackingPoints;
-			vector< cv::Point2f > m_refinedPoints;
-			cv::Point2f m_patternCenter;
-			cv::Point2f m_patternOrientation;
 
-			cv::Mat m_frame;
-			cv::Size m_frameSize;
 			cv::Mat m_workingInput;
 			vector< cv::Mat > m_stageFrameResults;
-
-			CpuTimer m_timer;
-			float m_stagesTimeCosts[4];
-
-			bool m_hasRefinedPoints;
 
 			cv::Ptr< cv::SimpleBlobDetector > m_blobsDetector;
 
@@ -121,22 +113,7 @@ namespace calibration { namespace concentric {
                                          vector< cv::Point2f >& matchedPoints, bool isFronto = false );
 			void _pipeline( const cv::Mat& input );
 
-			// Refining steps **********************************************************************
-
-			bool _refining( const cv::Mat& input, 
-							const cv::Mat& cameraMatrix, const cv::Mat& distortionCoefficients, 
-							const vector< TrackingPoint >& patternPoints,
-							vector< cv::Point2f >& refinedPoints );
-
-        	void _refiningUndistortion( const cv::Mat& input, cv::Mat& output,
-                                        const cv::Mat& cameraMatrix, const cv::Mat& distortionCoefficients,
-                                        const vector< cv::Point2f >& patternPoints,
-                                        vector< cv::Point2f >& undistortedPatternPoints );
-
-        	void _refiningFronto( const cv::Mat& input,// undistorted image
-                                  cv::Mat& output,// result after transforming to fronto view
-                                  const vector< cv::Point2f >& undistortedPatternPoints,
-                                  cv::Mat& frontoTransform );
+			// Refining prakash steps **************************************************************
 
         	void _refiningMask( const cv::Mat& input,
                                 cv::Mat& output );
@@ -149,47 +126,26 @@ namespace calibration { namespace concentric {
                                     cv::Mat& output,
                                     vector< cv::Point2f >& patternPointsFronto );
 
-        	void _refiningProjected( const cv::Mat& undistortedView,
-                                     cv::Mat& output,
-                                     const cv::Mat& inverseFrontoTransform,
-                                     const vector< cv::Point2f >& patternPointsFronto,
-                                     vector< cv::Point2f >& patternPointsProjected,
-                                     const vector< cv::Point2f >& patternPointsUndistorted );
-
-        	void _refiningDistortion( const cv::Mat& originalView,
-                                      cv::Mat& output,
-                                      const cv::Mat& cameraMatrix, const cv::Mat& distortionCoefficients,
-                                      const vector< cv::Point2f >& refinedUndistortedProjectedPoints,
-                                      vector< cv::Point2f >& refinedDistortedProjectedPoints,
-                                      const vector< cv::Point2f >& originalPatternPoints );
-
         	// *************************************************************************************
 
 			bool runInitialDetectionMode( const cv::Mat& input );
 			bool runTrackingMode( const cv::Mat& input, const DetectionInfo& detInfo );
 			bool runRecoveringMode( const cv::Mat& input );
 
-			Detector( const cv::Size& size );
+            protected :
+
+			DetectorConcentric( const cv::Size& size );
 
 			public :
 
-			static Detector* INSTANCE;
-			static Detector* create( const cv::Size& size );
+			static DetectorConcentric* INSTANCE;
+			static DetectorConcentric* create( const cv::Size& size );
 			static void release();
 
-			~Detector();
+			~DetectorConcentric();
 
-			bool run( const cv::Mat& input, const DetectionInfo& detInfo );
-
-			void setInitialROI( const vector< cv::Point2f >& roi ) { m_initialROI = roi; }
-
-			void getDetectedPoints( vector< cv::Point2f >& iPoints );
-			void getRefinedPoints( vector< cv::Point2f >& iPoints );
-
-			bool hasRefinedPoints() { return m_hasRefinedPoints; }
-
-			void getTimeCosts( vector< float >& timeCosts );
-			void getStageFrameResults( vector< cv::Mat >& vStageResults );
+			bool run( const cv::Mat& input, const DetectionInfo& detInfo ) override;
+			void getDetectedPoints( vector< cv::Point2f >& iPoints ) override;
 
 			string getCurrentDetectionMode();
 		};

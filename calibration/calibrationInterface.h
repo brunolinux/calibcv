@@ -6,7 +6,7 @@
 #include <ctime>
 
 #include "calibrationCommon.h"
-#include "calibrationPatternConcentricUtils.h"
+#include "calibrationPatternUtils.h"
 
 #include "calibrationPatternChessboard.h"
 #include "calibrationPatternCircleGridSymmetric.h"
@@ -133,43 +133,55 @@ namespace calibration
 
     void requestBatchRefinment( const PatternInfo& pInfo,
                                 const vector< cv::Mat >& batchImagesToRefine,
+                                const vector< vector< cv::Point2f > >& batchPointsToRefine,
                                 const cv::Mat& cameraMatrix,
                                 const cv::Mat& distortionCoefficients )
     {
-        // TODO: Should be something like this
 
-        // switch ( pInfo.type )
-        // {
-        //     case PATTERN_TYPE_CHESSBOARD :
+        switch ( pInfo.type )
+        {
+            case PATTERN_TYPE_CHESSBOARD :
                 
-        //         chessboard::refineBatch( batchImagesToRefine, cameraMatrix, distortionCoefficients );
+                chessboard::refineBatch( batchImagesToRefine, 
+                                         batchPointsToRefine, 
+                                         cameraMatrix, 
+                                         distortionCoefficients );
                 
-        //         break;
+                break;
                 
-        //     case PATTERN_TYPE_SYMMETRIC_CIRCLES :
+            case PATTERN_TYPE_SYMMETRIC_CIRCLES :
 
-        //         circleGridSymmetric::refineBatch( batchImagesToRefine, cameraMatrix, distortionCoefficients );
+                circleGridSymmetric::refineBatch( batchImagesToRefine, 
+                                                  batchPointsToRefine, 
+                                                  cameraMatrix, 
+                                                  distortionCoefficients );
 
-        //         break;
+                break;
 
-        //     case PATTERN_TYPE_ASYMMETRIC_CIRCLES :
+            case PATTERN_TYPE_ASYMMETRIC_CIRCLES :
 
-        //         circleGridAsymmetric::refineBatch( batchImagesToRefine, cameraMatrix, distortionCoefficients );
+                circleGridAsymmetric::refineBatch( batchImagesToRefine, 
+                                                   batchPointsToRefine, 
+                                                   cameraMatrix, 
+                                                   distortionCoefficients );
 
-        //         break;
+                break;
 
-        //     case PATTERN_TYPE_CONCENTRIC_CIRCLES :
+            case PATTERN_TYPE_CONCENTRIC_CIRCLES :
 
-        //         concentric::refineBatch( batchImagesToRefine, cameraMatrix, distortionCoefficients );
+                concentric::refineBatch( batchImagesToRefine, 
+                                         batchPointsToRefine, 
+                                         cameraMatrix, 
+                                         distortionCoefficients );
 
-        //         break;
+                break;
 
-        //     default :
+            default :
                 
-        //         cout << "pattern type: " << pInfo.type << " not found" << endl;
+                cout << "pattern type: " << pInfo.type << " not found" << endl;
                 
-        //         break;
-        // }
+                break;
+        }
 
 
     }
@@ -240,7 +252,7 @@ namespace calibration
 
     void grabRefinationBatch( const PatternInfo& pInfo, 
                               vector< cv::Mat >& batchRefinedImages,
-                              vector< CalibrationBucket >& batchBuckets )
+                              vector< vector< cv::Point2f > >& batchRefinedPoints )
     {
         // TODO: Should be something like this
         
@@ -248,19 +260,19 @@ namespace calibration
         // {
         //     case PATTERN_TYPE_CHESSBOARD :
                 
-        //         return chessboard::grabRefinationBatch( batchRefinedImages, batchBuckets );
+        //         return chessboard::grabRefinationBatch( batchRefinedImages, batchRefinedPoints );
                 
         //     case PATTERN_TYPE_SYMMETRIC_CIRCLES :
 
-        //         return circleGridSymmetric::grabRefinationBatch( batchRefinedImages, batchBuckets );
+        //         return circleGridSymmetric::grabRefinationBatch( batchRefinedImages, batchRefinedPoints );
 
         //     case PATTERN_TYPE_ASYMMETRIC_CIRCLES :
 
-        //         return circleGridAsymmetric::grabRefinationBatch( batchRefinedImages, batchBuckets );
+        //         return circleGridAsymmetric::grabRefinationBatch( batchRefinedImages, batchRefinedPoints );
 
         //     case PATTERN_TYPE_CONCENTRIC_CIRCLES :
 
-        //         return concentric::grabRefinationBatch( batchRefinedImages, batchBuckets );
+        //         return concentric::grabRefinationBatch( batchRefinedImages, batchRefinedPoints );
 
         //     default :
                 
