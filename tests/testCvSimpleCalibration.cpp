@@ -119,9 +119,11 @@ int main( int argc, char** argv )
             break;
         }
 
-        cv::Mat _frame;
+        cv::Mat _frame, _original;
 
         _videoHandler->takeFrame( _frame );
+
+        _original = _frame.clone();
 
         vector< cv::Point2f > _corners;
 
@@ -134,6 +136,7 @@ int main( int argc, char** argv )
 
             if ( _pickCalibrationBucket )
             {
+                _calibrator.addCalibrationImageOriginal( _original );
                 _calibrator.addCalibrationBucket( _frame, _corners );
                 cout << "currently there are: " << _calibrator.getCalibrationSize() << " calibration frames in batch" << endl;
             }

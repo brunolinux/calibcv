@@ -40,6 +40,7 @@ namespace calibration
         // TODO: Refactor this part ************************************************
         // Info from each calibration bucket
         vector< cv::Mat > m_calibrationImagesInitial;
+        vector< cv::Mat > m_calibrationImagesInitialOriginal;
         vector< cv::Mat > m_calibrationRotMatricesInitial;
         vector< cv::Mat > m_calibrationTranMatricesInitial;
         vector< vector< cv::Point2f > > m_pointsInImageInitial;
@@ -129,6 +130,7 @@ namespace calibration
         ~Calibrator()
         {
             m_calibrationImagesInitial.clear();
+            m_calibrationImagesInitialOriginal.clear();
             m_pointsInImageInitial.clear();
             m_pointsInWorldInitial.clear();
 
@@ -140,6 +142,7 @@ namespace calibration
         void init()
         {
             m_calibrationImagesInitial.clear();
+            m_calibrationImagesInitialOriginal.clear();
             m_pointsInImageInitial.clear();
             m_pointsInWorldInitial.clear();
             m_calibrationRotMatricesInitial.clear();
@@ -157,6 +160,11 @@ namespace calibration
             m_calibStateOld = CALIB_STATE_UNCALIBRATED;
             m_isCalibrating = false;
             m_useMode = USE_MODE_NONE;
+        }
+
+        void addCalibrationImageOriginal( const cv::Mat& original )
+        {
+            m_calibrationImagesInitialOriginal.push_back( original );
         }
 
         void addCalibrationBucket( const cv::Mat& image,
@@ -353,6 +361,7 @@ namespace calibration
                                              _calibrator->m_calibrationNewColinearityError );
 
             _calibrator->saveCalibrationImages( _calibrator->m_calibrationImagesInitial, 
+                                                _calibrator->m_calibrationImagesInitialOriginal,
                                                 _calibrator->m_pointsInImageInitial,
                                                 _calibrator->m_pointsInWorldInitial,
                                                 _calibrator->m_calibrationRotMatricesWorking,
@@ -471,6 +480,8 @@ namespace calibration
         {
             cv::FileStorage _fs;
             
+            filename += ".yaml";
+
             _fs.open( filename, cv::FileStorage::READ );
             
             if ( !_fs.isOpened() )
@@ -481,8 +492,11 @@ namespace calibration
 
             init();
             
+            int _numCalibrationFrames;
+
             _fs[ TAG_CAMERA_MATRIX ] >> m_cameraMatrixInitial;
             _fs[ TAG_DISTORTION_COEFFICIENTS ] >> m_distortionCoefficientsInitial;
+            _fs[ TAG_FRAMES_IN_CALIBRATION ] >> _numCalibrationFrames;
             
             int _fw, _fh;
             _fs[ TAG_FRAME_WIDTH ] >> _fw;
@@ -496,6 +510,69 @@ namespace calibration
                 std::cout << "WARNING: Size from previous calibration does not match" << std::endl;
             }
             
+            // Load the initial images and data
+
+            string _pathSaveFolder = "./" + m_calibFolder;
+            _pathSaveFolder += "_simple_";
+            _pathSaveFolder += m_calibSaveFile;
+
+            cv::Mat _frame, _original;
+            vector< cv::Point2f > _corners2D;
+            vector< cv::Point3f > _corners3D;
+
+            cv::Mat _rot, _trans;
+            float _rmsError;
+
+            // Loading calibration images
+
+            for ( int q = 0; q < _numCalibrationFrames; q++ )
+            {
+                string _imgSavePath = _pathSaveFolder + "/img_";
+                _imgSavePath += to_string( q + 1 );
+                _imgSavePath += ".jpg";
+
+                _frame = cv::imread( _imgSavePath );
+
+                m_calibrationImagesInitial.push_back( _frame );
+
+                string _imgOriginalSavePath = _pathSaveFolder + "/img_original_";
+                _imgOriginalSavePath += to_string( q + 1 );
+                _imgOriginalSavePath += ".jpg";
+
+                _original = cv::imread( _imgSavePath );
+
+                m_calibrationImagesInitialOriginal.push_back( _original );
+
+                string _fileExtraData = _pathSaveFolder + "/img_";
+                _fileExtraData += to_string( q + 1 );
+                _fileExtraData += ".yaml";
+
+                cv::FileStorage _fsFrame( _fileExtraData, cv::FileStorage::READ );
+
+                _fsFrame[ TAG_CALIBRATION_FRAME_PATTERN_IMAGE ] >> _corners2D;
+                _fsFrame[ TAG_CALIBRATION_FRAME_PATTERN_WORLD ] >> _corners3D;
+                _fsFrame[ TAG_CALIBRATION_FRAME_EXT_ROTATION ] >> _rot;
+                _fsFrame[ TAG_CALIBRATION_FRAME_EXT_TRANSLATION ] >> _trans;
+                _fsFrame[ TAG_CALIBRATION_FRAME_ERROR_RMS ] >> _rmsError;
+                
+                m_pointsInImageInitial.push_back( _corners2D );
+                m_pointsInWorldInitial.push_back( _corners3D );
+                m_calibrationRotMatricesInitial.push_back( _rot );
+                m_calibrationTranMatricesInitial.push_back( _trans );
+                m_perViewErrors.push_back( _rmsError );
+
+                _fsFrame.release(); 
+            }
+
+            for ( int q = 0; q < m_calibrationImagesInitial.size(); q++ )
+            {
+                m_visualizer->processCalibrationBucket( m_pointsInImageInitial[q] );
+                m_visualizer->addFrameInitial( m_calibrationImagesInitial[q] );
+            }
+
+            m_visualizer->addCalibratedBucket( m_calibrationImagesInitial, m_perViewErrors, VIZ_CALIB_TYPE_SIMPLE );
+
+
             cv::initUndistortRectifyMap( m_cameraMatrixInitial, m_distortionCoefficientsInitial, 
                                          cv::Mat(), cv::Mat(), 
                                          m_frameSize,
@@ -509,6 +586,7 @@ namespace calibration
         }
 
         void saveCalibrationImages( const vector< cv::Mat >& images, 
+                                    const vector< cv::Mat >& imagesOriginal,
                                     const vector< vector< cv::Point2f > >& pointsInImage,
                                     const vector< vector< cv::Point3f > >& pointsInWorld,
                                     const vector< cv::Mat >& rot,
@@ -544,6 +622,12 @@ namespace calibration
                 _imgSavePath += ".jpg";
 
         		cv::imwrite( _imgSavePath, images[q] );
+
+                string _imgOriginalSavePath = _pathSaveFolder + "/img_original_";
+                _imgOriginalSavePath += to_string( q + 1 );
+                _imgOriginalSavePath += ".jpg";
+
+                cv::imwrite( _imgOriginalSavePath, imagesOriginal[q] );
 
                 string _fileExtraData = _pathSaveFolder + "/img_";
                 _fileExtraData += to_string( q + 1 );
