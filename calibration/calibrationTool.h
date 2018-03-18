@@ -9,7 +9,7 @@
 
 #define INITIAL_CALIBRATION_THRESHOLD_COUNT 30
 #define REFINED_CALIBRATION_THRESHOLD_COUNT 30
-#define CALIBRATION_FOLDER "calib_default"
+#define CALIBRATION_FOLDER "calib_"
 
 using namespace std;
 
@@ -352,8 +352,16 @@ namespace calibration
                                              _calibrator->m_calibrationOldColinearityError,
                                              _calibrator->m_calibrationNewColinearityError );
 
-            _calibrator->saveCalibrationImages( _calibrator->m_calibrationImagesInitial, VIZ_CALIB_TYPE_SIMPLE );
-            _calibrator->saveToFile( _calibrator->m_calibSaveFile, VIZ_CALIB_TYPE_SIMPLE );
+            _calibrator->saveCalibrationImages( _calibrator->m_calibrationImagesInitial, 
+                                                _calibrator->m_pointsInImageInitial,
+                                                _calibrator->m_pointsInWorldInitial,
+                                                _calibrator->m_calibrationRotMatricesWorking,
+                                                _calibrator->m_calibrationTranMatricesWorking,
+                                                _calibrator->m_perViewErrors,
+                                                VIZ_CALIB_TYPE_SIMPLE );
+            _calibrator->saveToFile( _calibrator->m_calibSaveFile, 
+                                     _calibrator->m_calibrationImagesInitial.size(), 
+                                     VIZ_CALIB_TYPE_SIMPLE );
             _calibrator->m_isCalibrating = false;
         }
 
@@ -396,8 +404,11 @@ namespace calibration
                                              _calibrator->m_calibrationOldColinearityError,
                                              _calibrator->m_calibrationNewColinearityError );
 
-            _calibrator->saveCalibrationImages( _calibrator->m_calibrationImagesRefining, VIZ_CALIB_TYPE_REFINED );
-            _calibrator->saveToFile( _calibrator->m_calibSaveFileRefined, VIZ_CALIB_TYPE_REFINED );
+            // Use the initial calibration images for further refinenment
+            // _calibrator->saveCalibrationImages( _calibrator->m_calibrationImagesRefining, VIZ_CALIB_TYPE_REFINED );
+            _calibrator->saveToFile( _calibrator->m_calibSaveFileRefined, 
+                                     _calibrator->m_calibrationImagesRefining.size(), 
+                                     VIZ_CALIB_TYPE_REFINED );
             _calibrator->m_isCalibrating = false;
         }
 
@@ -436,12 +447,14 @@ namespace calibration
             
         }
 
-        void saveToFile( string filename, int calibType )
+        void saveToFile( string filename, int numFrames, int calibType )
         {
+            filename += ".yaml";
             cv::FileStorage _fs( filename, cv::FileStorage::WRITE );
  
             _fs << TAG_FRAME_WIDTH << m_frameSize.width;
             _fs << TAG_FRAME_HEIGHT << m_frameSize.height;
+            _fs << TAG_FRAMES_IN_CALIBRATION << numFrames;
             _fs << TAG_CAMERA_MATRIX << m_cameraMatrixWorking;
             _fs << TAG_DISTORTION_COEFFICIENTS << m_distortionCoefficientsWorking;
             _fs << TAG_CALIBRATION_ERROR_RMS << m_calibrationRMSerror;
@@ -495,11 +508,18 @@ namespace calibration
             return true;
         }
 
-        void saveCalibrationImages( const vector< cv::Mat >& images, int calibType )
+        void saveCalibrationImages( const vector< cv::Mat >& images, 
+                                    const vector< vector< cv::Point2f > >& pointsInImage,
+                                    const vector< vector< cv::Point3f > >& pointsInWorld,
+                                    const vector< cv::Mat >& rot,
+                                    const vector< cv::Mat >& trans,
+                                    const vector< float >& rmsErrors,
+                                    int calibType )
         {
         	// create calibration directory **************************
         	string _pathSaveFolder = "./" + m_calibFolder;
-            _pathSaveFolder += ( calibType == VIZ_CALIB_TYPE_SIMPLE ) ? "_simple" : "_refined";
+            _pathSaveFolder += ( calibType == VIZ_CALIB_TYPE_SIMPLE ) ? "_simple_" : "_refined_";
+            _pathSaveFolder += m_calibSaveFile;
 
         	mode_t _nMode = 0733;// permissions in unix
         	int _error = 0;
@@ -524,7 +544,21 @@ namespace calibration
                 _imgSavePath += ".jpg";
 
         		cv::imwrite( _imgSavePath, images[q] );
-        	}
+
+                string _fileExtraData = _pathSaveFolder + "/img_";
+                _fileExtraData += to_string( q + 1 );
+                _fileExtraData += ".yaml";
+
+                cv::FileStorage _fs( _fileExtraData, cv::FileStorage::WRITE );
+
+                _fs << TAG_CALIBRATION_FRAME_PATTERN_IMAGE << pointsInImage[q];
+                _fs << TAG_CALIBRATION_FRAME_PATTERN_WORLD << pointsInWorld[q];
+                _fs << TAG_CALIBRATION_FRAME_EXT_ROTATION << rot[q];
+                _fs << TAG_CALIBRATION_FRAME_EXT_TRANSLATION << trans[q];
+                _fs << TAG_CALIBRATION_FRAME_ERROR_RMS << rmsErrors[q];
+                
+                _fs.release();        	
+            }
         }
 
         void getCalibrationBatch( vector< cv::Mat >& batchImagesToRefine,

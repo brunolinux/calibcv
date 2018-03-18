@@ -5,5 +5,5 @@ PatternType: 3
 PatternSizeWidth: 5
 PatternSizeHeight: 4
 CalibrationVideo: "PS3_rings.webm"
-CalibrationFile: "PS3_rings_calibration.yaml"
-CalibrationFileRefined: "PS3_rings_calibration_refined.yaml"
+CalibrationFile: "PS3_rings_calibration"
+CalibrationFileRefined: "PS3_rings_calibration_refined"
