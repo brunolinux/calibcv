@@ -8,13 +8,14 @@
 \usepackage{array}
 \usepackage{graphicx}
 \usepackage{float}
+\usepackage{lipsum}
 
 % correct bad hyphenation here
 \hyphenation{op-tical net-works semi-conduc-tor}
 
 
 \begin{document}
-\title{Camera calibration with iterative refining of control points}
+\title{Analysis of camera calibration techniques for the concentric circles pattern}
 
 \author{Wilbert~Pumacay,~\textit{Catholic University San Pablo},~wilbert.pumacay@ucsp.edu.pe\\
         Gerson~Vizcarra,~\textit{Catholic University San Pablo},~gerson.vizcarra@ucsp.edu.pe}
@@ -23,15 +24,14 @@
 \maketitle
 
 \begin{abstract}
-This paper presents an application of Prakash camera calibration approach \cite{Prakash2012}, that is a improvement of Ankur's one \cite{Ankur2009}, to get better results than Zhang \cite{CameraCalibration1} camera calibration technique implemented by OpenCV. Also we present an algorithm to detect rings pattern using adaptive segmentation, ellipse fitting, blob detector and other techniques. We present a comparison between results using feature extraction of chessboard corners, asymmetric circle grids, and concentric circle grid patterns, the first two, using functions implemented in OpenCV and the third one using our own algorithm.
+This paper presents an algorithm for camera calibration using the concentric circles pattern, using a robust pipeline for detection, and further refinement based on the refinement process presented by Prakash \cite{Prakash2012}. We present a comparison with OpenCV's pattern detection functionality, which consists of the chessboard and circle grid pattern detectors; and analyze the results using the refinement process mentioned earlier, to check if there are any improvements by using the refinement process.
 \\
 \\
-In the presented method, we use an iterative approach, that relies on refinement of control points in grid patterns. First, we make an initial calibration using OpenCV implementation of Zhang's method, the captured images of patterns are undistorted and projected onto a fronto-parallel plane, then we detect points of control projecting and re-distorting them onto the original image to refine previous points of control. This process is repeated until a convergence between projected points and previous ones. The results show that the presented method reduces error in ... compared to OpenCV.
-
+We also analyze how the selection of the frames and poses for the camera calibration process can lead to undesired results if done incorrectly by showing how poor distributions lead to bad calibration results.
 \end{abstract}
 
 \begin{IEEEkeywords}
-Camera calibration, calibration pattern, circle grid, image processing.
+Camera calibration, calibration pattern, concentric circles, image processing.
 \end{IEEEkeywords}
 
 
@@ -79,16 +79,19 @@ To find these parameters, camera calibration methods make use of correspondences
 Where we are trying to minimize the difference between the expected projection and the actual projection over some set of features. The key idea is that supplying sufficient features that have a correct mapping, we can get the 11 parameters needed that minimize this function. So, a key part is the detection of these features.
 \\
 \\
-In equation $2$ we are looping through a set of features $n$ that are found in each frame of a video of $m$ frames, so, we basically need to detect some feature points in each frame of video, which is what we focus in this paper.
+In equation $2$ we are looping through a set of features $n$ that are found in each frame of a video of $m$ frames, so, we basically need to detect some feature points in each frame of video, which is achieved by a pattern detector. We implemented a detector for the concentric rings pattern for this purpose.
 \\
 \\
-This paper presents a camera calibration method that consist on iterative refinement of the camera calibration parameters by projection and unprojection to a fronto-parallel plane, and the localization of points of control combining adaptive thresholding and ellipse fitting to get better results.
-
-\section{Related work}
-
+Once calibrated, we can try to further improve the results of the calibration process by using the previous calibration data, which is used to correct the distortion and calculate a new refined set of features by running the pattern detector in a region which is parallel to the camera plane ( fronto parallel transformation ).
 
 \section{About the method}
-The presented method starts from a initial Zhang's camera calibration process using three patterns: Chessboard, Asymmetric circles, and Rings; the first two using implemented functions of OpenCV and the third one, using our own implementation. The structure of our applied pipeline are described in Fig. 1.
+The general structure of the implemented pipeline is shown in Fig. 1. There are two main steps in the pipeline, which are depicted with a different color each. 
+\\
+\\
+\begin{itemize}
+  \item \textbf{Initial calibration process}, which is in charge of detecting the pattern in the original frames from video. In this step we use our pattern detector, which handles the extraction of the pattern from the original images. We also create a batch from this detected patterns, by using a manual picking method for selecting the batch for the initial calibration.
+  \item \textbf{Refinement process}, in which we use the initial batch from the initial calibration process, and perform a fronto-parallel transformation, by finding a homography matrix between the pattern corners and a fronto-parallel view of the pattern. Once in this fronto-parallel view, we can take advantage of a simpler, which allows us to detect the pattern more accurately.
+\end{itemize}
 
 \begin{figure}[H]
 \centering
@@ -96,87 +99,107 @@ The presented method starts from a initial Zhang's camera calibration process us
 \caption{Pipeline of the implementation.}
 \end{figure}
 
-\subsection{Circle concentric pattern detection}
-In order to detect the pattern faster and get better results, we created a mode based detector, with three main modes: Finding Mode which has the function of detect the pattern in first frames, Tracking mode to track the order of recognized points and speed up the execution, and Recovering mode that is an temporal mode if there where a lost point in new Frame. In Fig. 2 we describe the modes in a chart.
+\subsection{ \textbf{ Initial calibration } }
+
+We first discuss the initial calibration process, which consists of out pattern detector and the calibration batch picking process.
+
+\subsubsection{ \textbf{Circle concentric pattern detection} }
+In order to detect the pattern faster and get better results, we created a state based detector, with three main modes ( See Fig. 2 ): 
 \\
-\\
-Also, for detecting the points in pattern we used the pipeline specified in Fig. 2.
+\begin{itemize}
+  \item \textbf{Finding Mode}, which is in charge of detecting the pattern using an initial region of interest.
+  \item \textbf{Tracking Mode}, which tracks the pattern by following each frame based on the previous.
+  \item \textbf{Recovering Mode}, which is a temporal mode in charge of detecting the pattern from scratch in case tracking was lost.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.3in]{_img/img_report4_pipeline_modes.png}
+\caption{Behavior of mode based detector.}
+\end{figure}
+
+For detecting the points in pattern we used a detection pipeline using some OpenCV functionality. This pipeline is shown in Fig. 3.
+
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.7in]{_img/img_report4_pipeline_detector.png}
-\includegraphics[width=2.3in]{_img/img_report4_pipeline_modes.png}
-\caption{Left: pipeline of pattern detection. Right: Behavior of mode based detector.}
+\caption{Detection pipeline}
 \end{figure}
 
+We now will show in more detail what each step in this pipeline does.
+\\
+\begin{itemize}
+    \item \textbf{Masking}
+        \\
+        \\
+        This step is in charge of isolating the pattern by using thresholding operations. The approach consists on creating a mask from the grayscale transformed image applying \textbf{Adaptive Thresholding algorithm}, this algorithm relies on Integral Image technique specified in \cite{IntegralImageThresholding}.
+        \begin{algorithm}
+        \caption{Masking}
+        \label{alg:mask2}
+        \begin{algorithmic}[1]
+        \State $\textit{Set up thresholding parameters}$
+        \State $mask   = \textit{rgb2gray}( inputImage )$
+        \State $mask   = \textit{AdaptiveThreshold}(mask, blockSize)$\\
+        \Return $masked$
+        \end{algorithmic}
+        \end{algorithm}
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        \begin{figure}[H]
+        \centering
+        \includegraphics[width=2.5in]{_img/img_report2_mask.png}
+        \caption{Image mask applied to ROI.}
+        \end{figure}
 
+    \item \textbf{Edge detection}
+        \\
+        \\
+        In this stage of the pipeline we extract edges from the result of the previous stage. In order to do this, we applied \textbf{Scharr operators} on \textit{x} and \textit{y} axis (as described in algorithm 2); Scharr is the result from Sobel algorithm minimizing weighted mean squared angular error in Fourier domain.
+        %% TODO: Gerson
+        \begin{algorithm}
+        \caption{Edge detection}
+        \begin{algorithmic}[1]
+        \State $axis_x   = \textit{Scharr}(masked, 1, 0)$
+        \State $axis_x   = \textit{Abs}(axis_x)$
+        \State $axis_y   = \textit{Scharr}(masked, 0, 1)$
+        \State $axis_y   = \textit{Abs}(axis_y)$
+        \State $edgesImage   = \textit{Add}(axis_x, axis_y)$ \\
+        \Return $edgesImage$
+        \end{algorithmic}
+        \end{algorithm}
 
-\subsubsection{ Masking }
-This step is in charge of isolating the pattern by using thresholding operations.
+        \begin{figure}[H]
+        \centering
+        \includegraphics[width=2.5in]{_img/img_report2_edges.png}
+        \caption{Edge detection to mask.}
+        \end{figure}
+
+    \item \textbf{Feature extraction}
+        \\
+        \\
+        The last stage consist of extracting the features needed for the calibration from the edges detected in the previous stage. We used OpenCV's \textbf{SimpleBlobDetector} that applies an extra thresholding on the image, applies the \textbf{findContours} algorithm to calculate the blob centers, groups centers of several images by their coordinates in blobs and finally, estimates the final centers of the blobs. For detecting only pattern blobs, we had to apply similar heuristics to above (color blobs, area, aspect ratio, and convexity of points).
+
+        \begin{figure}[H]
+        \centering
+        \includegraphics[width=2.5in]{_img/img_report2_feature_detection.png}
+        \caption{Result after feature detection.}
+        \end{figure}
+\end{itemize}
+
+\subsubsection{ \textbf{ Pattern Matching and Ordering } }
+Once we have the features extracted, we have to order them for them to be used in the calibration algorithm. 
 \\
 \\
-The approach consists on creating a mask from the grayscale transformed image applying \textbf{Adaptive Thresholding algorithm}, this algorithm relies on Integral Image technique specified in \cite{IntegralImageThresholding}.
-\begin{algorithm}
-\caption{Masking}
-\label{alg:mask2}
-\begin{algorithmic}[1]
-\State $\textit{Set up thresholding parameters}$
-\State $mask   = \textit{rgb2gray}( inputImage )$
-\State $mask   = \textit{AdaptiveThreshold}(mask, blockSize)$\\
-\Return $masked$
-\end{algorithmic}
-\end{algorithm}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{figure}[H]
-\centering
-\includegraphics[width=2.5in]{_img/img_report2_mask.png}
-\caption{Image mask applied to ROI.}
-\end{figure}
-
-\subsubsection{Edge detection}
-In this stage of the pipeline we extract edges from the result of the previous stage. In order to do this, we applied \textbf{Scharr operators} on \textit{x} and \textit{y} axis (as described in algorithm 2); Scharr is the result from Sobel algorithm minimizing weighted mean squared angular error in Fourier domain.
-%% TODO: Gerson
-\begin{algorithm}
-\caption{Edge detection}
-\begin{algorithmic}[1]
-\State $axis_x   = \textit{Scharr}(masked, 1, 0)$
-\State $axis_x   = \textit{Abs}(axis_x)$
-\State $axis_y   = \textit{Scharr}(masked, 0, 1)$
-\State $axis_y   = \textit{Abs}(axis_y)$
-\State $edgesImage   = \textit{Add}(axis_x, axis_y)$ \\
-\Return $edgesImage$
-\end{algorithmic}
-\end{algorithm}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=2.5in]{_img/img_report2_edges.png}
-\caption{Edge detection to mask.}
-\end{figure}
-
-\subsubsection{Feature extraction}
-The last stage consist of extracting the features needed for the calibration from the edges detected in the previous stage. We used OpenCV's \textbf{SimpleBlobDetector} that applies an extra thresholding on the image, applies the \textbf{findContours} algorithm to calculate the blob centers, groups centers of several images by their coordinates in blobs and finally, estimates the final centers of the blobs. For detecting only pattern blobs, we had to apply similar heuristics to above (color blobs, area, aspect ratio, and convexity of points).
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=2.5in]{_img/img_report2_feature_detection.png}
-\caption{Result after feature detection.}
-\end{figure}
-
-\subsection{Pattern Matching and Ordering}
-Once we have the features extracted, we have to order them for them to be used in the calibration algorithm. To achieve this, we made a simple algorithm that matches the best candidate grid to the current features, and correct by the orientation in order to choose a correct ordering.
+To achieve this, we made a simple algorithm that matches the best candidate grid to the current features, and correct by the orientation in order to choose a correct ordering. We first create a bounding box of the current possible corners. Then, we take the outer most corners as the corners of the pattern. 
 \\
 \\
-We first create a bounding box of the current possible corners. Then, we take the outer most corners as the corners of the pattern. With this information, we can compute a candidate grid that represents the positions where the candidate points should be, as seen in figure 7.
-
+With this information, we can compute a candidate grid that represents the positions where the candidate points should be, as seen in figure 7. We check for each combination of outer most corners, which ordering gives the best fit. This will give us a correct ordering of the outer most corners of the pattern.
+\\
+\\
 \begin{figure}[H]
 \centering
 \includegraphics[width=2.5in]{_img/img_report3_pattern_matching.jpg}
 \caption{Grid pattern matching.}
 \end{figure}
-
-We check for each combination of outer most corners, which ordering gives the best fit. This will give us a correct ordering of the outer most corners of the pattern.
-\\
-\\
 Lastly, we check that the orientation of the board is in some range, as shown in figure 8, which will complete the corner ordering, as shown in figure 9.
 \\
 \\
@@ -192,11 +215,11 @@ Lastly, we check that the orientation of the board is in some range, as shown in
 \caption{Pattern final ordering after matching.}
 \end{figure}
 
-\subsection{Calibration process}
-To do camera calibration process, we took some frames using tools to show the distribution of points in frames in order to improve results: better calibration requires better distribution of points.
+\subsubsection{Calibration process}
+For the camera calibration process, we took a batch frames were that pattern was successfully detected. We picked them manually, by using some tools we implemented in order to pick a correct distribution of frames. We implemented a heatmap like visualizer and a points distribution visualizer to check the right 2D distribution over all the field of view; and a histogram visualizer, which gave us the most picked angle at which the pattern was taken.
 \\
 \\
-We used 30 calibration frames trying to distribute points location as max as possible. In figure 9 we show screenshots of heatmap and point distribution of a calibration process.
+In Fig. 10 we show the heatmap and point distribution tools in a sample initial calibration process, and in Fig. 11 we show the histogram tool.
 
 \begin{figure}[H]
 \centering
@@ -205,12 +228,150 @@ We used 30 calibration frames trying to distribute points location as max as pos
 \caption{Left: Heatmap. Right: Points distribution.}
 \end{figure}
 
-Also we created a screen that shows the angle histogram of taken frames, like previous tools, it helps us to distribute angles better.
 \begin{figure}[H]
 \centering
 \includegraphics[width=1.5in]{_img/img_report3_angle_histogram.png}
 \caption{Angle distribution histogram screen.}
 \end{figure}
+
+\subsection{ \textbf{ Refinement process } }
+
+The second step in the calibration is the refining step, in which we use the previous calibrated batch and refine the detected points in a fronto-parallel view by means of finding an homography between the pattern in the image, and a fronto view.
+
+\subsubsection{ \textbf{ Fronto parallel transformation } }
+
+The pipeline for the fronto parallel transformation is depicted in Fig. 12, and consists of the following steps :
+
+\begin{itemize}
+
+    \item \textbf{Undistortion}
+        \\
+        \\
+        Camera distortion can make the detector find points in the pattern that are a little off from their actual position. For example, in the case of the chessboard pattern, we could have distortion affecting the pattern in a radial way, as shown in Fig. 13.
+
+        \begin{figure}[H]
+        \centering
+        \includegraphics[width=2.5in]{_img/img_cv_distortion_examples.png}
+        \caption{ \textit{ Left: Undistorted pattern. Middle: Barrel distortion. Right: Pincushion distortion. } }
+        \end{figure}
+
+        To correct for this, we use the estimated distortion coefficients from the initial camera calibration process by using OpenCV's \textbf{undistort} function, which will give us the following result.
+
+        %% TODO: Add screenshots from the undistortion process ( distorted - undistorted pair )
+        \begin{figure}[H]
+        \centering
+        \includegraphics[width=1.5in]{_img/img_report3_heatmap.png}
+        \includegraphics[width=1.5in]{_img/img_report3_points_distribution.png}
+        \caption{Left: Original. Right: Undistorted.}
+        \end{figure}
+
+        We make sure to undistort the pattern points as well, as we need them for the fronto parallel transformation. We achieve this with OpenCV's \textbf{undistortPoints} function.
+        \\
+    \item \textbf{Direct fronto-parallel transformation}
+        \\
+        \\
+        Once we are in the undistorted space, we can find the homography which will help us transform the image into a fronto-paralle view, as shown in Fig. 15. 
+
+        \begin{figure}[H]
+        \centering
+        \includegraphics[width=2.5in]{_img/img_cv_distortion_examples.png}
+        \caption{ \textit{ Left: Undistorted pattern. Middle: Barrel distortion. Right: Pincushion distortion. } }
+        \end{figure}
+
+        To achieve this we construct a correspondance between the corners points in the pattern ( plus some offset, to make sure the whole pattern is mapped ) and a fronto-parallel view of the pattern ( where only the whole pattern fronto-parallel to the view ). With this correspondance we find the homography transformation, by means of OpenCV's \textbf{getPerspectiveTransform} function. 
+
+        %% TODO: Add screenshots from the undistortion process ( distorted - undistorted pair )
+        \begin{figure}[H]
+        \centering
+        \includegraphics[width=1.5in]{_img/img_report3_heatmap.png}
+        \includegraphics[width=1.5in]{_img/img_report3_points_distribution.png}
+        \caption{Left: Original. Right: Undistorted.}
+        \end{figure}
+        
+        We then transform the image to a fronto parallel view by means of OpenCV's \textbf{warpPerspective} method.
+        \\
+
+    \item \textbf{Detection in the fronto-parallel space}
+        \\
+        \\
+        Once in the fronto-parallel view, we can use the pattern detectors from the initial stage to compute a fronto-refined pattern of points. In the case of the patterns supported by OpenCV, namely the chessboard and circle grid patterns, we used the same detectors as in the initial step : \textbf{findChessboardCorners} and \textbf{findCircleGrid} detectors.
+        \\
+        \\
+        For the concentric-rings pattern we use a different detector than our original detector. As described in Prakash's paper \cite{Prakash2012}, we use the following four-step detector :
+
+        \begin{itemize}
+
+            \item Adaptive thresholding
+            \item Canny edges detection
+            \item Contour finding and ellipse fitting
+            \item Ellipse discards by heuristics and patter fitting
+
+        \end{itemize}
+
+        In Figs. 16 to 18, we show the results of this detection in the fronto-paralle space.
+
+        \begin{figure}[H]
+        \centering
+        \includegraphics[width=1.0in]{_img/img_report3_heatmap.png}
+        \includegraphics[width=1.0in]{_img/img_report3_points_distribution.png}
+        \includegraphics[width=1.0in]{_img/img_report3_points_distribution.png}
+        \caption{Left: Original. Right: Undistorted.}
+        \end{figure}
+
+        Once we have this detected pattern, we just have to take it back to the original image space.
+        \\
+
+    \item \textbf{Inverse fronto-parallel transformation}
+        \\
+        \\
+        We can now use the inverse of the previously found homography matrix, to take the detected points back to the undistorted space. We just use OpenCV's \textbf{perspectiveTransform} method in these points and get the pattern points in the undistorted space, as shown in Fig. 19.
+
+        \begin{figure}[H]
+        \centering
+        \includegraphics[width=2.5in]{_img/img_report3_heatmap.png}
+        \caption{Left: Original. Right: Undistorted.}
+        \end{figure}        
+
+        We now just have to take these points back from the undistorted space to the original distorted image space.
+        \\
+
+    \item \textbf{Distortion}
+        \\
+        \\
+        Here we have to implement the distortion equations using the Radial-tangential distortion model, as OpenCV doesn't provide us with a handy helper function for this task. Recall, the distortion model can be described by the following set of equations.
+        \begin{gather*}
+            x = ( x_{undistorted} - c_{x} ) / f_{x}\\
+            y = ( y_{undistorted} - c_{y} ) / f_{y}\\
+            r = \sqrt{ x^{2} + y^{2} } \\
+            x_{distorted} = x ( 1 + k_{1} r^{2} + k_{2} r^{4} + k_{3} r^{6} )\\
+            y_{distorted} = y ( 1 + k_{1} r^{2} + k_{2} r^{4} + k_{3} r^{6} )\\
+            x_{distorted} = x_{distorted} + ( 2 p_{1} x y + p_{2} ( r^{2} + 2 x^{2} ) )\\
+            y_{distorted} = y_{distorted} + ( 2 p_{2} x y + p_{2} ( r^{2} + 2 y^{2} ) )\\
+            x_{new} = x_{distorted} f_{x} + c_{x}\\
+            y_{new} = x_{distorted} f_{y} + c_{y}\\
+        \end{gather*}
+
+        After we applied these equations, we get the following pattern in the original view.
+
+        \begin{figure}[H]
+        \centering
+        \includegraphics[width=2.5in]{_img/img_report3_heatmap.png}
+        \caption{Left: Original. Right: Undistorted.}
+        \end{figure}   
+
+        This concludes the refining process, which will give us a new refined batch to calibrate with. This is done in the last part of this step.
+
+\end{itemize}
+
+\subsubsection{ \textbf{ Refined recalibration } }
+
+Once we get our new refined batch, we can then recalibrate the camera and get refined intrinsic parameters. To do this we just call OpenCV's \textbf{calibrateCamera} again, with our new refined batch. We repeat this for twenty iterations and check for the reprojection error to check if there is any convergence, as you can see in the following figure.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/img_report3_heatmap.png}
+\caption{Left: Original. Right: Undistorted.}
+\end{figure}   
 
 \section{Results}
 We calibrated two cameras using as feature detection the three detection algorithms described earlier ( OpenCV's chessboard and circle finder and our algorithm )
@@ -229,7 +390,7 @@ For each calibration, we took a fixed batch of 30 correctly processed images. Th
  fx        & 876.2 & 933.2 & 829.5 & 609.6 & 609.5 & 627.0\\
  fy        & 876.6 & 935.4 & 834.8 & 609.4 & 612.6 & 631.8\\
  vx        & 325.0 & 342.3 & 320.0 & 326.9 & 351.5 & 342.7\\
- vy 	       & 251.4 & 220.7 & 243.5 & 223.8 & 227.2 & 231.2\\
+ vy            & 251.4 & 220.7 & 243.5 & 223.8 & 227.2 & 231.2\\
  RMS error & 0.313 & 0.184 & 0.187 & 0.74 & 0.22 & 0.19\\
  Colinearity before & 0.152 & 0.051 & 0.17 & 0.546 & 0.068 & 0.05\\
  Colinearity after & 0.127 & 0.054 & 0.152 & 0.166 & 0.011 & 0.005\\
