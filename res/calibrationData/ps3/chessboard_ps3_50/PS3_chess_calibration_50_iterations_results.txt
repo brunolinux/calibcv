@@ -1,81 +1,81 @@
 iteration results: 
 iteration 1*******
-rmsError: 0.567863
-colinearityError: 4.95472
+rmsError: 0.27862
+colinearityError: 4.9509
 
 iteration 2*******
-rmsError: 0.583452
-colinearityError: 4.93983
+rmsError: 0.278607
+colinearityError: 4.95071
 
 iteration 3*******
-rmsError: 0.576754
-colinearityError: 4.95442
+rmsError: 0.277404
+colinearityError: 4.95082
 
 iteration 4*******
-rmsError: 0.579255
-colinearityError: 4.94264
+rmsError: 0.278322
+colinearityError: 4.95074
 
 iteration 5*******
-rmsError: 0.568087
-colinearityError: 4.95545
+rmsError: 0.27833
+colinearityError: 4.95076
 
 iteration 6*******
-rmsError: 0.581766
-colinearityError: 4.94134
+rmsError: 0.278227
+colinearityError: 4.95066
 
 iteration 7*******
-rmsError: 0.579522
-colinearityError: 4.94218
+rmsError: 0.278419
+colinearityError: 4.9509
 
 iteration 8*******
-rmsError: 0.588712
-colinearityError: 4.93667
+rmsError: 0.278256
+colinearityError: 4.95065
 
 iteration 9*******
-rmsError: 0.565221
-colinearityError: 4.95771
+rmsError: 0.277744
+colinearityError: 4.95084
 
 iteration 10*******
-rmsError: 0.567518
-colinearityError: 4.95338
+rmsError: 0.278138
+colinearityError: 4.95071
 
 iteration 11*******
-rmsError: 0.57342
-colinearityError: 4.94121
+rmsError: 0.278237
+colinearityError: 4.95076
 
 iteration 12*******
-rmsError: 0.560484
-colinearityError: 4.94048
+rmsError: 0.278147
+colinearityError: 4.95078
 
 iteration 13*******
-rmsError: 0.570888
-colinearityError: 4.94231
+rmsError: 0.278428
+colinearityError: 4.95077
 
 iteration 14*******
-rmsError: 0.578431
-colinearityError: 4.93936
+rmsError: 0.278182
+colinearityError: 4.95074
 
 iteration 15*******
-rmsError: 0.572053
-colinearityError: 4.95452
+rmsError: 0.278094
+colinearityError: 4.95074
 
 iteration 16*******
-rmsError: 0.584544
-colinearityError: 4.94222
+rmsError: 0.278547
+colinearityError: 4.95073
 
 iteration 17*******
-rmsError: 0.570712
-colinearityError: 4.94245
+rmsError: 0.277968
+colinearityError: 4.95078
 
 iteration 18*******
-rmsError: 0.56971
-colinearityError: 4.9396
+rmsError: 0.278142
+colinearityError: 4.95069
 
 iteration 19*******
-rmsError: 0.565345
-colinearityError: 4.9536
+rmsError: 0.278118
+colinearityError: 4.9508
 
 iteration 20*******
-rmsError: 0.573583
-colinearityError: 4.94144
+rmsError: 0.278418
+colinearityError: 4.95073
 
