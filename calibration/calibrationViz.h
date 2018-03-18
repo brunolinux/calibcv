@@ -297,8 +297,8 @@ namespace calibration
 
         void addCalibratedBucket( const vector< cv::Mat >& frames4calibration, const vector< float >& perViewErrors, int calibrationType )
         {
-            cout << "fsize: " << frames4calibration.size() << endl;
-            cout << "esize: " << perViewErrors.size() << endl;
+            // cout << "fsize: " << frames4calibration.size() << endl;
+            // cout << "esize: " << perViewErrors.size() << endl;
 
             assert( frames4calibration.size() == perViewErrors.size() );
 

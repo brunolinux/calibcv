@@ -7,8 +7,8 @@
 #include <sys/stat.h>
 #include <pthread.h>
 
-#define INITIAL_CALIBRATION_THRESHOLD_COUNT 50
-#define REFINED_CALIBRATION_THRESHOLD_COUNT 45
+#define INITIAL_CALIBRATION_THRESHOLD_COUNT 20
+#define REFINED_CALIBRATION_THRESHOLD_COUNT INITIAL_CALIBRATION_THRESHOLD_COUNT - 5
 #define CALIBRATION_FOLDER "calib_"
 
 using namespace std;
@@ -779,6 +779,11 @@ namespace calibration
             return ( m_calibState == CALIB_STATE_CALIBRATED_SIMPLE || m_calibStateOld == CALIB_STATE_CALIBRATED_SIMPLE ) ||
                    ( m_calibState == CALIB_STATE_CALIBRATED_REFINED || m_calibStateOld == CALIB_STATE_CALIBRATED_REFINED );
         }
+
+        bool isCalibrating() { return m_isCalibrating || ( m_calibState == CALIB_STATE_CALIBRATING ); }
+
+        float getCurrentRMSerror() { return m_calibrationReprojectionError; }
+        float getCurrentColinearityerror() { return m_calibrationNewColinearityError; }
     };
 
 }
