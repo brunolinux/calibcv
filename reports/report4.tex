@@ -46,18 +46,18 @@ The camera calibration problem consists of finding 11 parameters that describe t
   \begin{bmatrix}
     \mu \\
     \nu \\
-      1 
-  \end{bmatrix} = 
+      1
+  \end{bmatrix} =
   \begin{bmatrix}
     \alpha & \gamma & \mu_{0} \\
        0   & \beta  & \nu_{0} \\
        0   &    0   &    1
-  \end{bmatrix} 
+  \end{bmatrix}
   \begin{bmatrix}
     r_{x_{1}} & r_{y_{1}} & r_{z_{1}} & t_{x}\\
     r_{x_{2}} & r_{y_{2}} & r_{z_{2}} & t_{y}\\
     r_{x_{3}} & r_{y_{3}} & r_{z_{3}} & t_{z}
-  \end{bmatrix} 
+  \end{bmatrix}
   \begin{bmatrix}
     x \\
     y \\
@@ -97,19 +97,21 @@ The presented method starts from a initial Zhang's camera calibration process us
 \end{figure}
 
 \subsection{Circle concentric pattern detection}
-The pipeline of our proposed pattern detection and tracking algorithm works as follows: First we set an initial Region of interest that help us to discard some false positive / negative points. In this ROI we apply the rest of steps to get centers of rings.
-
+In order to detect the pattern faster and get better results, we created a mode based detector, with three main modes: Finding Mode which has the function of detect the pattern in first frames, Tracking mode to track the order of recognized points and speed up the execution, and Recovering mode that is an temporal mode if there where a lost point in new Frame. In Fig. 2 we describe the modes in a chart.
+\\
+\\
+Also, for detecting the points in pattern we used the pipeline specified in Fig. 2.
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.7in]{_img/img_report4_pipeline_detector.png}
 \includegraphics[width=2.3in]{_img/img_report4_pipeline_modes.png}
-\caption{Pipeline of previous work.}
+\caption{Left: pipeline of pattern detection. Right: Behavior of mode based detector.}
 \end{figure}
 
 
 
 \subsubsection{ Masking }
-This step is in charge of isolating the pattern by using threhsolding operations.
+This step is in charge of isolating the pattern by using thresholding operations.
 \\
 \\
 The approach consists on creating a mask from the grayscale transformed image applying \textbf{Adaptive Thresholding algorithm}, this algorithm relies on Integral Image technique specified in \cite{IntegralImageThresholding}.
@@ -217,7 +219,7 @@ For each calibration, we took a fixed batch of 30 correctly processed images. Th
 \\
 \\
 \begin{table}[h]
-\centering 
+\centering
 \begin{tabular}{ |c||c|c|c|c|c|c|c|  }
  \hline
  Parameter & \multicolumn{3}{c|}{PS3 Eye cam} & \multicolumn{3}{c|}{MS lifecam}\\
@@ -250,7 +252,7 @@ This process is still quite cumbersome because we have to pick each frame that w
 \caption{Pattern final ordering after matching.}
 \end{figure}
 
-We have a heat-map that give us a distribution visualizer, as well as a histogram to be sure we are picking the patterns at some range of orientations. 
+We have a heat-map that give us a distribution visualizer, as well as a histogram to be sure we are picking the patterns at some range of orientations.
 
 \IEEEtriggeratref{8}
 
@@ -281,4 +283,3 @@ We have a heat-map that give us a distribution visualizer, as well as a histogra
 
 
 \end{document}
-
