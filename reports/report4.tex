@@ -129,12 +129,12 @@ For detecting the points in pattern we used a detection pipeline using some Open
 We now will show in more detail what each step in this pipeline does.
 \\
 \begin{itemize}
-    \item \textbf{Masking}
+    \item \textbf{Trehsholding}
         \\
         \\
         This step is in charge of isolating the pattern by using thresholding operations. The approach consists on creating a mask from the grayscale transformed image applying \textbf{Adaptive Thresholding algorithm}, this algorithm relies on Integral Image technique specified in \cite{IntegralImageThresholding}.
         \begin{algorithm}
-        \caption{Masking}
+        \caption{Trehsholding}
         \label{alg:mask2}
         \begin{algorithmic}[1]
         \State $\textit{Set up thresholding parameters}$
@@ -146,8 +146,8 @@ We now will show in more detail what each step in this pipeline does.
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         \begin{figure}[H]
         \centering
-        \includegraphics[width=2.5in]{_img/img_report2_mask.png}
-        \caption{Image mask applied to ROI.}
+        \includegraphics[width=2.5in]{_img/report_4/img_pipeline_detection_mask.png}
+        \caption{Thresholding step}
         \end{figure}
 
     \item \textbf{Edge detection}
@@ -169,7 +169,7 @@ We now will show in more detail what each step in this pipeline does.
 
         \begin{figure}[H]
         \centering
-        \includegraphics[width=2.5in]{_img/img_report2_edges.png}
+        \includegraphics[width=2.5in]{_img/report_4/img_pipeline_detection_edges.png}
         \caption{Edge detection to mask.}
         \end{figure}
 
@@ -180,7 +180,7 @@ We now will show in more detail what each step in this pipeline does.
 
         \begin{figure}[H]
         \centering
-        \includegraphics[width=2.5in]{_img/img_report2_feature_detection.png}
+        \includegraphics[width=2.5in]{_img/report_4/img_pipeline_detection_blobs.png}
         \caption{Result after feature detection.}
         \end{figure}
 \end{itemize}
@@ -260,8 +260,8 @@ The pipeline for the fronto parallel transformation is depicted in Fig. 12, and 
         %% TODO: Add screenshots from the undistortion process ( distorted - undistorted pair )
         \begin{figure}[H]
         \centering
-        \includegraphics[width=1.5in]{_img/img_report3_heatmap.png}
-        \includegraphics[width=1.5in]{_img/img_report3_points_distribution.png}
+        \includegraphics[width=1.5in]{_img/report_4/img_refinement_undistortion_original.png}
+        \includegraphics[width=1.5in]{_img/report_4/img_refinement_undistortion_b.png}
         \caption{Left: Original. Right: Undistorted.}
         \end{figure}
 
@@ -274,18 +274,16 @@ The pipeline for the fronto parallel transformation is depicted in Fig. 12, and 
 
         \begin{figure}[H]
         \centering
-        \includegraphics[width=2.5in]{_img/img_cv_distortion_examples.png}
-        \caption{ \textit{ Left: Undistorted pattern. Middle: Barrel distortion. Right: Pincushion distortion. } }
+        \includegraphics[width=2.5in]{_img/report_4/img_refinement_fronto_view.png}
+        \caption{ \textit{ Fronto parallel view } }
         \end{figure}
 
         To achieve this we construct a correspondance between the corners points in the pattern ( plus some offset, to make sure the whole pattern is mapped ) and a fronto-parallel view of the pattern ( where only the whole pattern fronto-parallel to the view ). With this correspondance we find the homography transformation, by means of OpenCV's \textbf{getPerspectiveTransform} function. 
 
-        %% TODO: Add screenshots from the undistortion process ( distorted - undistorted pair )
         \begin{figure}[H]
         \centering
-        \includegraphics[width=1.5in]{_img/img_report3_heatmap.png}
-        \includegraphics[width=1.5in]{_img/img_report3_points_distribution.png}
-        \caption{Left: Original. Right: Undistorted.}
+        \includegraphics[width=2.5in]{_img/report_4/img_homography.png}
+        \caption{Correspondance for homography computation}
         \end{figure}
         
         We then transform the image to a fronto parallel view by means of OpenCV's \textbf{warpPerspective} method.
@@ -312,10 +310,10 @@ The pipeline for the fronto parallel transformation is depicted in Fig. 12, and 
 
         \begin{figure}[H]
         \centering
-        \includegraphics[width=1.0in]{_img/img_report3_heatmap.png}
-        \includegraphics[width=1.0in]{_img/img_report3_points_distribution.png}
-        \includegraphics[width=1.0in]{_img/img_report3_points_distribution.png}
-        \caption{Left: Original. Right: Undistorted.}
+        \includegraphics[width=1.0in]{_img/report_4/img_refinement_fronto_detection_mask.png}
+        \includegraphics[width=1.0in]{_img/report_4/img_refinement_fronto_detection_edges.png}
+        \includegraphics[width=1.0in]{_img/report_4/img_refinement_detection_features.png}
+        \caption{Three steps of the detection in the fronto parallel view}
         \end{figure}
 
         Once we have this detected pattern, we just have to take it back to the original image space.
@@ -328,8 +326,8 @@ The pipeline for the fronto parallel transformation is depicted in Fig. 12, and 
 
         \begin{figure}[H]
         \centering
-        \includegraphics[width=2.5in]{_img/img_report3_heatmap.png}
-        \caption{Left: Original. Right: Undistorted.}
+        \includegraphics[width=2.5in]{_img/report_4/img_refinement_inverse_perspective.png}
+        \caption{Undistorted image with refined points}
         \end{figure}        
 
         We now just have to take these points back from the undistorted space to the original distorted image space.
@@ -355,8 +353,9 @@ The pipeline for the fronto parallel transformation is depicted in Fig. 12, and 
 
         \begin{figure}[H]
         \centering
-        \includegraphics[width=2.5in]{_img/img_report3_heatmap.png}
-        \caption{Left: Original. Right: Undistorted.}
+        \includegraphics[width=1.5in]{_img/report_4/img_refinement_distortion.png}
+        \includegraphics[width=1.5in]{_img/report_4/img_refinement_distortion_chessboard.png}
+        \caption{Refined points in original uncorrected space for rings and chessboard pattern}
         \end{figure}   
 
         This concludes the refining process, which will give us a new refined batch to calibrate with. This is done in the last part of this step.
@@ -370,7 +369,7 @@ Once we get our new refined batch, we can then recalibrate the camera and get re
 \begin{figure}[H]
 \centering
 \includegraphics[width=2.5in]{_img/img_report3_heatmap.png}
-\caption{Left: Original. Right: Undistorted.}
+\caption{Reprojection and colinearity errors during iterative recalibration}
 \end{figure}   
 
 \section{Results}
