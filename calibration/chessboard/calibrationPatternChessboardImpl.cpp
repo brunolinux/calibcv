@@ -138,7 +138,6 @@ namespace calibration { namespace chessboard {
                                                              vector< cv::Point2f >& frontoRefinedPoints )
         {
             frontoRefinedPoints.clear();
-
             return cv::findChessboardCorners( input, m_size, frontoRefinedPoints,
                                               CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_NORMALIZE_IMAGE );
         }

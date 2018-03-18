@@ -140,6 +140,25 @@ int main( int argc, char** argv )
         calibration::DetectionInfo _detInfo;
         _detInfo.roi = _videoHandler->roi();
 
+        // if ( _calibrator.canUseRefining() )
+        // {
+        //     vector< cv::Mat > _batchImagesToRefine;
+        //     vector< vector< cv::Point2f > > _batchPointsToRefine;
+
+        //     _calibrator.getCalibrationBatch( _batchImagesToRefine,
+        //                                      _batchPointsToRefine );
+
+        //     for ( int q = 0; q < _batchImagesToRefine.size(); q++ )
+        //     {
+        //         string _name = "img_";
+        //         _name += to_string( q + 1 );
+
+        //         // calibration::drawPatternCorners( _batchPointsToRefine[q], _batchImagesToRefine[q], _patternInfo );
+        //         cv::namedWindow( _name.c_str() );
+        //         cv::imshow( _name.c_str(), _batchImagesToRefine[q] );
+        //     }
+        // }
+
         // Make a refinment of the batch of images, only if ...
         // the calibrator has already initial calibration data ...
         // and the refiner is not working
@@ -151,6 +170,9 @@ int main( int argc, char** argv )
 
             _calibrator.getCalibrationCameraMatrix( _cameraMatrix );
             _calibrator.getCalibrationDistortionCoefficients( _distortionCoefficients );
+
+            // cout << "_cameraMatrix: " << _cameraMatrix << endl;
+            // cout << "_distortionCoefficients: " << _distortionCoefficients << endl;
 
             // Request refinment to the detection interface
             vector< cv::Mat > _batchImagesToRefine;
@@ -171,7 +193,7 @@ int main( int argc, char** argv )
         if ( calibration::hasRefinationToPick( _patternInfo ) )
         {
             vector< cv::Mat > _refinedImages;
-            vector< vector< cv::Point2f > _refinedPoints;
+            vector< vector< cv::Point2f > > _refinedPoints;
 
             calibration::grabRefinationBatch( _patternInfo, _refinedImages, _refinedPoints );
 
@@ -184,17 +206,22 @@ int main( int argc, char** argv )
             _calibrator.requestRefinedCalibration();
         }
 
-        if ( calibration::getPatternCorners( _corners, _frame, _patternInfo, _detInfo ) )
+        if ( !calibration::isRefining( _patternInfo ) )
         {
-            calibration::drawPatternCorners( _corners, _frame, _patternInfo );
-
-            // Allow bucket picking only if this is the first initial calibration
-            if ( _pickCalibrationBucket && ! _calibrator.canUseRefining() )
+            if ( calibration::getPatternCorners( _corners, _frame, _patternInfo, _detInfo ) )
             {
-                cout << "current buckets in calibrator: " << _calibrator.getCalibrationSize() << endl;
-                _calibrator.addCalibrationBucket( _frame, _corners );
+                calibration::drawPatternCorners( _corners, _frame, _patternInfo );
+
+                // Allow bucket picking only if this is the first initial calibration
+                if ( _pickCalibrationBucket && ! _calibrator.canUseRefining() )
+                {
+                    cout << "current buckets in calibrator: " << _calibrator.getCalibrationSize() << endl;
+                    _calibrator.addCalibrationBucket( _frame, _corners );
+                }
             }
         }
+            
+
 
         // Apply correction ********************************************************
         cv::Mat _frameCorrected;
@@ -202,6 +229,7 @@ int main( int argc, char** argv )
         _calibrator.applyCalibrationCorrection( _frame, _frameCorrected );
         cv::imshow( WINDOW_CORRECTED_FRAME, _frameCorrected );
 
+        calibration::update( _patternInfo );
         _calibrator.update();
 
         cv::imshow( WINDOW_ORIGINAL_FRAME, _frame );

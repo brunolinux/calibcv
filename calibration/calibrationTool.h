@@ -8,7 +8,7 @@
 #include <pthread.h>
 
 #define INITIAL_CALIBRATION_THRESHOLD_COUNT 30
-#define REFINED_CALIBRATION_THRESHOLD_COUNT 30
+#define REFINED_CALIBRATION_THRESHOLD_COUNT 25
 #define CALIBRATION_FOLDER "calib_"
 
 using namespace std;
@@ -247,13 +247,14 @@ namespace calibration
 
                         m_visualizer->addCalibratedBucket( m_calibrationImagesInitial, m_perViewErrors, VIZ_CALIB_TYPE_SIMPLE );
 
+                        m_perViewErrors.clear();
+
                         // Keep this data as initial, as we are going to need it after when ...
                         // the application requests a batch to refine
 
                         // m_calibrationImagesInitial.clear();
                         // m_calibrationRotMatricesInitial.clear();
                         // m_calibrationTranMatricesInitial.clear();
-                        // m_perViewErrors.clear();
                     }
                     else if ( m_calibStateOld == CALIB_STATE_CALIBRATED_SIMPLE ||
                               m_calibStateOld == CALIB_STATE_CALIBRATED_REFINED )
@@ -265,9 +266,16 @@ namespace calibration
                         m_calibrationRotMatricesRefining  = m_calibrationRotMatricesWorking;
                         m_calibrationTranMatricesRefining = m_calibrationTranMatricesWorking;
 
+                        // cout << "sizeimages: " << m_calibrationImagesRefining.size() << endl;
+                        // cout << "errs: " << m_perViewErrors.size() << endl;
+
                         m_visualizer->addCalibratedBucket( m_calibrationImagesRefining, m_perViewErrors, VIZ_CALIB_TYPE_REFINED );
 
                         // Set new calib state, refined data is now initial data
+                        m_calibrationImagesInitial.clear();
+                        m_calibrationRotMatricesInitial.clear();
+                        m_calibrationTranMatricesInitial.clear();
+
                         m_calibrationImagesInitial = m_calibrationImagesRefining;
                         m_calibrationRotMatricesInitial = m_calibrationRotMatricesRefining;
                         m_calibrationTranMatricesInitial = m_calibrationTranMatricesRefining;
@@ -277,6 +285,9 @@ namespace calibration
                         m_calibrationRotMatricesRefining.clear();
                         m_calibrationTranMatricesRefining.clear();
                         m_perViewErrors.clear();
+
+                        m_pointsInImageRefining.clear();
+                        m_pointsInWorldRefining.clear();
 
                     }
 
@@ -317,6 +328,9 @@ namespace calibration
             m_pointsInWorldRefining = vector< vector< cv::Point3f > >( 1 );
             getPatternKnownPlanePositions( m_pointsInWorldRefining[0], m_patternInfo );
             m_pointsInWorldRefining.resize( m_pointsInImageRefining.size(), m_pointsInWorldRefining[0] );            
+
+            // cout << "foo-sizeimages: " << m_calibrationImagesRefining.size() << endl;
+            // cout << "foo-errs: " << m_perViewErrors.size() << endl;
 
             pthread_create( &m_threadHandle, NULL, Calibrator::calibrateRefinedWorker, ( void* ) this );
         }
@@ -418,6 +432,11 @@ namespace calibration
             _calibrator->saveToFile( _calibrator->m_calibSaveFileRefined, 
                                      _calibrator->m_calibrationImagesRefining.size(), 
                                      VIZ_CALIB_TYPE_REFINED );
+
+            cout << "rms: " << _calibrator->m_calibrationReprojectionError << endl;
+            cout << "colinearityOld: " << _calibrator->m_calibrationOldColinearityError << endl;
+            cout << "colinearityNew: " << _calibrator->m_calibrationNewColinearityError << endl;
+
             _calibrator->m_isCalibrating = false;
         }
 
@@ -539,7 +558,7 @@ namespace calibration
                 _imgOriginalSavePath += to_string( q + 1 );
                 _imgOriginalSavePath += ".jpg";
 
-                _original = cv::imread( _imgSavePath );
+                _original = cv::imread( _imgOriginalSavePath );
 
                 m_calibrationImagesInitialOriginal.push_back( _original );
 
@@ -651,9 +670,9 @@ namespace calibration
             batchImagesToRefine.clear();
             batchPointsToRefine.clear();
 
-            for ( int q = 0; q < m_calibrationImagesInitial.size(); q++ )
+            for ( int q = 0; q < m_calibrationImagesInitialOriginal.size(); q++ )
             {
-                batchImagesToRefine.push_back( m_calibrationImagesInitial[q] );
+                batchImagesToRefine.push_back( m_calibrationImagesInitialOriginal[q] );
             }
 
             for ( int q = 0; q < m_pointsInImageInitial.size(); q++ )

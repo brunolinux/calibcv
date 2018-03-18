@@ -117,7 +117,7 @@ namespace calibration
 
         utils::distortPoints( undistortedRefinedPoints,
                               refinedPoints, cameraMatrix, distortionCoefficients );
-
+  
         refinedImageResult = originalView.clone();
 
         for ( int q = 0; q < originalPoints.size(); q++ )
@@ -255,12 +255,17 @@ namespace calibration
             m_workingDataBatchImages.clear();
             m_workingDataBatchPoints.clear();
 
-            m_workingDataCameraMatrix = cameraMatrix;
-            m_workingDataDistortionCoefficients = distortionCoefficients;
-            m_workingDataBatchPoints = batchPointsToRefine;
-            m_workingDataBatchImages = batchImagesToRefine;
+            m_workingDataCameraMatrix = cameraMatrix.clone();
+            m_workingDataDistortionCoefficients = distortionCoefficients.clone();
+
+            for ( int q = 0; q < batchImagesToRefine.size(); q++ )
+            {
+                m_workingDataBatchPoints.push_back( batchPointsToRefine[q] );
+                m_workingDataBatchImages.push_back( batchImagesToRefine[q].clone() );
+            }
 
             pthread_create( &m_threadHandle, NULL, BaseDetector::refinerWorker, ( void* ) this );
+            cout << "sent worker" << endl;
         }
         else
         {
@@ -306,7 +311,7 @@ namespace calibration
             if ( !_found )
             {
                 // cout << "Skipping frame, didn't find pattern in fronto view" << endl;
-                break;
+                continue;
             }
 
             _numFound++;
@@ -321,6 +326,23 @@ namespace calibration
                                         _refinedPoints,
                                         _refinationResult );
 
+            // cv::Mat _refinationResult;
+            // vector< cv::Point2f > _refinedPoints;
+
+            // bool _found = _refineSingleInternal( batchImagesToRefine[q],
+            //                                      batchPointsToRefine[q],
+            //                                      cameraMatrix,
+            //                                      distortionCoefficients,
+            //                                      _refinationResult,
+            //                                      _refinedPoints );
+
+            // if ( !_found )
+            // {
+            //     continue;
+            // }
+
+            // _numFound++;
+
             m_batchImagesRefinationResult.push_back( _refinationResult );
             m_batchPointsRefined.push_back( _refinedPoints );
         }
@@ -332,10 +354,16 @@ namespace calibration
     {
         BaseDetector* _detector = ( BaseDetector* ) pDetector;
 
+        cout << "working ..." << endl;
+
+        cout << "numbatch: " << _detector->m_workingDataBatchImages.size() << endl;
+
         _detector->_refineBatchInternal( _detector->m_workingDataBatchImages,
                                          _detector->m_workingDataBatchPoints,
                                          _detector->m_workingDataCameraMatrix,
                                          _detector->m_workingDataDistortionCoefficients );
+
+        cout << "done" << endl;
 
         _detector->m_hasRefinedPoints = true;
     }
@@ -346,8 +374,13 @@ namespace calibration
         {
             if ( m_hasRefinedPoints )
             {
+                cout << "stopped refiner thread" << endl;
                 pthread_join( m_threadHandle, NULL );
                 m_isRefining = false;
+            }
+            else
+            {
+                cout << "still refining" << endl;
             }
         }
 
@@ -377,6 +410,13 @@ namespace calibration
         {
             batchRefinedImages.push_back( m_batchImagesRefinationResult[q] );
             batchRefinedPoints.push_back( m_batchPointsRefined[q] );
+        }
+
+        if ( m_isRefining )
+        {
+            cout << "stopped refiner thread" << endl;
+            pthread_join( m_threadHandle, NULL );
+            m_isRefining = false;
         }
 
         m_hasRefinedPoints = false;
