@@ -138,8 +138,20 @@ namespace calibration { namespace chessboard {
                                                              vector< cv::Point2f >& frontoRefinedPoints )
         {
             frontoRefinedPoints.clear();
-            return cv::findChessboardCorners( input, m_size, frontoRefinedPoints,
-                                              CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_NORMALIZE_IMAGE );
+
+            bool _found = cv::findChessboardCorners( input, m_size, frontoRefinedPoints,
+                                                     CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_NORMALIZE_IMAGE );
+
+            if ( _found )
+            {
+                cv::Mat _imgGray;
+                cv::cvtColor( input, _imgGray, CV_BGR2GRAY );
+
+                cv::cornerSubPix( _imgGray, frontoRefinedPoints, cv::Size( 11,11 ), cv::Size( -1,-1 ), 
+                                  cv::TermCriteria( cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 30, 0.1 ) );
+            }
+
+            return _found;
         }
 
         void DetectorChessboard::getDetectedPoints( vector< cv::Point2f >& iPoints )
