@@ -13,6 +13,7 @@ namespace calibration
 
         m_isRefining = false;
         m_hasRefinedPoints = false;
+        m_useAsymmetricPicking = false;
 
         m_stepImageResults = vector< cv::Mat >( MAX_STAGES );
         m_pipelinePanel = calibcv::SPatternDetectorPanel::create();
@@ -47,19 +48,48 @@ namespace calibration
                              cameraMatrix, distortionCoefficients,
                              cv::noArray(), cameraMatrix );
 
-        // Create the points for the perspective mapping
-        // Borders points with radial padding
-        cv::Point2f _topLeft     = 2 * undistortedPatternPoints[0] - 
-                                   undistortedPatternPoints[ m_size.width + 1 ];
+        cv::Point2f _topLeft, _topRight, _bottomLeft, _bottomRight;
 
-        cv::Point2f _topRight    = 2 * undistortedPatternPoints[ m_size.width - 1 ] - 
-                                   undistortedPatternPoints[ 2 * m_size.width - 2 ];
+        if ( !m_useAsymmetricPicking )
+        {
+            // Create the points for the perspective mapping
+            // Borders points with radial padding
+            _topLeft     = 2 * undistortedPatternPoints[0] - 
+                           undistortedPatternPoints[ m_size.width + 1 ];
 
-        cv::Point2f _bottomRight = 2 * undistortedPatternPoints[ m_size.width * m_size.height - 1 ] - 
-                                   undistortedPatternPoints[ m_size.width * ( m_size.height - 1 ) - 2 ];
+            _topRight    = 2 * undistortedPatternPoints[ m_size.width - 1 ] - 
+                           undistortedPatternPoints[ 2 * m_size.width - 2 ];
 
-        cv::Point2f _bottomLeft  = 2 * undistortedPatternPoints[ m_size.width * ( m_size.height - 1 ) ] - 
-                                   undistortedPatternPoints[ m_size.width * ( m_size.height - 2 ) + 1 ];
+            _bottomRight = 2 * undistortedPatternPoints[ m_size.width * m_size.height - 1 ] - 
+                           undistortedPatternPoints[ m_size.width * ( m_size.height - 1 ) - 2 ];
+
+            _bottomLeft  = 2 * undistortedPatternPoints[ m_size.width * ( m_size.height - 1 ) ] - 
+                           undistortedPatternPoints[ m_size.width * ( m_size.height - 2 ) + 1 ];
+        }
+        else
+        {
+            cv::Point2f _sideRight1 = undistortedPatternPoints[0];
+            cv::Point2f _sideRight2 = undistortedPatternPoints[ m_size.width - 1 ];
+            cv::Point2f _sideLeft1 = undistortedPatternPoints[ m_size.width * ( m_size.height - 1 ) ];
+            cv::Point2f _sideLeft2 = undistortedPatternPoints[ m_size.width * m_size.height - 1 ];
+
+            cv::Point2f _vbottom1 = undistortedPatternPoints[ 2 * m_size.width - 1 ];
+            cv::Point2f _vbottom2 = undistortedPatternPoints[ m_size.width * ( m_size.height - 1 ) - 1 ];
+
+            cv::Point2f _p0, _p1, _p2, _p3;
+
+            _p0 = _sideRight1;
+            utils::getLinesIntersection( _sideRight1, _sideRight2, _vbottom1, _vbottom2, _p1 );
+            utils::getLinesIntersection( _sideLeft1, _sideLeft2, _vbottom1, _vbottom2, _p2 );
+            // _p1 = _sideRight2;
+            // _p2 = _sideLeft2;
+            _p3 = _sideLeft1;
+
+            _topLeft = _p3 + 0.2 * ( _p3 - _p1 ) ;
+            _topRight = _p0 + 0.2 * ( _p0 - _p2 );
+            _bottomRight = _p1 + 0.2 * ( _p1 - _p3 );
+            _bottomLeft = _p2 + 0.2 * ( _p2 - _p0 );
+        }
 
         vector< cv::Point2f > _src = { _topLeft, _topRight, _bottomRight, _bottomLeft };
 

@@ -44,6 +44,8 @@ namespace calibration
         cv::Size m_size;
         int m_numPoints;
 
+        bool m_useAsymmetricPicking;
+
         // To be used internally by each detector ( 2 step : make and get )
         vector< cv::Point2f > m_patternPoints;
 

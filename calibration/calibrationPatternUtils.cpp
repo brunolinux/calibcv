@@ -262,4 +262,34 @@ namespace utils {
         }
     }
 
+     bool getLinesIntersection( const cv::Point2f ap0, const cv::Point2f ap1, 
+                                const cv::Point2f bp0, const cv::Point2f bp1,
+                                cv::Point2f& intersection )
+    {
+        if ( cv::norm( ap1 - ap0 ) == 0.0f ||
+             cv::norm( bp1 - bp0 ) == 0.0f )
+        {
+            return false;
+        }
+
+        cv::Point2f _ua = ( ap1 - ap0 ) / cv::norm( ap1 - ap0 );
+        cv::Point2f _ub = ( bp1 - bp0 ) / cv::norm( bp1 - bp0 );
+
+        float _dsys = -_ub.x * _ua.y + _ub.y * _ua.x;
+        float _dq = -( ap0.x - bp0.x ) * _ua.y + ( ap0.y - bp0.y ) * _ua.x;
+        float _dt = ( ap0.y - bp0.y ) * _ub.x - ( ap0.x - bp0.x ) * _ub.y;
+
+        if ( _dsys == 0.0f )
+        {
+            return false;
+        }
+
+        float _t = _dt / _dsys;
+        float _q = _dq / _dsys;
+
+        intersection = ap0 + _ua * _t;
+
+        return true;
+    }
+
 }

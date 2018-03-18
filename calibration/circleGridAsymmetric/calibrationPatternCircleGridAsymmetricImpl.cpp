@@ -98,7 +98,7 @@ namespace calibration { namespace circleGridAsymmetric {
         DetectorCircleGridAsymmetric::DetectorCircleGridAsymmetric( const cv::Size& pSize )
             : BaseDetector( pSize )
         {
-            
+            m_useAsymmetricPicking = true;
         }
 
         DetectorCircleGridAsymmetric::~DetectorCircleGridAsymmetric()
@@ -139,7 +139,7 @@ namespace calibration { namespace circleGridAsymmetric {
         {
             frontoRefinedPoints.clear();
 
-            return cv::findCirclesGrid( input, m_size, frontoRefinedPoints );
+            return cv::findCirclesGrid( input, m_size, frontoRefinedPoints, cv::CALIB_CB_ASYMMETRIC_GRID );
         }
 
 

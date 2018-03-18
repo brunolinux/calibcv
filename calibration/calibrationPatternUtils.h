@@ -86,4 +86,8 @@ namespace utils {
                         vector< cv::Point2f >& distorted,
                         const cv::Mat& cameraMatrix, const cv::Mat& distortionCoefficients );
 
+    bool getLinesIntersection( const cv::Point2f ap0, const cv::Point2f ap1, 
+                               const cv::Point2f bp0, const cv::Point2f bp1,
+                               cv::Point2f& intersection );
+
 }

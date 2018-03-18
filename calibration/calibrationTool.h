@@ -332,6 +332,9 @@ namespace calibration
             // cout << "foo-sizeimages: " << m_calibrationImagesRefining.size() << endl;
             // cout << "foo-errs: " << m_perViewErrors.size() << endl;
 
+            // getCalibrationCameraMatrix( m_cameraMatrixWorking );
+            // getCalibrationDistortionCoefficients( m_distortionCoefficientsWorking );
+
             pthread_create( &m_threadHandle, NULL, Calibrator::calibrateRefinedWorker, ( void* ) this );
         }
 
@@ -399,7 +402,8 @@ namespace calibration
                                                                       _calibrator->m_cameraMatrixWorking,
                                                                       _calibrator->m_distortionCoefficientsWorking,
                                                                       _calibrator->m_calibrationRotMatricesWorking,
-                                                                      _calibrator->m_calibrationTranMatricesWorking );
+                                                                      _calibrator->m_calibrationTranMatricesWorking/*,
+                                                                      CV_CALIB_USE_INTRINSIC_GUESS*/ );
             // TODO: Check if change to undistort is necessary
             cv::initUndistortRectifyMap( _calibrator->m_cameraMatrixWorking, 
                                          _calibrator->m_distortionCoefficientsWorking, 
