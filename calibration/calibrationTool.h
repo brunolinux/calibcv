@@ -7,8 +7,8 @@
 #include <sys/stat.h>
 #include <pthread.h>
 
-#define INITIAL_CALIBRATION_THRESHOLD_COUNT 30
-#define REFINED_CALIBRATION_THRESHOLD_COUNT 25
+#define INITIAL_CALIBRATION_THRESHOLD_COUNT 50
+#define REFINED_CALIBRATION_THRESHOLD_COUNT 45
 #define CALIBRATION_FOLDER "calib_"
 
 using namespace std;
@@ -481,6 +481,8 @@ namespace calibration
 
         void saveToFile( string filename, int numFrames, int calibType )
         {
+            filename += "_";
+            filename += to_string( m_calibInitThresholdCount );
             filename += ".yaml";
             cv::FileStorage _fs( filename, cv::FileStorage::WRITE );
  
@@ -503,6 +505,8 @@ namespace calibration
         {
             cv::FileStorage _fs;
             
+            filename += "_";
+            filename += to_string( m_calibInitThresholdCount );
             filename += ".yaml";
 
             _fs.open( filename, cv::FileStorage::READ );
@@ -538,6 +542,8 @@ namespace calibration
             string _pathSaveFolder = "./" + m_calibFolder;
             _pathSaveFolder += "_simple_";
             _pathSaveFolder += m_calibSaveFile;
+            _pathSaveFolder += "_";
+            _pathSaveFolder += to_string( m_calibInitThresholdCount );
 
             cv::Mat _frame, _original;
             vector< cv::Point2f > _corners2D;
@@ -621,6 +627,8 @@ namespace calibration
         	string _pathSaveFolder = "./" + m_calibFolder;
             _pathSaveFolder += ( calibType == VIZ_CALIB_TYPE_SIMPLE ) ? "_simple_" : "_refined_";
             _pathSaveFolder += m_calibSaveFile;
+            _pathSaveFolder += "_";
+            _pathSaveFolder += to_string( m_calibInitThresholdCount );
 
         	mode_t _nMode = 0733;// permissions in unix
         	int _error = 0;

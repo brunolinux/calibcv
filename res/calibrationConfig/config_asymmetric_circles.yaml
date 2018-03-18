@@ -4,6 +4,6 @@ SquareSpacing: 0.035
 PatternType: 2
 PatternSizeWidth: 4
 PatternSizeHeight: 11
-CalibrationVideo: "LifeCam_asymmetric_circles.webm"
-CalibrationFile: "LifeCam_asymmetric_circles_calibration"
-CalibrationFileRefined: "LifeCam_asymmetric_circles_calibration_refined"
+CalibrationVideo: "PS3_asymmetric_circles.webm"
+CalibrationFile: "PS3_asymmetric_circles_calibration"
+CalibrationFileRefined: "PS3_asymmetric_circles_calibration_refined"
