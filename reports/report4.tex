@@ -14,7 +14,7 @@
 
 
 \begin{document}
-\title{Camera calibration using OpenCV}
+\title{Camera calibration with iterative refining of control points}
 
 \author{Wilbert~Pumacay,~\textit{Catholic University San Pablo},~wilbert.pumacay@ucsp.edu.pe\\
         Gerson~Vizcarra,~\textit{Catholic University San Pablo},~gerson.vizcarra@ucsp.edu.pe}
@@ -23,7 +23,7 @@
 \maketitle
 
 \begin{abstract}
-This paper presents an application of Prakash camera calibration approach \cite{Prakash2012}, that is a improvement of Ankur's one \cite{Ankur2009}, to get better results than Zhang \cite{CameraCalibration1} camera calibration technique implemented by OpenCV. Also we present an algorithm to detect rings pattern using adaptive segmentation, ellipse fitting, blob detector and other techniques. We present a comparison between results using feature extraction of chessboard corners, asymmetric circle grids, and concentric circle grid patterns, the first two, using funnctions implemented in OpenCV and the third one using our own algorithm.
+This paper presents an application of Prakash camera calibration approach \cite{Prakash2012}, that is a improvement of Ankur's one \cite{Ankur2009}, to get better results than Zhang \cite{CameraCalibration1} camera calibration technique implemented by OpenCV. Also we present an algorithm to detect rings pattern using adaptive segmentation, ellipse fitting, blob detector and other techniques. We present a comparison between results using feature extraction of chessboard corners, asymmetric circle grids, and concentric circle grid patterns, the first two, using functions implemented in OpenCV and the third one using our own algorithm.
 \\
 \\
 In the presented method, we use an iterative approach, that relies on refinement of control points in grid patterns. First, we make an initial calibration using OpenCV implementation of Zhang's method, the captured images of patterns are undistorted and projected onto a fronto-parallel plane, then we detect points of control projecting and re-distorting them onto the original image to refine previous points of control. This process is repeated until a convergence between projected points and previous ones. The results show that the presented method reduces error in ... compared to OpenCV.
@@ -40,7 +40,7 @@ Camera calibration, calibration pattern, circle grid, image processing.
 \IEEEPARstart{T}{he} camera calibration process is an important step in several applications, like augmented reality. To do calibration properly using current calibration methods we need to get features we can related in both 2D camera space and 3D world space to estimate the camera parameters that give this mapping. In this context, the use of grid patterns help by giving us the features we need, being the components in the pattern which we must detect in every frame in video.
 \\
 \\
-The camera calibration problem consists of finding 11 parameters that describe the mapping between 2D camera space and 3D world space. Six parameters, called extrinsic, come from an homogeneous transform, giving 6 parameters ( rotation and translation around the axes ). The other 5 parameters, called intrinsic, define some internal propertietos of the camera. This can be expressed in the following transformation equation:
+The camera calibration problem consists of finding 11 parameters that describe the mapping between 2D camera space and 3D world space. Six parameters, called extrinsic, come from an homogeneous transform, giving 6 parameters ( rotation and translation around the axes ). The other 5 parameters, called intrinsic, define some internal properties of the camera. This can be expressed in the following transformation equation:
 
 \begin{equation}
   \begin{bmatrix}
@@ -92,7 +92,7 @@ The presented method starts from a initial Zhang's camera calibration process us
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=2.5in]{_img/img_report4_pipeline.png}
+\includegraphics[width=3.0in]{_img/img_report4_pipeline.png}
 \caption{Pipeline of the implementation.}
 \end{figure}
 
@@ -101,7 +101,8 @@ The pipeline of our proposed pattern detection and tracking algorithm works as f
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=2.5in]{_img/algorithm_overview.png}
+\includegraphics[width=0.7in]{_img/img_report4_pipeline_detector.png}
+\includegraphics[width=2.3in]{_img/img_report4_pipeline_modes.png}
 \caption{Pipeline of previous work.}
 \end{figure}
 
@@ -111,7 +112,7 @@ The pipeline of our proposed pattern detection and tracking algorithm works as f
 This step is in charge of isolating the pattern by using threhsolding operations.
 \\
 \\
-The approach consists on creating a mask from the grayscale transformed image applying \textbf{Adaptive Thresholding algorithm}, this algorithm relies on Integral Image technique especified in \cite{IntegralImageThresholding}.
+The approach consists on creating a mask from the grayscale transformed image applying \textbf{Adaptive Thresholding algorithm}, this algorithm relies on Integral Image technique specified in \cite{IntegralImageThresholding}.
 \begin{algorithm}
 \caption{Masking}
 \label{alg:mask2}
