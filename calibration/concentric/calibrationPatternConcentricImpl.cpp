@@ -2,6 +2,8 @@
 #include "../calibrationPatternUtils.h"
 #include "calibrationPatternConcentricImpl.h"
 
+#include <queue>
+
 using namespace std;
 
 namespace calibration { namespace concentric {
@@ -259,7 +261,7 @@ namespace calibration { namespace concentric {
         }
 
         bool DetectorConcentric::_computeInitialPattern( const vector< cv::Point2f >& candidatePatternPoints,
-                                               vector< cv::Point2f >& matchedPoints, bool isFronto )
+                                                         vector< cv::Point2f >& matchedPoints, bool isFronto )
         {
             vector< cv::Point2f > _orderedKeypoints( m_numPoints );
 
@@ -270,25 +272,80 @@ namespace calibration { namespace concentric {
             int _topIndx    = 0;
             int _bottomIndx = 0;
 
-            for ( int q = 1; q < candidatePatternPoints.size(); q++ )
+            if ( !isFronto )
             {
-                if ( candidatePatternPoints[q].x < candidatePatternPoints[_leftIndx].x )
+                for ( int q = 1; q < candidatePatternPoints.size(); q++ )
                 {
-                    _leftIndx = q;
-                }
-                if ( candidatePatternPoints[q].x > candidatePatternPoints[_rightIndx].x )
-                {
-                    _rightIndx = q;
-                }
-                if ( candidatePatternPoints[q].y < candidatePatternPoints[_topIndx].y )
-                {
-                    _topIndx = q;
-                }
-                if ( candidatePatternPoints[q].y > candidatePatternPoints[_bottomIndx].y )
-                {
-                    _bottomIndx = q;
+                    if ( candidatePatternPoints[q].x < candidatePatternPoints[_leftIndx].x )
+                    {
+                        _leftIndx = q;
+                    }
+                    if ( candidatePatternPoints[q].x > candidatePatternPoints[_rightIndx].x )
+                    {
+                        _rightIndx = q;
+                    }
+                    if ( candidatePatternPoints[q].y < candidatePatternPoints[_topIndx].y )
+                    {
+                        _topIndx = q;
+                    }
+                    if ( candidatePatternPoints[q].y > candidatePatternPoints[_bottomIndx].y )
+                    {
+                        _bottomIndx = q;
+                    }
                 }
             }
+            else
+            {
+                typedef priority_queue< int, vector< int >, ComparatorCenter > p_queue;
+
+                p_queue pq( candidatePatternPoints );
+
+                cv::Point2f center( 0, 0 );
+
+                for( int i = 0; i < candidatePatternPoints.size(); i++ )
+                {
+                    pq.push(i);
+                    center += candidatePatternPoints[i];
+                }
+
+                center /= float( candidatePatternPoints.size() );
+
+                vector< int > _corners;
+                _corners.push_back( pq.top() ); pq.pop();
+                _corners.push_back( pq.top() ); pq.pop();
+                _corners.push_back( pq.top() ); pq.pop();
+                _corners.push_back( pq.top() ); pq.pop();
+
+                for( int i = 0; i < _corners.size(); i++)
+                {
+                    int q = _corners[i];
+
+                    if ( candidatePatternPoints[q].x < center.x &&
+                         candidatePatternPoints[q].y < center.y )
+                    {
+                        _topIndx = q;
+                    }
+
+                    if ( candidatePatternPoints[q].x > center.x &&
+                         candidatePatternPoints[q].y < center.y )
+                    {
+                        _rightIndx = q;
+                    }
+
+                    if ( candidatePatternPoints[q].y > center.y &&
+                         candidatePatternPoints[q].x > center.x )
+                    {
+                        _bottomIndx = q;
+                    }
+
+                    if ( candidatePatternPoints[q].y > center.y &&
+                         candidatePatternPoints[q].x < center.x )
+                    {
+                        _leftIndx = q;
+                    }
+                }
+            }
+
 
             vector< int > _cornerOptions = { _topIndx, _rightIndx, _bottomIndx, _leftIndx };
             
@@ -443,9 +500,9 @@ namespace calibration { namespace concentric {
                     {
                         cv::Point2f _candidate = m_candidatePoints[q];
 
-                        if ( !_assigned[q] && utils::dist( m_trackingPoints[t].pos, _candidate ) < 20 )
+                        if ( !_assigned[q] && utils::dist( m_trackingPoints[t].pos, _candidate ) < 10 )
                         {
-                            m_trackingPoints[t].vel = _candidate - m_trackingPoints[t].pos;
+                            m_trackingPoints[t].vel = cv::Point2f( 0, 0 );
                             m_trackingPoints[t].pos = _candidate;
                             m_trackingPoints[t].found = true;
                             _assigned[q] = true;
@@ -453,6 +510,23 @@ namespace calibration { namespace concentric {
                         }
                     }
                 }
+
+                // for ( int t = 0; t < m_trackingPoints.size(); t++ )
+                // {
+                //     if ( !m_trackingPoints[t].found )
+                //     {
+                //         cout << "tp: " << m_trackingPoints[t].pos << endl;
+                //     }
+                // }
+
+                // for ( int q = 0; q < m_candidatePoints.size(); q++ )
+                // {
+                //     if ( !_assigned[q] )
+                //     {
+                //         cout << "cp: " << m_candidatePoints[q] << endl;
+                //     }
+                // }
+                        
             }
             else
             {
@@ -595,9 +669,9 @@ namespace calibration { namespace concentric {
                 _candidatesFilteredPoints.push_back( _agg );
             }
 
-            patternPointsFronto = _candidatesFilteredPoints;
+            patternPointsFronto.clear();
 
-            return false;
+            return _computeInitialPattern( _candidatesFilteredPoints, patternPointsFronto, true );
         }
 
         string DetectorConcentric::getCurrentDetectionMode()

@@ -64,6 +64,11 @@ namespace utils {
 				}
 			}
 
+            if ( _closestIndx == -1 )
+            {
+                return false;
+            }
+
 			_found[_closestIndx] = true;
 
 			if ( _closestDist < RANGE_CLOSE )

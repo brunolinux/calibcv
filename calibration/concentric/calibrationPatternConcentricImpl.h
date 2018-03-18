@@ -66,6 +66,35 @@ namespace calibration { namespace concentric {
 	namespace detection
 	{
 
+        class ComparatorCenter
+        {
+            private :
+
+            vector< cv::Point2f > m_points;
+            cv::Point2f m_center;
+
+            public:
+
+            ComparatorCenter( vector< cv::Point2f > points )
+            {
+                cv::Point2f center( 0, 0 );
+
+                for( cv::Point2f point : points )
+                {
+                    center += point;
+                }
+
+                center /= float( points.size() );
+                m_center = center;
+                m_points = points;
+            }
+
+            bool operator() ( const int& left, const int& right ) const
+            {
+                return utils::dist( m_points[left], m_center ) < utils::dist( m_points[right], m_center );
+            }
+       };
+
 		class DetectorConcentric : public BaseDetector
 		{
 

@@ -1,9 +1,9 @@
 %YAML:1.0
 ---
-SquareSpacing: 0.0353
+SquareSpacing: 0.035
 PatternType: 2
 PatternSizeWidth: 4
 PatternSizeHeight: 11
-CalibrationVideo: "LifeCam_asymmetric_circles.avi"
+CalibrationVideo: "LifeCam_asymmetric_circles.webm"
 CalibrationFile: "LifeCam_asymmetric_circles_calibration.yaml"
 CalibrationFileRefined: "LifeCam_asymmetric_circles_calibration_refined.yaml"
