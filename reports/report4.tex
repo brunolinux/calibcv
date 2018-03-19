@@ -116,7 +116,7 @@ In order to detect the pattern faster and get better results, we created a state
 \begin{figure}[H]
 \centering
 \includegraphics[width=2.3in]{_img/img_report4_pipeline_modes.png}
-\caption{Behavior of mode based detector.}
+\caption{Behavior of state based detector.}
 \end{figure}
 
 For detecting the points in pattern we used a detection pipeline using some OpenCV functionality. This pipeline is shown in Fig. 3.
@@ -243,6 +243,13 @@ The second step in the calibration is the refining step, in which we use the pre
 
 The pipeline for the fronto parallel transformation is depicted in Fig. 12, and consists of the following steps :
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/report_4/img_fronto_parallel_pipeline.png}
+\caption{Pipeline of fronto-parallel transformation.}
+\end{figure}
+
+
 \begin{itemize}
 
     \item \textbf{Undistortion}
@@ -365,13 +372,7 @@ The pipeline for the fronto parallel transformation is depicted in Fig. 12, and 
 
 \subsubsection{ \textbf{ Refined recalibration } }
 
-Once we get our new refined batch, we can then recalibrate the camera and get refined intrinsic parameters. To do this we just call OpenCV's \textbf{calibrateCamera} again, with our new refined batch. We repeat this for twenty iterations and check for the reprojection error to check if there is any convergence, as you can see in the following figure.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=2.5in]{_img/img_report3_heatmap.png}
-\caption{Reprojection and colinearity errors during iterative recalibration}
-\end{figure}
+Once we get our new refined batch, we can then recalibrate the camera and get refined intrinsic parameters. To do this we just call OpenCV's \textbf{calibrateCamera} again, with our new refined batch. We repeat this for twenty iterations and check for the reprojection error to check if there is any convergence.
 
 \section{Parallelization}
 
@@ -511,7 +512,7 @@ For each calibration, we took a fixed batch of 20, 30, 40, 50 correctly processe
 
 \begin{table}[h]
 \centering
-\caption{Asymmetric circles pattern results with Lifecam camera}
+\caption{Asymmetric circles pattern results with PS3 camera}
 \begin{tabular}{ |c||c|c|c|c|  }
  \hline
  N° Batch & \multicolumn{2}{c|}{RMS} & \multicolumn{2}{c|}{Colinearity}\\
@@ -541,7 +542,7 @@ For each calibration, we took a fixed batch of 20, 30, 40, 50 correctly processe
 
 \begin{table}[h]
 \centering
-\caption{Concentric circles (rings) pattern results with Lifecam camera}
+\caption{Concentric circles (rings) pattern results with PS3 camera}
 \begin{tabular}{ |c||c|c|c|c|  }
  \hline
  N° Batch & \multicolumn{2}{c|}{RMS} & \multicolumn{2}{c|}{Colinearity}\\
@@ -585,7 +586,7 @@ For each calibration, we took a fixed batch of 20, 30, 40, 50 correctly processe
     \includegraphics[width=1.5in]{_img/report_4/img_issue_frames_distribution_1.png}
     \includegraphics[width=1.5in]{_img/report_4/img_issue_frames_distribution_1_plot.png}
     \caption{A frame not uniform to the calibration batch generates bigger reprojection errors}
-    \end{figure}    
+    \end{figure}
 
     As shown in the previous figure, this was a frame that didn't have much correlation with the other frames in the batch, as it was closer to the camera than the other. This suggests that a good calibration should be one that takes frames uniformly not only in the \textbf{x, y} axes, but in the \textbf{z} axis as well ( the cloud of points representing the frames should be uniformly distributed around the \textbf{xyz} region ).
 
