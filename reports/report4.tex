@@ -85,7 +85,7 @@ In equation $2$ we are looping through a set of features $n$ that are found in e
 Once calibrated, we can try to further improve the results of the calibration process by using the previous calibration data, which is used to correct the distortion and calculate a new refined set of features by running the pattern detector in a region which is parallel to the camera plane ( fronto parallel transformation ).
 
 \section{About the method}
-The general structure of the implemented pipeline is shown in Fig. 1. There are two main steps in the pipeline, which are depicted with a different color each. 
+The general structure of the implemented pipeline is shown in Fig. 1. There are two main steps in the pipeline, which are depicted with a different color each.
 \\
 \\
 \begin{itemize}
@@ -104,7 +104,7 @@ The general structure of the implemented pipeline is shown in Fig. 1. There are 
 We first discuss the initial calibration process, which consists of out pattern detector and the calibration batch picking process.
 
 \subsubsection{ \textbf{Circle concentric pattern detection} }
-In order to detect the pattern faster and get better results, we created a state based detector, with three main modes ( See Fig. 2 ): 
+In order to detect the pattern faster and get better results, we created a state based detector, with three main modes ( See Fig. 2 ):
 \\
 \begin{itemize}
   \item \textbf{Finding Mode}, which is in charge of detecting the pattern using an initial region of interest.
@@ -186,10 +186,10 @@ We now will show in more detail what each step in this pipeline does.
 \end{itemize}
 
 \subsubsection{ \textbf{ Pattern Matching and Ordering } }
-Once we have the features extracted, we have to order them for them to be used in the calibration algorithm. 
+Once we have the features extracted, we have to order them for them to be used in the calibration algorithm.
 \\
 \\
-To achieve this, we made a simple algorithm that matches the best candidate grid to the current features, and correct by the orientation in order to choose a correct ordering. We first create a bounding box of the current possible corners. Then, we take the outer most corners as the corners of the pattern. 
+To achieve this, we made a simple algorithm that matches the best candidate grid to the current features, and correct by the orientation in order to choose a correct ordering. We first create a bounding box of the current possible corners. Then, we take the outer most corners as the corners of the pattern.
 \\
 \\
 With this information, we can compute a candidate grid that represents the positions where the candidate points should be, as seen in figure 7. We check for each combination of outer most corners, which ordering gives the best fit. This will give us a correct ordering of the outer most corners of the pattern.
@@ -270,7 +270,7 @@ The pipeline for the fronto parallel transformation is depicted in Fig. 12, and 
     \item \textbf{Direct fronto-parallel transformation}
         \\
         \\
-        Once we are in the undistorted space, we can find the homography which will help us transform the image into a fronto-paralle view, as shown in Fig. 15. 
+        Once we are in the undistorted space, we can find the homography which will help us transform the image into a fronto-paralle view, as shown in Fig. 15.
 
         \begin{figure}[H]
         \centering
@@ -278,14 +278,14 @@ The pipeline for the fronto parallel transformation is depicted in Fig. 12, and 
         \caption{ \textit{ Fronto parallel view } }
         \end{figure}
 
-        To achieve this we construct a correspondance between the corners points in the pattern ( plus some offset, to make sure the whole pattern is mapped ) and a fronto-parallel view of the pattern ( where only the whole pattern fronto-parallel to the view ). With this correspondance we find the homography transformation, by means of OpenCV's \textbf{getPerspectiveTransform} function. 
+        To achieve this we construct a correspondance between the corners points in the pattern ( plus some offset, to make sure the whole pattern is mapped ) and a fronto-parallel view of the pattern ( where only the whole pattern fronto-parallel to the view ). With this correspondance we find the homography transformation, by means of OpenCV's \textbf{getPerspectiveTransform} function.
 
         \begin{figure}[H]
         \centering
         \includegraphics[width=2.5in]{_img/report_4/img_homography.png}
         \caption{Correspondance for homography computation}
         \end{figure}
-        
+
         We then transform the image to a fronto parallel view by means of OpenCV's \textbf{warpPerspective} method.
         \\
 
@@ -328,7 +328,7 @@ The pipeline for the fronto parallel transformation is depicted in Fig. 12, and 
         \centering
         \includegraphics[width=2.5in]{_img/report_4/img_refinement_inverse_perspective.png}
         \caption{Undistorted image with refined points}
-        \end{figure}        
+        \end{figure}
 
         We now just have to take these points back from the undistorted space to the original distorted image space.
         \\
@@ -356,7 +356,7 @@ The pipeline for the fronto parallel transformation is depicted in Fig. 12, and 
         \includegraphics[width=1.5in]{_img/report_4/img_refinement_distortion.png}
         \includegraphics[width=1.5in]{_img/report_4/img_refinement_distortion_chessboard.png}
         \caption{Refined points in original uncorrected space for rings and chessboard pattern}
-        \end{figure}   
+        \end{figure}
 
         This concludes the refining process, which will give us a new refined batch to calibrate with. This is done in the last part of this step.
 
@@ -370,34 +370,194 @@ Once we get our new refined batch, we can then recalibrate the camera and get re
 \centering
 \includegraphics[width=2.5in]{_img/img_report3_heatmap.png}
 \caption{Reprojection and colinearity errors during iterative recalibration}
-\end{figure}   
+\end{figure}
 
 \section{Results}
 We calibrated two cameras using as feature detection the three detection algorithms described earlier ( OpenCV's chessboard and circle finder and our algorithm )
 
-For each calibration, we took a fixed batch of 30 correctly processed images. The results are the following:
-\\
-\\
+For each calibration, we took a fixed batch of 20, 30, 40, 50 correctly processed images. The results are the following:
+
 \begin{table}[h]
 \centering
-\begin{tabular}{ |c||c|c|c|c|c|c|c|  }
+\caption{Chessboard pattern results with Lifecam camera}
+\begin{tabular}{ |c||c|c|c|c|  }
  \hline
- Parameter & \multicolumn{3}{c|}{PS3 Eye cam} & \multicolumn{3}{c|}{MS lifecam}\\
- \cline{2-7}
- & Chessboard & Circles & Rings & Chessboard & Circles & Rings \\
+ N° Batch & \multicolumn{2}{c|}{RMS} & \multicolumn{2}{c|}{Colinearity}\\
+ \cline{2-5}
+ & Initial & Iterative & Initial & Iterative \\
  \hline
- fx        & 876.2 & 933.2 & 829.5 & 609.6 & 609.5 & 627.0\\
- fy        & 876.6 & 935.4 & 834.8 & 609.4 & 612.6 & 631.8\\
- vx        & 325.0 & 342.3 & 320.0 & 326.9 & 351.5 & 342.7\\
- vy            & 251.4 & 220.7 & 243.5 & 223.8 & 227.2 & 231.2\\
- RMS error & 0.313 & 0.184 & 0.187 & 0.74 & 0.22 & 0.19\\
- Colinearity before & 0.152 & 0.051 & 0.17 & 0.546 & 0.068 & 0.05\\
- Colinearity after & 0.127 & 0.054 & 0.152 & 0.166 & 0.011 & 0.005\\
+ 20        & 0.374204 & 0.38766 & 6.46812 & 6.46958 \\
+ 30        & 0.415195 & 0.428411 & 7.00946 & 7.00455 \\
+ 40        & 0.336462 & 0.287172 & 4.33423 & 4.33893 \\
+ 50        & 0.306374 & 0.326697 & 5.42552 & 5.37304 \\
  \hline
 \end{tabular}
 \\
-\caption{PS3 Eye Cam and MS Lifecam calibration results}
 \end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/report_4/img_results_lifecam_chessboard.png}
+\caption{Results of RMS vs iterations in Lifecam camera and chessboard pattern}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/report_4/img_results_lifecam_colinearity_chessboard.png}
+\caption{Results of colinearity error vs iterations in Lifecam camera and chessboard pattern}
+\end{figure}
+
+
+\begin{table}[h]
+\centering
+\caption{Asymmetric circles pattern results with Lifecam camera}
+\begin{tabular}{ |c||c|c|c|c|  }
+ \hline
+ N° Batch & \multicolumn{2}{c|}{RMS} & \multicolumn{2}{c|}{Colinearity}\\
+ \cline{2-5}
+ & Initial & Iterative & Initial & Iterative \\
+ \hline
+ 20        & 0.222345 & 0.222763 & 4.09431 & 4.09381 \\
+ 30        & 0.331330 & 0.328184 & 5.27557 & 5.3586 \\
+ 40        & 0.259684 & 0.248669 & 4.66493 & 4.66603 \\
+ 50        & 0.264687 & 0.26316 & 4.34921 & 4.28743 \\
+ \hline
+\end{tabular}
+\\
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/report_4/img_results_lifecam_asymmetric.png}
+\caption{Results of RMS vs iterations in Lifecam camera and asymmetric circles pattern}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/report_4/img_results_lifecam_colinearity_asymmetric.png}
+\caption{Results of colinearity vs iterations in Lifecam camera and asymmetric circles pattern}
+\end{figure}
+
+\begin{table}[h]
+\centering
+\caption{Concentric circles (rings) pattern results with Lifecam camera}
+\begin{tabular}{ |c||c|c|c|c|  }
+ \hline
+ N° Batch & \multicolumn{2}{c|}{RMS} & \multicolumn{2}{c|}{Colinearity}\\
+ \cline{2-5}
+ & Initial & Iterative & Initial & Iterative \\
+ \hline
+ 20        & 0.306374 & 0.21358 & 5.42552 & 7.36297 \\
+ 30        & 0.259630 & 0.24536 & 7.15769 & 7.31293 \\
+ 40        & 0.270549 & 0.258839 & 7.63387 & 7.81084 \\
+ 50        & 0.374728 & 0.373889 & 8.00490 & 8.21095 \\
+ \hline
+\end{tabular}
+\\
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/report_4/img_results_lifecam_rings.png}
+\caption{Results of RMS vs iterations in Lifecam camera and rings pattern}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/report_4/img_results_lifecam_colinearity_rings.png}
+\caption{Results of colinearity error vs iterations in Lifecam camera and rings pattern}
+\end{figure}
+
+\begin{table}[h]
+\centering
+\caption{Chessboard pattern results with PS3 camera}
+\begin{tabular}{ |c||c|c|c|c|  }
+ \hline
+ N° Batch & \multicolumn{2}{c|}{RMS} & \multicolumn{2}{c|}{Colinearity}\\
+ \cline{2-5}
+ & Initial & Iterative & Initial & Iterative \\
+ \hline
+ 20        & 0.2155 & 0.2866 & 4.2983 & 4.2995 \\
+ 30        & 0.2272 & 0.2778 & 4.4263 & 4.4278 \\
+ 40        & 0.2064 & 0.2661 & 4.1667 & 4.1762 \\
+ 50        & 0.2487 & 0.2784 & 4.9589 & 4.9507 \\
+ \hline
+\end{tabular}
+\\
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/report_4/img_results_ps3_chessboard.png}
+\caption{Results of RMS vs iterations in PS3 camera and chessboard pattern}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/report_4/img_results_ps3_colinearity_chessboard.png}
+\caption{Results of colinearity error vs iterations in PS3 camera and chessboard pattern}
+\end{figure}
+
+\begin{table}[h]
+\centering
+\caption{Asymmetric circles pattern results with Lifecam camera}
+\begin{tabular}{ |c||c|c|c|c|  }
+ \hline
+ N° Batch & \multicolumn{2}{c|}{RMS} & \multicolumn{2}{c|}{Colinearity}\\
+ \cline{2-5}
+ & Initial & Iterative & Initial & Iterative \\
+ \hline
+ 20        & 0.1914 & 0.1933 & 3.7034 & 3.7067 \\
+ 30        & 0.1849 & 0.1864 & 3.6823 & 3.6820 \\
+ 40        & 0.2625 & 0.2588 & 4.3692 & 4.3106 \\
+ 50        & 0.2685 & 0.2699 & 4.4143 & 4.4143 \\
+ \hline
+\end{tabular}
+\\
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/report_4/img_results_ps3_asymmetric.png}
+\caption{Results of RMS vs iterations in PS3 camera and asymmetric circles pattern}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/report_4/img_results_ps3_colinearity_asymmetric.png}
+\caption{Results of colinearity error vs iterations in PS3 camera and asymmetric circles pattern}
+\end{figure}
+
+\begin{table}[h]
+\centering
+\caption{Concentric circles (rings) pattern results with Lifecam camera}
+\begin{tabular}{ |c||c|c|c|c|  }
+ \hline
+ N° Batch & \multicolumn{2}{c|}{RMS} & \multicolumn{2}{c|}{Colinearity}\\
+ \cline{2-5}
+ & Initial & Iterative & Initial & Iterative \\
+ \hline
+ 20        & 0.1991 & 0.1931 & 8.1223 & 8.1235 \\
+ 30        & 0.2112 & 0.2083 & 8.3407 & 8.3419 \\
+ 40        & 0.2966 & 0.2823 & 9.8922 & 9.8926 \\
+ 50        & 0.2425 & 0.2401 & 9.2364 & 9.2494 \\
+ \hline
+\end{tabular}
+\\
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/report_4/img_results_ps3_rings.png}
+\caption{Results of RMS vs iterations in PS3 camera and rings pattern}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=2.5in]{_img/report_4/img_results_ps3_colinearity_rings.png}
+\caption{Results of colinearity error vs iterations in PS3 camera and rings pattern}
+\end{figure}
+
 
 \section{Conclusions and Future improvements}
 We see by the results that our algorithm is close enough compared to OpenCV's pattern detectors. We got close to the camera matrix parameters obtained by the other detector algorithms.
