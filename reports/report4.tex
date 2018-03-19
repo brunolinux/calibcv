@@ -9,6 +9,7 @@
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{lipsum}
+\usepackage{hyperref}
 
 % correct bad hyphenation here
 \hyphenation{op-tical net-works semi-conduc-tor}
@@ -372,6 +373,16 @@ Once we get our new refined batch, we can then recalibrate the camera and get re
 \caption{Reprojection and colinearity errors during iterative recalibration}
 \end{figure}
 
+\section{Parallelization}
+
+We got stuck in some points in the iterative process as we couldn't see intermediate results as the iterations went by. The way we tackle this issue was by making the calibration and refining processes run in separate threads, separate of the application main thread, which main purpose was data visualization.
+\\
+\\
+This approach allowed us to analyze the results more quickly, as well as taking them quickly. A simple change can be made to make batches of refinements and calibrations run in different threads.
+\\
+\\
+To see more of this implementation, refer to the repository and the implementation of the \href{https://github.com/wpumacay/calibcv/blob/dev/calibration/calibrationBaseDetector.cpp}(\textbf{BaseDetector}) and \href{https://github.com/wpumacay/calibcv/blob/dev/calibration/calibrationTool.h}(\textbf{Calibrator}) classes, which implement this functionality.
+
 \section{Results}
 We calibrated two cameras using as feature detection the three detection algorithms described earlier ( OpenCV's chessboard and circle finder and our algorithm )
 
@@ -559,20 +570,28 @@ For each calibration, we took a fixed batch of 20, 30, 40, 50 correctly processe
 \end{figure}
 
 
-\section{Conclusions and Future improvements}
-We see by the results that our algorithm is close enough compared to OpenCV's pattern detectors. We got close to the camera matrix parameters obtained by the other detector algorithms.
+\section{Conclusions}
 
-Also, the matching and ordering algorithm allows us to get the right ordering, allowing us to pick the right calibration frames to be used for the calibration process.
+\begin{itemize}
 
-This process is still quite cumbersome because we have to pick each frame that we want to use. We plan on making this process automatic, by keeping frames at some fixed rate and checking that we pick the right combination of frames from a big batch that give us a good overall distribution over the whole field of view. We have made some tools to help us with this task, as shown in Fig. 9.
+    \item By the results we see that the refinement helps a little in the concentric pattern case. We see a small drop in the RMS error in this pattern with the PS3 camera. It seems that this approach doesn't help very much in the case of the other patterns, being the chessboard the case in which in fact increases the error. This could be because of the initial calibration, as for some tests we did with poorly calibrated cases we saw that the iterative process made the intrinsic parameters ( mainly the camera center ) move around a region in a random way.
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=2.5in]{_img/tools.png}
-\caption{Pattern final ordering after matching.}
-\end{figure}
+    \item We can conclude that the refinement process helps, but very little, as the plots suggest. This could be caused by the choice of the refined points, as we are only integrating the refined points into the new refined batch. One way to fix this could be to use more information of the pattern in te fronto parallel view, to generate an extra set of points ( expected grid pattern ) which could be averaged with the refined points and the previous pattern points.
 
-We have a heat-map that give us a distribution visualizer, as well as a histogram to be sure we are picking the patterns at some range of orientations.
+    \item After testing the refinement, we also noticed that the distribution of the frames taken for the calibration plays a big role in a good calibration process. We noticed this by plotting the error and checking which frames caused more reprojection error in the batch, as you can see in the following picture.
+
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=1.5in]{_img/report_4/img_issue_frames_distribution_1.png}
+    \includegraphics[width=1.5in]{_img/report_4/img_issue_frames_distribution_1_plot.png}
+    \caption{A frame not uniform to the calibration batch generates bigger reprojection errors}
+    \end{figure}    
+
+    As shown in the previous figure, this was a frame that didn't have much correlation with the other frames in the batch, as it was closer to the camera than the other. This suggests that a good calibration should be one that takes frames uniformly not only in the \textbf{x, y} axes, but in the \textbf{z} axis as well ( the cloud of points representing the frames should be uniformly distributed around the \textbf{xyz} region ).
+
+    \item We also checked that a multithreaded implementation allowed easy extraction of the information and a more responsive way to implement calibration. Our first implementation lacked this featured, and it was not possible to analyze other aspects of the previous results while we were waiting for the results, nor we could see intermediate results as the iterations passed. The calibration process can be easily parallelized - extracted from the application thread, as it only needs to be working on an initial set of features and then not touching other applications' data.
+
+\end{itemize}
 
 \IEEEtriggeratref{8}
 
