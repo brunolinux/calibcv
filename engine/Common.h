@@ -5,6 +5,8 @@
 #define KEY_SPACE 32
 #define KEY_ENTER 13
 #define KEY_R     114
+#define KEY_P     112
+#define KEY_C     99
 
 #include <vector>
 #include <iostream>

@@ -1,0 +1,81 @@
+iteration results: 
+iteration 1*******
+rmsError: 0.193754
+colinearityError: 8.12354
+
+iteration 2*******
+rmsError: 0.19298
+colinearityError: 8.1238
+
+iteration 3*******
+rmsError: 0.193981
+colinearityError: 8.12355
+
+iteration 4*******
+rmsError: 0.193954
+colinearityError: 8.12364
+
+iteration 5*******
+rmsError: 0.192849
+colinearityError: 8.12358
+
+iteration 6*******
+rmsError: 0.191247
+colinearityError: 8.12354
+
+iteration 7*******
+rmsError: 0.192169
+colinearityError: 8.12362
+
+iteration 8*******
+rmsError: 0.193522
+colinearityError: 8.12378
+
+iteration 9*******
+rmsError: 0.192428
+colinearityError: 8.12357
+
+iteration 10*******
+rmsError: 0.192658
+colinearityError: 8.12368
+
+iteration 11*******
+rmsError: 0.193155
+colinearityError: 8.12365
+
+iteration 12*******
+rmsError: 0.192197
+colinearityError: 8.1236
+
+iteration 13*******
+rmsError: 0.193875
+colinearityError: 8.12359
+
+iteration 14*******
+rmsError: 0.193574
+colinearityError: 8.1235
+
+iteration 15*******
+rmsError: 0.192456
+colinearityError: 8.12373
+
+iteration 16*******
+rmsError: 0.19357
+colinearityError: 8.12355
+
+iteration 17*******
+rmsError: 0.19305
+colinearityError: 8.12333
+
+iteration 18*******
+rmsError: 0.191432
+colinearityError: 8.12373
+
+iteration 19*******
+rmsError: 0.192194
+colinearityError: 8.12367
+
+iteration 20*******
+rmsError: 0.193149
+colinearityError: 8.12351
+

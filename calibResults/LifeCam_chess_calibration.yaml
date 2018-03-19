@@ -6,16 +6,16 @@ CameraMatrix: !!opencv-matrix
    rows: 3
    cols: 3
    dt: d
-   data: [ 6.0960089524988075e+02, 0., 3.2690953561620165e+02, 0.,
-       6.0944958202119892e+02, 2.2383884269504770e+02, 0., 0., 1. ]
+   data: [ 5.7888640056918246e+02, 0., 3.1536145296447995e+02, 0.,
+       5.7470407450856305e+02, 2.4213158507186554e+02, 0., 0., 1. ]
 DistortionCoefficients: !!opencv-matrix
    rows: 1
    cols: 5
    dt: d
-   data: [ 4.2408715923863659e-02, -1.3359912666849069e-01,
-       -1.0282820314657434e-03, -2.1472794192546013e-03,
-       2.0710803502169015e-01 ]
-CalibrationRMSerror: 3.7481486797332764e-01
-CalibrationReprojectionError: 3.7481504678726196e-01
-CalibrationColinearityErrorOld: 4.3398380279541016e+00
-CalibrationColinearityErrorNew: 4.3381919860839844e+00
+   data: [ -1.5064322440416500e-02, 6.9134611794089182e-02,
+       2.2380072103663270e-03, -1.0969614529415169e-02,
+       -1.3826188199618350e-01 ]
+CalibrationRMSerror: 2.3719568550586700e-01
+CalibrationReprojectionError: 2.3719578981399536e-01
+CalibrationColinearityErrorOld: 4.3402485847473145e+00
+CalibrationColinearityErrorNew: 4.3386096954345703e+00

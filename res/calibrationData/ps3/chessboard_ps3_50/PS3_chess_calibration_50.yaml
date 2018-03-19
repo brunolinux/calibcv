@@ -1,0 +1,22 @@
+%YAML:1.0
+---
+FrameWidth: 640
+FrameHeight: 480
+FramesInCalibration: 50
+CameraMatrix: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [ 8.2675768025319326e+02, 0., 2.5876842051070474e+02, 0.,
+       8.1613941553785662e+02, 2.7470634314105376e+02, 0., 0., 1. ]
+DistortionCoefficients: !!opencv-matrix
+   rows: 1
+   cols: 5
+   dt: d
+   data: [ -3.0888115030549684e-01, 8.8309983370293971e-03,
+       -2.8907948680531111e-03, 4.8876259941035873e-03,
+       2.1392004260134451e-02 ]
+CalibrationRMSerror: 2.4871946871280670e-01
+CalibrationReprojectionError: 2.4871948361396790e-01
+CalibrationColinearityErrorOld: 4.9602065086364746e+00
+CalibrationColinearityErrorNew: 4.9589776992797852e+00
