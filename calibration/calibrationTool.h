@@ -7,7 +7,7 @@
 #include <sys/stat.h>
 #include <pthread.h>
 
-#define INITIAL_CALIBRATION_THRESHOLD_COUNT 50
+#define INITIAL_CALIBRATION_THRESHOLD_COUNT 30
 #define REFINED_CALIBRATION_THRESHOLD_COUNT INITIAL_CALIBRATION_THRESHOLD_COUNT - 5
 #define CALIBRATION_FOLDER "calib_"
 
@@ -67,7 +67,7 @@ namespace calibration
         cv::Mat m_transformationMap1Working;
         cv::Mat m_transformationMap2Working;
         cv::Mat m_cameraMatrixWorking;
-        cv::Mat m_distortionCoefficientsWorking;        
+        cv::Mat m_distortionCoefficientsWorking;
         vector< cv::Mat > m_calibrationRotMatricesWorking;
         vector< cv::Mat > m_calibrationTranMatricesWorking;
         // *************************************************************************
@@ -212,7 +212,7 @@ namespace calibration
                 //     m_calibStateOld = m_calibState;
                 //     m_calibState = CALIB_STATE_CALIBRATING;
                 //     m_isCalibrating = true;
-                    
+
                 //     calibrateRefined();
                 // }
             }
@@ -327,7 +327,7 @@ namespace calibration
         {
             m_pointsInWorldRefining = vector< vector< cv::Point3f > >( 1 );
             getPatternKnownPlanePositions( m_pointsInWorldRefining[0], m_patternInfo );
-            m_pointsInWorldRefining.resize( m_pointsInImageRefining.size(), m_pointsInWorldRefining[0] );            
+            m_pointsInWorldRefining.resize( m_pointsInImageRefining.size(), m_pointsInWorldRefining[0] );
 
             // cout << "foo-sizeimages: " << m_calibrationImagesRefining.size() << endl;
             // cout << "foo-errs: " << m_perViewErrors.size() << endl;
@@ -351,33 +351,34 @@ namespace calibration
                                                                       _calibrator->m_calibrationRotMatricesWorking,
                                                                       _calibrator->m_calibrationTranMatricesWorking );
 
-            cv::initUndistortRectifyMap( _calibrator->m_cameraMatrixWorking, 
-                                         _calibrator->m_distortionCoefficientsWorking, 
-                                         cv::Mat(), cv::Mat(), 
+            cv::initUndistortRectifyMap( _calibrator->m_cameraMatrixWorking,
+                                         _calibrator->m_distortionCoefficientsWorking,
+                                         cv::Mat(), cv::Mat(),
                                          _calibrator->m_frameSize,
-                                         CV_32FC1, 
-                                         _calibrator->m_transformationMap1Working, 
+                                         CV_32FC1,
+                                         _calibrator->m_transformationMap1Working,
                                          _calibrator->m_transformationMap2Working );
 
-            utils::computeReprojectionErrors( _calibrator->m_cameraMatrixWorking, 
-                                              _calibrator->m_distortionCoefficientsWorking, 
-                                              _calibrator->m_pointsInWorldInitial, 
-                                              _calibrator->m_pointsInImageInitial, 
-                                              _calibrator->m_calibrationRotMatricesWorking, 
-                                              _calibrator->m_calibrationTranMatricesWorking, 
+            utils::computeReprojectionErrors( _calibrator->m_cameraMatrixWorking,
+                                              _calibrator->m_distortionCoefficientsWorking,
+                                              _calibrator->m_pointsInWorldInitial,
+                                              _calibrator->m_pointsInImageInitial,
+                                              _calibrator->m_calibrationRotMatricesWorking,
+                                              _calibrator->m_calibrationTranMatricesWorking,
                                               _calibrator->m_calibrationReprojectionError,
                                               _calibrator->m_perViewErrors );
 
-            utils::computeColinearityErrors( _calibrator->m_cameraMatrixWorking, 
-                                             _calibrator->m_distortionCoefficientsWorking, 
-                                             _calibrator->m_pointsInWorldInitial, 
-                                             _calibrator->m_pointsInImageInitial, 
-                                             _calibrator->m_calibrationRotMatricesWorking, 
-                                             _calibrator->m_calibrationTranMatricesWorking, 
+            utils::computeColinearityErrors( _calibrator->m_cameraMatrixWorking,
+                                             _calibrator->m_distortionCoefficientsWorking,
+                                             _calibrator->m_pointsInWorldInitial,
+                                             _calibrator->m_pointsInImageInitial,
+                                             _calibrator->m_calibrationRotMatricesWorking,
+                                             _calibrator->m_calibrationTranMatricesWorking,
+                                             _calibrator->m_patternInfo.size,
                                              _calibrator->m_calibrationOldColinearityError,
                                              _calibrator->m_calibrationNewColinearityError );
 
-            _calibrator->saveCalibrationImages( _calibrator->m_calibrationImagesInitial, 
+            _calibrator->saveCalibrationImages( _calibrator->m_calibrationImagesInitial,
                                                 _calibrator->m_calibrationImagesInitialOriginal,
                                                 _calibrator->m_pointsInImageInitial,
                                                 _calibrator->m_pointsInWorldInitial,
@@ -385,8 +386,8 @@ namespace calibration
                                                 _calibrator->m_calibrationTranMatricesWorking,
                                                 _calibrator->m_perViewErrors,
                                                 VIZ_CALIB_TYPE_SIMPLE );
-            _calibrator->saveToFile( _calibrator->m_calibSaveFile, 
-                                     _calibrator->m_calibrationImagesInitial.size(), 
+            _calibrator->saveToFile( _calibrator->m_calibSaveFile,
+                                     _calibrator->m_calibrationImagesInitial.size(),
                                      VIZ_CALIB_TYPE_SIMPLE );
             _calibrator->m_isCalibrating = false;
         }
@@ -405,36 +406,37 @@ namespace calibration
                                                                       _calibrator->m_calibrationTranMatricesWorking/*,
                                                                       CV_CALIB_USE_INTRINSIC_GUESS*/ );
             // TODO: Check if change to undistort is necessary
-            cv::initUndistortRectifyMap( _calibrator->m_cameraMatrixWorking, 
-                                         _calibrator->m_distortionCoefficientsWorking, 
-                                         cv::Mat(), cv::Mat(), 
+            cv::initUndistortRectifyMap( _calibrator->m_cameraMatrixWorking,
+                                         _calibrator->m_distortionCoefficientsWorking,
+                                         cv::Mat(), cv::Mat(),
                                          _calibrator->m_frameSize,
-                                         CV_32FC1, 
-                                         _calibrator->m_transformationMap1Working, 
+                                         CV_32FC1,
+                                         _calibrator->m_transformationMap1Working,
                                          _calibrator->m_transformationMap2Working );
 
-            utils::computeReprojectionErrors( _calibrator->m_cameraMatrixWorking, 
-                                              _calibrator->m_distortionCoefficientsWorking, 
-                                              _calibrator->m_pointsInWorldRefining, 
-                                              _calibrator->m_pointsInImageRefining, 
-                                              _calibrator->m_calibrationRotMatricesWorking, 
-                                              _calibrator->m_calibrationTranMatricesWorking, 
+            utils::computeReprojectionErrors( _calibrator->m_cameraMatrixWorking,
+                                              _calibrator->m_distortionCoefficientsWorking,
+                                              _calibrator->m_pointsInWorldRefining,
+                                              _calibrator->m_pointsInImageRefining,
+                                              _calibrator->m_calibrationRotMatricesWorking,
+                                              _calibrator->m_calibrationTranMatricesWorking,
                                               _calibrator->m_calibrationReprojectionError,
                                               _calibrator->m_perViewErrors );
 
-            utils::computeColinearityErrors( _calibrator->m_cameraMatrixWorking, 
-                                             _calibrator->m_distortionCoefficientsWorking, 
-                                             _calibrator->m_pointsInWorldRefining, 
-                                             _calibrator->m_pointsInImageRefining, 
-                                             _calibrator->m_calibrationRotMatricesWorking, 
-                                             _calibrator->m_calibrationTranMatricesWorking, 
+            utils::computeColinearityErrors( _calibrator->m_cameraMatrixWorking,
+                                             _calibrator->m_distortionCoefficientsWorking,
+                                             _calibrator->m_pointsInWorldRefining,
+                                             _calibrator->m_pointsInImageRefining,
+                                             _calibrator->m_calibrationRotMatricesWorking,
+                                             _calibrator->m_calibrationTranMatricesWorking,
+                                             _calibrator->m_patternInfo.size,
                                              _calibrator->m_calibrationOldColinearityError,
                                              _calibrator->m_calibrationNewColinearityError );
 
             // Use the initial calibration images for further refinenment
             // _calibrator->saveCalibrationImages( _calibrator->m_calibrationImagesRefining, VIZ_CALIB_TYPE_REFINED );
-            _calibrator->saveToFile( _calibrator->m_calibSaveFileRefined, 
-                                     _calibrator->m_calibrationImagesRefining.size(), 
+            _calibrator->saveToFile( _calibrator->m_calibSaveFileRefined,
+                                     _calibrator->m_calibrationImagesRefining.size(),
                                      VIZ_CALIB_TYPE_REFINED );
 
             cout << "rms: " << _calibrator->m_calibrationReprojectionError << endl;
@@ -476,7 +478,7 @@ namespace calibration
                     cv::remap( src, dst, m_transformationMap1Initial, m_transformationMap2Initial, cv::INTER_LINEAR );
                 }
             }
-            
+
         }
 
         void saveToFile( string filename, int numFrames, int calibType )
@@ -485,7 +487,7 @@ namespace calibration
             filename += to_string( m_calibInitThresholdCount );
             filename += ".yaml";
             cv::FileStorage _fs( filename, cv::FileStorage::WRITE );
- 
+
             _fs << TAG_FRAME_WIDTH << m_frameSize.width;
             _fs << TAG_FRAME_HEIGHT << m_frameSize.height;
             _fs << TAG_FRAMES_IN_CALIBRATION << numFrames;
@@ -495,7 +497,7 @@ namespace calibration
             _fs << TAG_CALIBRATION_ERROR_REPROJECTION << m_calibrationReprojectionError;
             _fs << TAG_CALIBRATION_ERROR_COLINEARITY_OLD << m_calibrationOldColinearityError;
             _fs << TAG_CALIBRATION_ERROR_COLINEARITY_NEW << m_calibrationNewColinearityError;
-            
+
             _fs.release();
 
             m_visualizer->saveToFile();
@@ -504,13 +506,13 @@ namespace calibration
         bool loadFromFile( string filename )
         {
             cv::FileStorage _fs;
-            
+
             filename += "_";
             filename += to_string( m_calibInitThresholdCount );
             filename += ".yaml";
 
             _fs.open( filename, cv::FileStorage::READ );
-            
+
             if ( !_fs.isOpened() )
             {
                 std::cout << "couldn't find calibration file: " << filename << std::endl;
@@ -518,25 +520,25 @@ namespace calibration
             }
 
             init();
-            
+
             int _numCalibrationFrames;
 
             _fs[ TAG_CAMERA_MATRIX ] >> m_cameraMatrixInitial;
             _fs[ TAG_DISTORTION_COEFFICIENTS ] >> m_distortionCoefficientsInitial;
             _fs[ TAG_FRAMES_IN_CALIBRATION ] >> _numCalibrationFrames;
-            
+
             int _fw, _fh;
             _fs[ TAG_FRAME_WIDTH ] >> _fw;
             _fs[ TAG_FRAME_HEIGHT ] >> _fh;
-            
+
             _fs.release();
-            
+
             if ( m_frameSize.width != _fw ||
                  m_frameSize.height != _fh )
             {
                 std::cout << "WARNING: Size from previous calibration does not match" << std::endl;
             }
-            
+
             // Load the initial images and data
 
             string _pathSaveFolder = "./" + m_calibFolder;
@@ -583,14 +585,14 @@ namespace calibration
                 _fsFrame[ TAG_CALIBRATION_FRAME_EXT_ROTATION ] >> _rot;
                 _fsFrame[ TAG_CALIBRATION_FRAME_EXT_TRANSLATION ] >> _trans;
                 _fsFrame[ TAG_CALIBRATION_FRAME_ERROR_RMS ] >> _rmsError;
-                
+
                 m_pointsInImageInitial.push_back( _corners2D );
                 m_pointsInWorldInitial.push_back( _corners3D );
                 m_calibrationRotMatricesInitial.push_back( _rot );
                 m_calibrationTranMatricesInitial.push_back( _trans );
                 m_perViewErrors.push_back( _rmsError );
 
-                _fsFrame.release(); 
+                _fsFrame.release();
             }
 
             for ( int q = 0; q < m_calibrationImagesInitial.size(); q++ )
@@ -602,19 +604,19 @@ namespace calibration
             m_visualizer->addCalibratedBucket( m_calibrationImagesInitial, m_perViewErrors, VIZ_CALIB_TYPE_SIMPLE );
 
 
-            cv::initUndistortRectifyMap( m_cameraMatrixInitial, m_distortionCoefficientsInitial, 
-                                         cv::Mat(), cv::Mat(), 
+            cv::initUndistortRectifyMap( m_cameraMatrixInitial, m_distortionCoefficientsInitial,
+                                         cv::Mat(), cv::Mat(),
                                          m_frameSize,
                                          CV_32FC1, m_transformationMap1Initial, m_transformationMap2Initial );
-            
+
             m_calibState = CALIB_STATE_CALIBRATED_SIMPLE;
             m_calibStateOld = CALIB_STATE_CALIBRATED_SIMPLE;
             m_useMode = USE_MODE_INITIAL;
-            
+
             return true;
         }
 
-        void saveCalibrationImages( const vector< cv::Mat >& images, 
+        void saveCalibrationImages( const vector< cv::Mat >& images,
                                     const vector< cv::Mat >& imagesOriginal,
                                     const vector< vector< cv::Point2f > >& pointsInImage,
                                     const vector< vector< cv::Point3f > >& pointsInWorld,
@@ -671,8 +673,8 @@ namespace calibration
                 _fs << TAG_CALIBRATION_FRAME_EXT_ROTATION << rot[q];
                 _fs << TAG_CALIBRATION_FRAME_EXT_TRANSLATION << trans[q];
                 _fs << TAG_CALIBRATION_FRAME_ERROR_RMS << rmsErrors[q];
-                
-                _fs.release();        	
+
+                _fs.release();
             }
         }
 
@@ -724,16 +726,16 @@ namespace calibration
             m_calibStateOld = m_calibState;
             m_calibState = CALIB_STATE_CALIBRATING;
             m_isCalibrating = true;
-                    
-            calibrateRefined();            
+
+            calibrateRefined();
         }
 
-        int getCalibrationSize() 
-        { 
+        int getCalibrationSize()
+        {
             if ( m_calibState == CALIB_STATE_UNCALIBRATED ||
                  m_calibStateOld == CALIB_STATE_UNCALIBRATED )
-            {            
-                return m_calibrationImagesInitial.size(); 
+            {
+                return m_calibrationImagesInitial.size();
             }
             else if ( m_calibState == CALIB_STATE_CALIBRATED_SIMPLE ||
                       m_calibStateOld == CALIB_STATE_CALIBRATED_SIMPLE ||
@@ -746,8 +748,8 @@ namespace calibration
             return -1;
         }
 
-        void getCalibrationCameraMatrix( cv::Mat& cameraMatrix ) 
-        { 
+        void getCalibrationCameraMatrix( cv::Mat& cameraMatrix )
+        {
             if ( m_calibState == CALIB_STATE_CALIBRATED_SIMPLE ||
                  m_calibStateOld == CALIB_STATE_CALIBRATED_SIMPLE )
             {

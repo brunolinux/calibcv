@@ -80,13 +80,14 @@ namespace utils {
                                    const vector< vector< cv::Point3f > >& worldPoints,
                                    const vector< vector< cv::Point2f > >& imagePoints,
                                    const vector< cv::Mat >& rvecs, const vector< cv::Mat >& tvecs,
+                                   const cv::Size& boardSize,
                                    float& oldColinearity, float& newColinearity );
 
     void distortPoints( const vector< cv::Point2f >& undistorted,
                         vector< cv::Point2f >& distorted,
                         const cv::Mat& cameraMatrix, const cv::Mat& distortionCoefficients );
 
-    bool getLinesIntersection( const cv::Point2f ap0, const cv::Point2f ap1, 
+    bool getLinesIntersection( const cv::Point2f ap0, const cv::Point2f ap1,
                                const cv::Point2f bp0, const cv::Point2f bp1,
                                cv::Point2f& intersection );
 

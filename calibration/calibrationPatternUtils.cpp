@@ -114,7 +114,7 @@ namespace utils {
 
 				cv::Point2f _point = ( 1.0f - _ee ) * _pLeft + ( _ee ) * _pRight +
 									 ( 1.0f - _nn ) * _pBottom + ( _nn ) * _pTop -
-									 ( 1.0f - _nn ) * ( 1.0f - _ee ) * p3 - 
+									 ( 1.0f - _nn ) * ( 1.0f - _ee ) * p3 -
 									 ( 1.0f - _ee ) * ( _nn ) * p0 -
 									 ( 1.0f - _nn ) * ( _ee ) * p2 -
 									 ( _nn ) * ( _ee ) * p1;
@@ -169,10 +169,10 @@ namespace utils {
     {
         vector< cv::Point2f > _reprojectedPoints;
         size_t _totalPoints = 0;
-            
+
         float _totalErr = 0;
         float _err = 0;
-            
+
         perViewErrors.resize( worldPoints.size() );
 
         for( size_t i = 0; i < worldPoints.size(); ++i )
@@ -193,23 +193,38 @@ namespace utils {
     							   const vector< vector< cv::Point3f > >& worldPoints,
                                    const vector< vector< cv::Point2f > >& imagePoints,
                                    const vector< cv::Mat >& rvecs, const vector< cv::Mat >& tvecs,
+                                   const cv::Size& boardSize,
                                    float& oldColinearity, float& newColinearity )
     {
         vector< cv::Point2f > _reprojectedPoints;
         size_t _totalPoints = 0;
-        
+
         float _totalErrOld = 0;
         float _totalErrNew = 0;
-        float _err = 0;        
+        float _errOriginal = 0;
+        float _errReprojected = 0;
 
         for( size_t i = 0; i < worldPoints.size(); ++i )
         {
             cv::projectPoints( worldPoints[i], rvecs[i], tvecs[i], cameraMatrix, distortionCoefficients, _reprojectedPoints );
-                
-            _err = utils::checkEnd2EndColinearity( _reprojectedPoints );
-            _totalErrNew           += _err * _err;
-            _err = utils::checkEnd2EndColinearity( imagePoints[i] );
-            _totalErrOld           += _err * _err;
+
+            for( size_t j = 0; j < boardSize.height; j++ )
+            {
+                vector< cv::Point2f > _original;
+                vector< cv::Point2f > _reprojected;
+                for( size_t k = 0; k < boardSize.width; k++ )
+                {
+                    int _ptIndex = j * boardSize.height + k;
+                    _original.push_back( imagePoints[i][_ptIndex] );
+                    _reprojected.push_back( _reprojectedPoints[_ptIndex] );
+                }
+                _errOriginal += utils::checkEnd2EndColinearity( _original ) / boardSize.width;
+                _errReprojected += utils::checkEnd2EndColinearity( _reprojected ) / boardSize.width;
+            }
+            _errOriginal /= boardSize.height;
+            _errReprojected /= boardSize.height;
+            _totalErrOld           += _errOriginal * _errOriginal;
+            _totalErrNew           += _errReprojected * _errReprojected;
 
             size_t _n           = worldPoints[i].size();
             _totalPoints        += _n;
@@ -262,7 +277,7 @@ namespace utils {
         }
     }
 
-     bool getLinesIntersection( const cv::Point2f ap0, const cv::Point2f ap1, 
+     bool getLinesIntersection( const cv::Point2f ap0, const cv::Point2f ap1,
                                 const cv::Point2f bp0, const cv::Point2f bp1,
                                 cv::Point2f& intersection )
     {
