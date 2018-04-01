@@ -6,6 +6,10 @@ set( CMAKE_CXX_STANDARD 11 )
 find_package( OpenGL REQUIRED )
 find_package( Threads REQUIRED )
 
+add_definitions( -DGL_RESOURCES_PATH="${CMAKE_SOURCE_DIR}/ext/mauro/lib/res/" )
+
+message( "GL Resources Path: ${GL_RESOURCES_PATH}" )
+
 set( MAURO_INCLUDE_DIRECTORIES
 	 lib/include/
 	 "${CMAKE_SOURCE_DIR}/ext/glfw/include"
