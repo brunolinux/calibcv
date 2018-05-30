@@ -24,7 +24,7 @@ int main()
     while( 1 )
     {
 
-        int _key = cv::waitKey( SAMPLE_TIME ) & 0xff;
+        int _key = cv::waitKey( 1 ) & 0xff;
 
         if ( _key == KEY_SPACE )
         {
