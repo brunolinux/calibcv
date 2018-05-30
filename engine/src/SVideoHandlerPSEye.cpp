@@ -72,7 +72,7 @@ namespace calibcv
     bool SVideoHandlerPSEye::openCamera( int deviceId )
     {
         m_camHandler->openDevice();
-        m_camHandler->deviceSetStreamingProperty( CAMPROP_STREAMING_FRAMERATE, 60 );
+        // m_camHandler->deviceSetStreamingProperty( CAMPROP_STREAMING_FRAMERATE, 60 );
 
         m_camHandler->startCapture();
 
